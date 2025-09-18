@@ -5,20 +5,24 @@ import { prisma } from '../../../../lib/prisma'
 
 export async function PUT(request: NextRequest) {
   try {
+    console.log('Profile API called')
     const session = await getServerSession(authOptions)
+    console.log('Session:', session)
     
     if (!session?.user?.id) {
+      console.log('No session or user ID')
       return NextResponse.json(
         { message: 'Non autorisé' },
         { status: 401 }
       )
     }
 
-    const { pseudo, type } = await request.json()
+    const { pseudo } = await request.json()
+    console.log('Received pseudo:', pseudo)
 
-    if (!pseudo || !type) {
+    if (!pseudo) {
       return NextResponse.json(
-        { message: 'Pseudo et type sont requis' },
+        { message: 'Pseudo est requis' },
         { status: 400 }
       )
     }
@@ -27,9 +31,10 @@ export async function PUT(request: NextRequest) {
       where: { id: session.user.id },
       data: {
         pseudo,
-        type: type as 'particulier' | 'association' | 'entreprise',
       }
     })
+
+    console.log('User updated:', updatedUser)
 
     return NextResponse.json({
       message: 'Profil mis à jour avec succès',
@@ -37,7 +42,6 @@ export async function PUT(request: NextRequest) {
         id: updatedUser.id,
         email: updatedUser.email,
         pseudo: updatedUser.pseudo,
-        type: updatedUser.type,
         avatarUrl: updatedUser.avatarUrl,
       }
     })

@@ -4,10 +4,10 @@ import { prisma } from '../../../../../lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, pseudo, type } = await request.json()
+    const { email, password, pseudo } = await request.json()
 
     // Validation
-    if (!email || !password || !pseudo || !type) {
+    if (!email || !password || !pseudo) {
       return NextResponse.json(
         { message: 'Tous les champs sont requis' },
         { status: 400 }
@@ -42,7 +42,6 @@ export async function POST(request: NextRequest) {
         email,
         passwordHash,
         pseudo,
-        type: type as 'particulier' | 'association' | 'entreprise',
       }
     })
 

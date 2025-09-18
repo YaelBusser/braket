@@ -69,15 +69,14 @@ export const authOptions: NextAuthOptions = {
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
+      if (token && session.user) {
+        (session.user as any).id = token.id as string
       }
       return session
     },
   },
   pages: {
     signIn: '/login',
-    signUp: '/register',
   },
   secret: process.env.NEXTAUTH_SECRET || 'fallback-secret-for-development',
 }

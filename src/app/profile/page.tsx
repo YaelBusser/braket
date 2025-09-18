@@ -1,8 +1,8 @@
 'use client'
 
-import { useSession, signOut, update } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
@@ -11,10 +11,18 @@ function ProfilePage() {
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    pseudo: session?.user?.name || '',
-    type: 'particulier' as 'particulier' | 'association' | 'entreprise'
+    pseudo: ''
   })
   const [isLoading, setIsLoading] = useState(false)
+
+  // Update formData when session changes
+  useEffect(() => {
+    if (session?.user) {
+      setFormData({
+        pseudo: session.user.name || ''
+      })
+    }
+  }, [session])
 
   if (status === 'loading') {
     return (
@@ -42,6 +50,9 @@ function ProfilePage() {
     e.preventDefault()
     setIsLoading(true)
 
+    console.log('Submitting profile update:', formData)
+    console.log('Session user:', session?.user)
+
     try {
       const response = await fetch('/api/profile', {
         method: 'PUT',
@@ -51,29 +62,30 @@ function ProfilePage() {
         body: JSON.stringify(formData),
       })
 
+      console.log('Response status:', response.status)
+      const result = await response.json()
+      console.log('Response data:', result)
+
       if (response.ok) {
-        const result = await response.json()
-        
-        // Update the NextAuth session with new data
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: result.user.pseudo,
-            // Keep other user data
-          }
+        // Update the form data with the response
+        setFormData({
+          pseudo: result.user.pseudo
         })
-        
         setIsEditing(false)
-        // Update formData to reflect the changes
-        setFormData(prev => ({
-          ...prev,
-          pseudo: result.user.pseudo,
-          type: result.user.type
-        }))
+        
+        // Show success message
+        alert('Profil mis à jour avec succès !')
+        
+        // Refresh the page to update the session
+        window.location.reload()
+      } else {
+        // Show error message
+        alert(`Erreur: ${result.message}`)
+        console.error('Profile update error:', result)
       }
     } catch (error) {
       console.error('Error updating profile:', error)
+      alert('Une erreur est survenue lors de la mise à jour du profil')
     } finally {
       setIsLoading(false)
     }
@@ -110,9 +122,8 @@ function ProfilePage() {
                   )}
                 </div>
                 <div className={styles.info}>
-                  <h3>{session?.user?.name}</h3>
+                  <h3>{formData.pseudo}</h3>
                   <p className="text-secondary">{session?.user?.email}</p>
-                  <p className="text-muted">Type de compte: {formData.type}</p>
                 </div>
                 <button
                   onClick={() => setIsEditing(true)}
@@ -138,22 +149,6 @@ function ProfilePage() {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="type" className="form-label form-label-required">
-                    Type de compte
-                  </label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleChange}
-                    className="form-select"
-                  >
-                    <option value="particulier">Particulier</option>
-                    <option value="association">Association</option>
-                    <option value="entreprise">Entreprise</option>
-                  </select>
-                </div>
 
                 <div className={styles.formActions}>
                   <button

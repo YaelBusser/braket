@@ -15,7 +15,6 @@ model User {
   email         String    @unique
   passwordHash  String?
   pseudo        String
-  type          UserType
   avatarUrl     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -67,10 +66,4 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
-}
-
-enum UserType {
-  particulier
-  association
-  entreprise
 }

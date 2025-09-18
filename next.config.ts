@@ -2,10 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Configuration pour le rendu côté client
-  experimental: {
-    // Désactiver le SSR pour certaines pages
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  serverExternalPackages: ['@prisma/client'],
   
   // Configuration des pages
   async rewrites() {

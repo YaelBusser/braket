@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { Button, Input, Select, Card, CardHeader, CardBody } from '../../components/ui'
+import { Button, Input, Card, CardHeader, CardBody } from '../../components/ui'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
@@ -12,8 +12,7 @@ function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    pseudo: '',
-    type: 'particulier' as 'particulier' | 'association' | 'entreprise'
+    pseudo: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -74,7 +73,6 @@ function RegisterPage() {
           email: formData.email,
           password: formData.password,
           pseudo: formData.pseudo,
-          type: formData.type,
         }),
       })
 
@@ -102,11 +100,6 @@ function RegisterPage() {
     }
   }
 
-  const userTypeOptions = [
-    { value: 'particulier', label: 'Particulier' },
-    { value: 'association', label: 'Association' },
-    { value: 'entreprise', label: 'Entreprise' }
-  ]
 
   return (
     <div className={styles.container}>
@@ -144,14 +137,6 @@ function RegisterPage() {
               required
             />
 
-            <Select
-              name="type"
-              label="Type de compte"
-              value={formData.type}
-              onChange={handleChange}
-              options={userTypeOptions}
-              required
-            />
 
             <Input
               type="password"
