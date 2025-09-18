@@ -1,0 +1,87 @@
+@use '../../styles/variables.module' as vars;
+
+.container {
+  min-height: 100vh;
+  padding: vars.$spacing-8 0;
+  background: vars.$bg-secondary;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-8;
+  
+  h1 {
+    font-size: vars.$font-size-4xl;
+    font-weight: vars.$font-weight-bold;
+    color: vars.$text-primary;
+  }
+}
+
+.profileInfo {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-6;
+  
+  @media (max-width: vars.$breakpoint-md) {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.avatarPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: vars.$primary;
+  color: vars.$white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+}
+
+.info {
+  flex: 1;
+  
+  h3 {
+    font-size: vars.$font-size-xl;
+    font-weight: vars.$font-weight-semibold;
+    color: vars.$text-primary;
+    margin-bottom: vars.$spacing-1;
+  }
+  
+  p {
+    margin-bottom: vars.$spacing-1;
+  }
+}
+
+.editForm {
+  max-width: 400px;
+}
+
+.formActions {
+  display: flex;
+  gap: vars.$spacing-4;
+  justify-content: flex-end;
+  margin-top: vars.$spacing-6;
+  
+  @media (max-width: vars.$breakpoint-sm) {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,83 @@
+@use '../../styles/variables.module' as vars;
+
+.card {
+  background-color: vars.$white;
+  border: 1px solid vars.$border-light;
+  border-radius: vars.$radius-xl;
+  box-shadow: vars.$shadow-sm;
+  overflow: hidden;
+  transition: all vars.$transition-base;
+  
+  &:hover {
+    box-shadow: vars.$shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+// Variants
+.card-elevated {
+  box-shadow: vars.$shadow-lg;
+  
+  &:hover {
+    box-shadow: vars.$shadow-xl;
+  }
+}
+
+.card-flat {
+  box-shadow: none;
+  border: 1px solid vars.$border-medium;
+  
+  &:hover {
+    box-shadow: vars.$shadow-sm;
+  }
+}
+
+.card-outlined {
+  background-color: transparent;
+  border: 2px solid vars.$border-medium;
+  box-shadow: none;
+  
+  &:hover {
+    border-color: vars.$primary;
+    box-shadow: vars.$shadow-sm;
+  }
+}
+
+// Sizes
+.card-sm {
+  .cardHeader,
+  .cardBody,
+  .cardFooter {
+    padding: vars.$spacing-4;
+  }
+}
+
+.card-md {
+  .cardHeader,
+  .cardBody,
+  .cardFooter {
+    padding: vars.$spacing-6;
+  }
+}
+
+.card-lg {
+  .cardHeader,
+  .cardBody,
+  .cardFooter {
+    padding: vars.$spacing-8;
+  }
+}
+
+.cardHeader {
+  border-bottom: 1px solid vars.$border-light;
+  background-color: vars.$bg-secondary;
+}
+
+.cardBody {
+  // Default padding handled by size variants
+}
+
+.cardFooter {
+  border-top: 1px solid vars.$border-light;
+  background-color: vars.$bg-secondary;
+}

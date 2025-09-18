@@ -1,0 +1,272 @@
+@use '../variables.module' as vars;
+
+// ===========================================
+// FORM COMPONENTS
+// ===========================================
+
+.form-group {
+  margin-bottom: vars.$spacing-6;
+}
+
+.form-label {
+  display: block;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$text-primary;
+  margin-bottom: vars.$spacing-2;
+}
+
+.form-label-required::after {
+  content: ' *';
+  color: vars.$error;
+}
+
+.form-input {
+  display: block;
+  width: 100%;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  font-size: vars.$font-size-sm;
+  line-height: vars.$line-height-normal;
+  color: vars.$text-primary;
+  background-color: vars.$white;
+  border: 1px solid vars.$border-medium;
+  border-radius: vars.$radius-lg;
+  transition: all vars.$transition-fast;
+  
+  &:focus {
+    outline: none;
+    border-color: vars.$primary;
+    box-shadow: 0 0 0 3px rgba(vars.$primary, 0.1);
+  }
+  
+  &:disabled {
+    background-color: vars.$bg-secondary;
+    color: vars.$text-muted;
+    cursor: not-allowed;
+  }
+  
+  &::placeholder {
+    color: vars.$text-muted;
+  }
+  
+  &.error {
+    border-color: vars.$error;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(vars.$error, 0.1);
+    }
+  }
+  
+  &.success {
+    border-color: vars.$success;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(vars.$success, 0.1);
+    }
+  }
+}
+
+.form-textarea {
+  @extend .form-input;
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.form-select {
+  @extend .form-input;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right vars.$spacing-3 center;
+  background-repeat: no-repeat;
+  background-size: 1rem;
+  padding-right: vars.$spacing-10;
+  appearance: none;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  cursor: pointer;
+  
+  input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid vars.$border-medium;
+    border-radius: vars.$radius-sm;
+    background-color: vars.$white;
+    cursor: pointer;
+    transition: all vars.$transition-fast;
+    
+    &:checked {
+      background-color: vars.$primary;
+      border-color: vars.$primary;
+      background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='m13.854 3.646-7.5 7.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6 10.293l7.146-7.147a.5.5 0 0 1 .708.708z'/%3e%3c/svg%3e");
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(vars.$primary, 0.1);
+    }
+  }
+  
+  .form-checkbox-label {
+    font-size: vars.$font-size-sm;
+    color: vars.$text-primary;
+    cursor: pointer;
+  }
+}
+
+.form-radio {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  cursor: pointer;
+  
+  input[type="radio"] {
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid vars.$border-medium;
+    border-radius: 50%;
+    background-color: vars.$white;
+    cursor: pointer;
+    transition: all vars.$transition-fast;
+    
+    &:checked {
+      background-color: vars.$primary;
+      border-color: vars.$primary;
+      background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e");
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(vars.$primary, 0.1);
+    }
+  }
+  
+  .form-radio-label {
+    font-size: vars.$font-size-sm;
+    color: vars.$text-primary;
+    cursor: pointer;
+  }
+}
+
+.form-error {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$error;
+  margin-top: vars.$spacing-1;
+}
+
+.form-help {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$text-muted;
+  margin-top: vars.$spacing-1;
+}
+
+.form-success {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$success;
+  margin-top: vars.$spacing-1;
+}
+
+// Form layouts
+.form-row {
+  display: grid;
+  gap: vars.$spacing-4;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.form-row-3 {
+  display: grid;
+  gap: vars.$spacing-4;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+// Input groups
+.input-group {
+  display: flex;
+  position: relative;
+  
+  .form-input {
+    border-radius: 0;
+    
+    &:first-child {
+      border-top-left-radius: vars.$radius-lg;
+      border-bottom-left-radius: vars.$radius-lg;
+    }
+    
+    &:last-child {
+      border-top-right-radius: vars.$radius-lg;
+      border-bottom-right-radius: vars.$radius-lg;
+    }
+    
+    &:not(:first-child):not(:last-child) {
+      border-left: 0;
+    }
+  }
+  
+  .input-group-addon {
+    display: flex;
+    align-items: center;
+    padding: vars.$spacing-3 vars.$spacing-4;
+    font-size: vars.$font-size-sm;
+    color: vars.$text-muted;
+    background-color: vars.$bg-secondary;
+    border: 1px solid vars.$border-medium;
+    border-right: 0;
+    
+    &:first-child {
+      border-top-left-radius: vars.$radius-lg;
+      border-bottom-left-radius: vars.$radius-lg;
+    }
+    
+    &:last-child {
+      border-top-right-radius: vars.$radius-lg;
+      border-bottom-right-radius: vars.$radius-lg;
+      border-right: 1px solid vars.$border-medium;
+    }
+  }
+}
+
+// Search input
+.search-input {
+  position: relative;
+  
+  .search-icon {
+    position: absolute;
+    left: vars.$spacing-3;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: vars.$text-muted;
+  }
+  
+  .form-input {
+    padding-left: vars.$spacing-10;
+  }
+  
+  .search-clear {
+    position: absolute;
+    right: vars.$spacing-3;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1rem;
+    height: 1rem;
+    color: vars.$text-muted;
+    cursor: pointer;
+    transition: color vars.$transition-fast;
+    
+    &:hover {
+      color: vars.$text-primary;
+    }
+  }
+}

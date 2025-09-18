@@ -1,0 +1,336 @@
+@use 'variables.module' as vars;
+@use 'components/index';
+
+// ===========================================
+// GLOBAL STYLES
+// ===========================================
+
+// Reset and base styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  line-height: vars.$line-height-normal;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: vars.$font-family-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-normal;
+  line-height: vars.$line-height-normal;
+  color: vars.$text-primary;
+  background-color: vars.$bg-primary;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// Typography
+h1, h2, h3, h4, h5, h6 {
+  font-weight: vars.$font-weight-semibold;
+  line-height: vars.$line-height-tight;
+  color: vars.$text-primary;
+  margin: 0;
+}
+
+h1 {
+  font-size: vars.$font-size-4xl;
+  font-weight: vars.$font-weight-bold;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-5xl;
+  }
+}
+
+h2 {
+  font-size: vars.$font-size-3xl;
+  font-weight: vars.$font-weight-bold;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-4xl;
+  }
+}
+
+h3 {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-semibold;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-3xl;
+  }
+}
+
+h4 {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-semibold;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-2xl;
+  }
+}
+
+h5 {
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-medium;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-xl;
+  }
+}
+
+h6 {
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-lg;
+  }
+}
+
+p {
+  margin: 0;
+  line-height: vars.$line-height-relaxed;
+}
+
+a {
+  color: vars.$primary;
+  text-decoration: none;
+  transition: color vars.$transition-fast;
+  
+  &:hover {
+    color: vars.$primary-hover;
+  }
+  
+  &:focus {
+    outline: 2px solid vars.$primary;
+    outline-offset: 2px;
+  }
+}
+
+// Lists
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Form elements
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+// Focus styles
+:focus-visible {
+  outline: 2px solid vars.$primary;
+  outline-offset: 2px;
+}
+
+// Selection
+::selection {
+  background-color: vars.$primary-light;
+  color: vars.$primary-dark;
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: vars.$gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: vars.$gray-300;
+  border-radius: vars.$radius-full;
+  
+  &:hover {
+    background: vars.$gray-400;
+  }
+}
+
+// Utility classes
+.container {
+  width: 100%;
+  max-width: vars.$container-xl;
+  margin: 0 auto;
+  padding: 0 vars.$spacing-4;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding: 0 vars.$spacing-6;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: 0 vars.$spacing-8;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Layout utilities
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: vars.$spacing-2;
+}
+
+.gap-4 {
+  gap: vars.$spacing-4;
+}
+
+.gap-6 {
+  gap: vars.$spacing-6;
+}
+
+.gap-8 {
+  gap: vars.$spacing-8;
+}
+
+// Spacing utilities
+.p-4 {
+  padding: vars.$spacing-4;
+}
+
+.p-6 {
+  padding: vars.$spacing-6;
+}
+
+.p-8 {
+  padding: vars.$spacing-8;
+}
+
+.m-4 {
+  margin: vars.$spacing-4;
+}
+
+.m-6 {
+  margin: vars.$spacing-6;
+}
+
+.m-8 {
+  margin: vars.$spacing-8;
+}
+
+// Text utilities
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-sm {
+  font-size: vars.$font-size-sm;
+}
+
+.text-lg {
+  font-size: vars.$font-size-lg;
+}
+
+.text-xl {
+  font-size: vars.$font-size-xl;
+}
+
+.font-medium {
+  font-weight: vars.$font-weight-medium;
+}
+
+.font-semibold {
+  font-weight: vars.$font-weight-semibold;
+}
+
+.font-bold {
+  font-weight: vars.$font-weight-bold;
+}
+
+// Color utilities
+.text-primary {
+  color: vars.$text-primary;
+}
+
+.text-secondary {
+  color: vars.$text-secondary;
+}
+
+.text-muted {
+  color: vars.$text-muted;
+}
+
+.bg-primary {
+  background-color: vars.$bg-primary;
+}
+
+.bg-secondary {
+  background-color: vars.$bg-secondary;
+}
+
+// Animation utilities
+.transition {
+  transition: all vars.$transition-base;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:opacity-80:hover {
+  opacity: 0.8;
+}

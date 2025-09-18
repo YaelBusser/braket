@@ -1,0 +1,83 @@
+@use '../../styles/variables.module' as vars;
+
+.formGroup {
+  margin-bottom: vars.$spacing-6;
+}
+
+.label {
+  display: block;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$text-primary;
+  margin-bottom: vars.$spacing-2;
+}
+
+.required {
+  color: vars.$error;
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  font-size: vars.$font-size-sm;
+  line-height: vars.$line-height-normal;
+  color: vars.$text-primary;
+  background-color: vars.$white;
+  border: 1px solid vars.$border-medium;
+  border-radius: vars.$radius-lg;
+  transition: all vars.$transition-fast;
+  
+  &:focus {
+    outline: none;
+    border-color: vars.$primary;
+    box-shadow: 0 0 0 3px rgba(vars.$primary, 0.1);
+  }
+  
+  &:disabled {
+    background-color: vars.$bg-secondary;
+    color: vars.$text-muted;
+    cursor: not-allowed;
+  }
+  
+  &::placeholder {
+    color: vars.$text-muted;
+  }
+  
+  &.error {
+    border-color: vars.$error;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(vars.$error, 0.1);
+    }
+  }
+  
+  &.success {
+    border-color: vars.$success;
+    
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(vars.$success, 0.1);
+    }
+  }
+}
+
+.errorText {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$error;
+  margin-top: vars.$spacing-1;
+}
+
+.helpText {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$text-muted;
+  margin-top: vars.$spacing-1;
+}
+
+.successText {
+  display: block;
+  font-size: vars.$font-size-xs;
+  color: vars.$success;
+  margin-top: vars.$spacing-1;
+}

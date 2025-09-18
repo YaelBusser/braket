@@ -1,0 +1,78 @@
+@use '../../styles/variables.module' as vars;
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-4;
+  background: linear-gradient(135deg, vars.$primary-50 0%, vars.$white 100%);
+}
+
+.card {
+  background: vars.$white;
+  border-radius: vars.$radius-2xl;
+  box-shadow: vars.$shadow-xl;
+  padding: vars.$spacing-8;
+  width: 100%;
+  max-width: 400px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: vars.$spacing-8;
+  
+  h1 {
+    font-size: vars.$font-size-3xl;
+    font-weight: vars.$font-weight-bold;
+    color: vars.$text-primary;
+    margin-bottom: vars.$spacing-2;
+  }
+  
+  p {
+    color: vars.$text-secondary;
+    font-size: vars.$font-size-lg;
+  }
+}
+
+.form {
+  margin-bottom: vars.$spacing-6;
+}
+
+.divider {
+  position: relative;
+  text-align: center;
+  margin: vars.$spacing-6 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: vars.$border-light;
+  }
+  
+  span {
+    background: vars.$white;
+    padding: 0 vars.$spacing-4;
+    color: vars.$text-muted;
+    font-size: vars.$font-size-sm;
+  }
+}
+
+.registerLink {
+  text-align: center;
+  margin-top: vars.$spacing-6;
+  color: vars.$text-secondary;
+  
+  a {
+    color: vars.$primary;
+    font-weight: vars.$font-weight-medium;
+    
+    &:hover {
+      color: vars.$primary-hover;
+    }
+  }
+}
