@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button, Input, Select, Card, CardHeader, CardBody } from '../../components/ui'
+import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
-export default function Register() {
+function RegisterPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -205,5 +206,13 @@ export default function Register() {
         </CardBody>
       </Card>
     </div>
+  )
+}
+
+export default function Register() {
+  return (
+    <ClientPageWrapper>
+      <RegisterPage />
+    </ClientPageWrapper>
   )
 }

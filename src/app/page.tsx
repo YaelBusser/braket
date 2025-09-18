@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import styles from './page.module.scss'
 
+// Cette page reste en SSR (Server Side Rendering)
 export default function Home() {
   return (
     <main className={styles.hero}>

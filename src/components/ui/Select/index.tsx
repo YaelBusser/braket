@@ -1,5 +1,5 @@
 import React from 'react'
-import styles from './Select.module.scss'
+import styles from './index.module.scss'
 
 interface SelectOption {
   value: string

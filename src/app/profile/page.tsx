@@ -1,11 +1,12 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession, signOut, update } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
-export default function Profile() {
+function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [isEditing, setIsEditing] = useState(false)
@@ -51,9 +52,25 @@ export default function Profile() {
       })
 
       if (response.ok) {
+        const result = await response.json()
+        
+        // Update the NextAuth session with new data
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: result.user.pseudo,
+            // Keep other user data
+          }
+        })
+        
         setIsEditing(false)
-        // Refresh the page to update the session
-        window.location.reload()
+        // Update formData to reflect the changes
+        setFormData(prev => ({
+          ...prev,
+          pseudo: result.user.pseudo,
+          type: result.user.type
+        }))
       }
     } catch (error) {
       console.error('Error updating profile:', error)
@@ -172,5 +189,13 @@ export default function Profile() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function Profile() {
+  return (
+    <ClientPageWrapper>
+      <ProfilePage />
+    </ClientPageWrapper>
   )
 }

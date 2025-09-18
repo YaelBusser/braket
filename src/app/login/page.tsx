@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
-export default function Login() {
+function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -122,5 +123,13 @@ export default function Login() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function Login() {
+  return (
+    <ClientPageWrapper>
+      <LoginPage />
+    </ClientPageWrapper>
   )
 }
