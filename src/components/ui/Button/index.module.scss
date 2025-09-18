@@ -19,6 +19,16 @@
     cursor: not-allowed;
   }
   
+  // Supprime l'outline au clic (focus souris), conserve pour clavier (focus-visible)
+  &:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  &:focus:not(:focus-visible) {
+    outline: none;
+    box-shadow: none;
+  }
+
   &:focus-visible {
     outline: 2px solid vars.$primary;
     outline-offset: 2px;

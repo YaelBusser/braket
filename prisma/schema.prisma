@@ -26,7 +26,113 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
+  // Relations
+  tournaments   Tournament[] @relation("OrganizerTournaments")
+  teamMembers   TeamMember[]
+
   @@map("users")
+}
+
+// ==========================
+// New Enums
+// ==========================
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+}
+
+enum TournamentVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum MatchStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+}
+
+enum TournamentCategory {
+  VIDEO_GAMES
+  SPORTS
+  BOARD_GAMES
+}
+
+// ==========================
+// New Models
+// ==========================
+
+model Tournament {
+  id           String               @id @default(cuid())
+  name         String
+  description  String?
+  game         String
+  format       TournamentFormat     @default(SINGLE_ELIMINATION)
+  visibility   TournamentVisibility @default(PUBLIC)
+  category     TournamentCategory   @default(VIDEO_GAMES)
+  posterUrl    String?
+  startDate    DateTime?
+  endDate      DateTime?
+  organizerId  String
+  organizer    User                 @relation("OrganizerTournaments", fields: [organizerId], references: [id], onDelete: Cascade)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  teams        Team[]
+  matches      Match[]
+
+  @@map("tournaments")
+}
+
+model Team {
+  id           String      @id @default(cuid())
+  name         String
+  tournamentId String
+  tournament   Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  members      TeamMember[]
+  matchesA     Match[]     @relation("TeamA")
+  matchesB     Match[]     @relation("TeamB")
+  wins         Match[]     @relation("WinnerTeam")
+
+  @@unique([tournamentId, name])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model Match {
+  id            String      @id @default(cuid())
+  tournamentId  String
+  teamAId       String
+  teamBId       String
+  winnerTeamId  String?
+  round         Int?
+  status        MatchStatus @default(PENDING)
+  scheduledAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tournament    Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  teamA         Team        @relation("TeamA", fields: [teamAId], references: [id], onDelete: Cascade)
+  teamB         Team        @relation("TeamB", fields: [teamBId], references: [id], onDelete: Cascade)
+  winnerTeam    Team?       @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
+
+  @@map("matches")
 }
 
 model Account {

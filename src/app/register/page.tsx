@@ -1,22 +1,30 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Button, Input, Card, CardHeader, CardBody } from '../../components/ui'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
 function RegisterPage() {
+  const { status } = useSession()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    pseudo: ''
+    pseudo: '',
+    preferredCategory: 'VIDEO_GAMES'
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/profile')
+    }
+  }, [status, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -73,10 +81,12 @@ function RegisterPage() {
           email: formData.email,
           password: formData.password,
           pseudo: formData.pseudo,
+          preferredCategory: formData.preferredCategory,
         }),
       })
 
       if (response.ok) {
+        try { localStorage.setItem('lt_category', formData.preferredCategory) } catch {}
         // Auto-login after successful registration
         const result = await signIn('credentials', {
           email: formData.email,
@@ -85,7 +95,9 @@ function RegisterPage() {
         })
 
         if (result?.ok) {
-          router.push('/profile')
+          const sp = new URLSearchParams(window.location.search)
+          const returnTo = sp.get('returnTo')
+          router.push(returnTo || '/profile')
         } else {
           router.push('/login')
         }
@@ -100,6 +112,8 @@ function RegisterPage() {
     }
   }
 
+
+  if (status === 'authenticated') return null
 
   return (
     <div className={styles.container}>
@@ -136,6 +150,14 @@ function RegisterPage() {
               placeholder="Votre pseudo"
               required
             />
+            <div className="form-group">
+              <label className="form-label" htmlFor="preferredCategory">Catégorie préférée</label>
+              <select id="preferredCategory" name="preferredCategory" className="form-input" value={formData.preferredCategory} onChange={handleChange}>
+                <option value="VIDEO_GAMES">Jeux vidéo</option>
+                <option value="SPORTS">Sports</option>
+                <option value="BOARD_GAMES">Jeux de société</option>
+              </select>
+            </div>
 
 
             <Input

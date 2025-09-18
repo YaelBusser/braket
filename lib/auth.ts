@@ -60,17 +60,36 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: 'jwt',
+    // garder la session active (cookies) pendant 30 jours
+    maxAge: 60 * 60 * 24 * 30,
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      // On login, hydrater le token avec les infos de l'utilisateur
       if (user) {
-        token.id = user.id
+        token.id = (user as any).id
+        token.name = user.name
+        // "image" est la clé utilisée par NextAuth pour l'avatar côté token/session
+        token.picture = (user as any).image
       }
+
+      // Lors d'un session.update côté client, propager les champs mis à jour dans le token
+      if (trigger === 'update' && session) {
+        if (session.name) token.name = session.name
+        if ((session as any).image) token.picture = (session as any).image
+      }
+
       return token
     },
     async session({ session, token }) {
       if (token && session.user) {
         (session.user as any).id = token.id as string
+        if (token.name) {
+          session.user.name = token.name as string
+        }
+        if ((token as any).picture) {
+          session.user.image = (token as any).picture as string
+        }
       }
       return session
     },

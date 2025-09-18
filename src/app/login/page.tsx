@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import styles from './page.module.scss'
 
 function LoginPage() {
+  const { status } = useSession()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -14,6 +15,12 @@ function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.replace('/profile')
+    }
+  }, [status, router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -52,6 +59,8 @@ function LoginPage() {
       setIsLoading(false)
     }
   }
+
+  if (status === 'authenticated') return null
 
   return (
     <div className={styles.container}>

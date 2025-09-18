@@ -2,7 +2,10 @@
 
 .hero {
   min-height: 100vh;
-  background: linear-gradient(135deg, vars.$primary-50 0%, vars.$white 100%);
+  background:
+    radial-gradient(1200px 400px at 10% 0%, rgba(255,255,255,0.35), transparent 60%),
+    radial-gradient(1200px 400px at 90% 0%, rgba(255,255,255,0.35), transparent 60%),
+    linear-gradient(135deg, vars.$primary-50 0%, vars.$white 100%);
   display: flex;
   align-items: center;
   padding: vars.$spacing-8 0;
@@ -66,3 +69,44 @@
 .heroFeatures {
   margin-top: vars.$spacing-16;
 }
+
+.searchBar {
+  margin-bottom: vars.$spacing-6;
+}
+
+.searchInput {
+  width: 100%;
+  padding: vars.$spacing-4 vars.$spacing-5;
+  border-radius: vars.$radius-xl;
+  border: 1px solid vars.$border-light;
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(6px);
+  font-size: vars.$font-size-base;
+}
+
+.cardsGrid {
+  display: grid;
+  gap: vars.$spacing-4;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.tCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: vars.$radius-xl;
+  background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0.75));
+  box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+  display: grid;
+  grid-template-rows: 160px auto;
+}
+
+.tPoster { background-size: cover; background-position: center; }
+.tPosterPlaceholder { background: linear-gradient(135deg, #e5e7eb, #f3f4f6); }
+
+.tMeta { padding: vars.$spacing-4; }
+.tTopLine { display: flex; justify-content: space-between; margin-bottom: vars.$spacing-2; }
+.tBadge { background: #111827; color: white; border-radius: 999px; padding: 2px 8px; font-size: vars.$font-size-xs; }
+.tDate { color: vars.$text-muted; font-size: vars.$font-size-xs; }
+.tTitle { font-size: vars.$font-size-lg; margin: 0 0 4px; }
+.tSub { color: vars.$text-secondary; margin: 0; }
+.tActions { padding: vars.$spacing-4; display: flex; justify-content: flex-end; }

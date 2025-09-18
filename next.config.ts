@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   // Configuration pour le rendu côté client
   serverExternalPackages: ['@prisma/client'],
   

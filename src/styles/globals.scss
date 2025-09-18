@@ -110,6 +110,9 @@ a {
   }
   
   &:focus {
+    outline: none;
+  }
+  &:focus-visible {
     outline: 2px solid vars.$primary;
     outline-offset: 2px;
   }
@@ -144,7 +147,12 @@ button {
 }
 
 // Focus styles
-:focus-visible {
+// Focus global par défaut désactivé, mais réactivé pour :focus-visible
+// (préserve l'accessibilité au clavier, évite le halo lors du clic souris)
+*:focus {
+  outline: none;
+}
+*:focus-visible {
   outline: 2px solid vars.$primary;
   outline-offset: 2px;
 }
