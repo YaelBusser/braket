@@ -33,6 +33,8 @@ function TournamentView() {
   const [teams, setTeams] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [teamName, setTeamName] = useState('')
+  const [isRegistered, setIsRegistered] = useState(false)
+  const [registrations, setRegistrations] = useState<any[]>([])
 
   useEffect(() => {
     const load = async () => {
@@ -44,6 +46,7 @@ function TournamentView() {
         const tData = await tRes.json()
         const teamData = await teamRes.json()
         setTournament(tData.tournament)
+        setRegistrations(tData.tournament?.registrations || [])
         setTeams(teamData.teams)
       } finally {
         setLoading(false)
@@ -51,6 +54,13 @@ function TournamentView() {
     }
     if (id) load()
   }, [id])
+
+  // recalculer l'état d'inscription à l'arrivée de la session ou des données
+  useEffect(() => {
+    if (tournament?.registrations && session?.user) {
+      setIsRegistered(tournament.registrations.some((r: any) => r.userId === (session?.user as any).id))
+    }
+  }, [tournament, session])
 
   const handleCreateTeam = async () => {
     if (!teamName.trim()) return
@@ -78,6 +88,7 @@ function TournamentView() {
   if (!tournament) return <div className="container" style={{ padding: '2rem 0' }}>Tournoi introuvable</div>
 
   const isOrganizer = (session?.user as any)?.id === tournament.organizerId
+  const registeredCount = tournament._count?.registrations || 0
 
   return (
     <div>
@@ -98,14 +109,20 @@ function TournamentView() {
 
       {/* Barre d’infos */}
       <div style={{ background: '#0b0f1a', color: '#fff', padding: '24px 0' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
           <div>
             <div style={{ opacity: 0.8 }}>Début</div>
             <div style={{ fontWeight: 600 }}>{tournament.startDate ? new Date(tournament.startDate).toLocaleString() : 'À définir'}</div>
           </div>
           <div>
             <div style={{ opacity: 0.8 }}>Participants</div>
-            <div style={{ fontWeight: 600 }}>{teams.length} équipe(s)</div>
+            {tournament.isTeamBased ? (
+              <div style={{ fontWeight: 600 }}>{teams.length} équipe(s)</div>
+            ) : (
+              <div style={{ fontWeight: 600 }}>
+                {registeredCount}{tournament.maxParticipants ? ` / ${tournament.maxParticipants}` : ''}
+              </div>
+            )}
           </div>
           <div>
             <div style={{ opacity: 0.8 }}>Format</div>
@@ -115,6 +132,10 @@ function TournamentView() {
             <div style={{ opacity: 0.8 }}>Créé par</div>
             <div style={{ fontWeight: 600 }}>{tournament.organizer?.pseudo || '—'}</div>
           </div>
+          <div>
+            <div style={{ opacity: 0.8 }}>Visibilité</div>
+            <div style={{ fontWeight: 600 }}>{tournament.visibility}</div>
+          </div>
         </div>
       </div>
 
@@ -123,19 +144,57 @@ function TournamentView() {
         {!isOrganizer && (
           <div className="card" style={{ marginBottom: 16, textAlign: 'center' }}>
             <div className="card-body">
-              <button
-                className="btn btn-primary"
-                onClick={() => {
-                  if (!session?.user) {
-                    const returnTo = encodeURIComponent(window.location.pathname)
-                    window.location.href = `/register?returnTo=${returnTo}`
-                    return
-                  }
-                  alert('Inscription: à implémenter (selon le format du tournoi)')
-                }}
-              >
-                Je m'inscris à ce tournoi !
-              </button>
+              {tournament.isTeamBased ? (
+                isRegistered ? (
+                  <div className="text-muted">Inscrit au tournoi. Créez ou rejoignez une équipe ci-dessous.</div>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      if (!session?.user) {
+                        try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
+                        window.location.href = '/login'
+                        return
+                      }
+                      fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
+                        .then(async (r) => {
+                          const d = await r.json().catch(() => ({}))
+                          if (r.ok) { setIsRegistered(true); alert('Inscrit. Créez ou rejoignez une équipe ci-dessous.') }
+                          else alert(d.message || 'Impossible de s\'inscrire')
+                        })
+                    }}
+                  >Rejoindre le tournoi</button>
+                )
+              ) : isRegistered ? (
+                <button className="btn btn-secondary" onClick={() => {
+                  fetch(`/api/tournaments/${id}/register`, { method: 'DELETE' })
+                    .then(async (r) => {
+                      const d = await r.json().catch(() => ({}))
+                      if (r.ok) { setIsRegistered(false); setRegistrations(prev => prev.filter((r: any) => r.userId !== (session?.user as any).id)); alert('Désinscrit') }
+                      else alert(d.message || 'Erreur de désinscription')
+                    })
+                }}>Se désinscrire</button>
+              ) : (
+                <button
+                  className="btn btn-primary"
+                  disabled={tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants}
+                  onClick={() => {
+                    if (!session?.user) {
+                      try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
+                      window.location.href = '/login'
+                      return
+                    }
+                    fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
+                      .then(async (r) => {
+                        const d = await r.json().catch(() => ({}))
+                        if (r.ok) { setIsRegistered(true); setRegistrations(prev => [...prev, { userId: (session?.user as any).id, user: { pseudo: session?.user?.name, avatarUrl: session?.user?.image } }]); alert('Inscrit au tournoi') }
+                        else alert(d.message || 'Impossible de s\'inscrire')
+                      })
+                  }}
+                >
+                  {tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants ? 'Complet' : "Je m'inscris à ce tournoi !"}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -145,10 +204,16 @@ function TournamentView() {
         <div className="card-header"><h2>Équipes</h2></div>
         <div className="card-body">
           {!isOrganizer ? (
-            <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-              <input className="form-input" placeholder="Nom de l'équipe" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
-              <button className="btn btn-primary" onClick={handleCreateTeam}>Créer une équipe</button>
-            </div>
+            session?.user && isRegistered ? (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <input className="form-input" placeholder="Nom de l'équipe" value={teamName} onChange={(e) => setTeamName(e.target.value)} />
+                <button className="btn btn-primary" onClick={handleCreateTeam}>Créer une équipe</button>
+              </div>
+            ) : (
+              <div className="text-muted" style={{ marginBottom: 12 }}>
+                {session?.user ? 'Inscrivez-vous au tournoi pour créer ou rejoindre une équipe.' : 'Connectez-vous pour créer ou rejoindre une équipe.'}
+              </div>
+            )
           ) : (
             <div className="text-muted" style={{ marginBottom: 12 }}>
               En tant qu’organisateur, vous ne pouvez pas créer ou rejoindre une équipe.
@@ -162,7 +227,7 @@ function TournamentView() {
                     <strong>{team.name}</strong>
                     <div className="text-muted" style={{ marginTop: 4 }}>{team.members.length} membre(s)</div>
                   </div>
-                  {!isOrganizer && (
+                  {!isOrganizer && session?.user && isRegistered && (
                     <button className="btn btn-outline" onClick={() => handleJoinTeam(team.id)}>Rejoindre</button>
                   )}
                 </div>
@@ -189,6 +254,32 @@ function TournamentView() {
       </div>
 
       <MatchesSection tournamentId={id} isOrganizer={isOrganizer} />
+
+      {!tournament.isTeamBased && (
+        <div className="card" style={{ marginTop: 16 }}>
+          <div className="card-header"><h2>Joueurs inscrits</h2></div>
+          <div className="card-body">
+            {registrations.length === 0 ? (
+              <div className="text-muted">Aucun joueur inscrit pour le moment.</div>
+            ) : (
+              <ul style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {registrations.map((r: any, idx: number) => (
+                  <li key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {r.user?.avatarUrl ? (
+                      <img src={r.user.avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#eee', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12 }}>
+                        {(r.user?.pseudo || 'U').charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                    <span>{r.user?.pseudo || 'Utilisateur'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

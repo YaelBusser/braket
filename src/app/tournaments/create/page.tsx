@@ -22,6 +22,11 @@ function CreateForm() {
     format: 'SINGLE_ELIMINATION',
     visibility: 'PUBLIC',
     category: 'VIDEO_GAMES',
+    isTeamBased: 'solo',
+    maxParticipants: '',
+    kind: 'PERSONAL',
+    teamMinSize: '',
+    teamMaxSize: '',
     startDate: '',
     endDate: ''
   })
@@ -87,6 +92,13 @@ function CreateForm() {
       fd.append('format', form.format)
       fd.append('visibility', form.visibility)
       fd.append('category', form.category)
+      fd.append('isTeamBased', String(form.isTeamBased === 'team'))
+      if (form.maxParticipants) fd.append('maxParticipants', form.maxParticipants)
+      fd.append('kind', form.kind)
+      if (form.isTeamBased === 'team') {
+        if (form.teamMinSize) fd.append('teamMinSize', form.teamMinSize)
+        if (form.teamMaxSize) fd.append('teamMaxSize', form.teamMaxSize)
+      }
       if (form.startDate) fd.append('startDate', form.startDate)
       if (form.endDate) fd.append('endDate', form.endDate)
       if (posterFile) fd.append('poster', posterFile)
@@ -173,6 +185,40 @@ function CreateForm() {
                 <option value="VIDEO_GAMES">Jeux vidéo</option>
                 <option value="SPORTS">Sports</option>
                 <option value="BOARD_GAMES">Jeux de société</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Mode</label>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <label><input type="radio" name="isTeamBased" value="solo" checked={form.isTeamBased === 'solo'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} /> Solo</label>
+                <label><input type="radio" name="isTeamBased" value="team" checked={form.isTeamBased === 'team'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} /> Équipe</label>
+              </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="maxParticipants">Nombre de participants</label>
+              <input id="maxParticipants" name="maxParticipants" className="form-input" type="number" min="2" placeholder="ex: 16" value={form.maxParticipants} onChange={(e) => setForm(p => ({ ...p, maxParticipants: e.target.value }))} />
+            </div>
+
+            {form.isTeamBased === 'team' && (
+              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="teamMinSize">Taille min. par équipe</label>
+                  <input id="teamMinSize" className="form-input" type="number" min="1" value={form.teamMinSize} onChange={(e) => setForm(p => ({ ...p, teamMinSize: e.target.value }))} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label" htmlFor="teamMaxSize">Taille max. par équipe</label>
+                  <input id="teamMaxSize" className="form-input" type="number" min="1" value={form.teamMaxSize} onChange={(e) => setForm(p => ({ ...p, teamMaxSize: e.target.value }))} />
+                </div>
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="kind">Type de tournoi</label>
+              <select id="kind" name="kind" className="form-input" value={form.kind} onChange={(e) => setForm(p => ({ ...p, kind: e.target.value }))}>
+                <option value="PERSONAL">Particulier</option>
+                <option value="PROFESSIONAL" disabled>Professionnel (bientôt)</option>
               </select>
             </div>
 

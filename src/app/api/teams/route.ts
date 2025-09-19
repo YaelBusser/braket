@@ -23,6 +23,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'L’organisateur ne peut pas créer d’équipe' }, { status: 403 })
     }
 
+    // exiger inscription préalable au tournoi
+    const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId, userId } } })
+    if (!reg) {
+      return NextResponse.json({ message: 'Inscrivez-vous au tournoi avant de créer une équipe' }, { status: 403 })
+    }
+
     const team = await prisma.team.create({
       data: {
         name,

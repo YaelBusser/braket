@@ -88,6 +88,9 @@ export default function Home() {
                         <div className="text-muted" style={{ marginTop: 4 }}>{(t.game || '—') + ' · ' + t.format}</div>
                       </div>
                     </div>
+                    {t.maxParticipants && t._count?.registrations >= t.maxParticipants ? (
+                      <span className="text-muted" style={{ marginRight: 12 }}>Complet</span>
+                    ) : null}
                     <Link className="btn btn-outline" href={`/tournaments/${t.id}`}>Voir</Link>
                   </li>
                 ))}

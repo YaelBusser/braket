@@ -49,6 +49,14 @@ function LoginPage() {
       })
 
       if (result?.ok) {
+        try {
+          const redirect = localStorage.getItem('lt_returnTo')
+          if (redirect) {
+            localStorage.removeItem('lt_returnTo')
+            router.push(redirect)
+            return
+          }
+        } catch {}
         router.push('/profile')
       } else {
         setErrors({ general: 'Email ou mot de passe incorrect' })

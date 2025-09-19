@@ -29,6 +29,7 @@ model User {
   // Relations
   tournaments   Tournament[] @relation("OrganizerTournaments")
   teamMembers   TeamMember[]
+  registrations TournamentRegistration[]
 
   @@map("users")
 }
@@ -60,6 +61,11 @@ enum TournamentCategory {
   BOARD_GAMES
 }
 
+enum TournamentKind {
+  PERSONAL
+  PROFESSIONAL
+}
+
 // ==========================
 // New Models
 // ==========================
@@ -68,11 +74,16 @@ model Tournament {
   id           String               @id @default(cuid())
   name         String
   description  String?
-  game         String
+  game         String?
   format       TournamentFormat     @default(SINGLE_ELIMINATION)
   visibility   TournamentVisibility @default(PUBLIC)
   category     TournamentCategory   @default(VIDEO_GAMES)
   posterUrl    String?
+  isTeamBased  Boolean              @default(false)
+  maxParticipants Int?
+  kind         TournamentKind       @default(PERSONAL)
+  teamMinSize  Int?
+  teamMaxSize  Int?
   startDate    DateTime?
   endDate      DateTime?
   organizerId  String
@@ -82,6 +93,7 @@ model Tournament {
 
   teams        Team[]
   matches      Match[]
+  registrations TournamentRegistration[]
 
   @@map("tournaments")
 }
@@ -133,6 +145,19 @@ model Match {
   winnerTeam    Team?       @relation("WinnerTeam", fields: [winnerTeamId], references: [id])
 
   @@map("matches")
+}
+
+model TournamentRegistration {
+  id           String   @id @default(cuid())
+  tournamentId String
+  userId       String
+  createdAt    DateTime @default(now())
+
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, userId])
+  @@map("tournament_registrations")
 }
 
 model Account {

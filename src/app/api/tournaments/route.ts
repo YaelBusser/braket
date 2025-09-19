@@ -50,6 +50,13 @@ export async function POST(request: NextRequest) {
         await fsp.writeFile(filePath, buf)
         posterUrl = `/uploads/posters/${fileName}`
       }
+      // options
+      const isTeamBasedStr = form.get('isTeamBased') as string | null
+      const maxParticipantsStr = form.get('maxParticipants') as string | null
+      const kindStr = form.get('kind') as string | null
+      if (isTeamBasedStr) (global as any).__tmp_isTeamBased = isTeamBasedStr === 'true'
+      if (maxParticipantsStr) (global as any).__tmp_maxParticipants = parseInt(maxParticipantsStr)
+      if (kindStr) (global as any).__tmp_kind = kindStr
     } else {
       const body = await request.json()
       name = body?.name
@@ -60,6 +67,9 @@ export async function POST(request: NextRequest) {
       category = body?.category || 'VIDEO_GAMES'
       startDate = body?.startDate
       endDate = body?.endDate
+      ;(global as any).__tmp_isTeamBased = body?.isTeamBased === true
+      ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? parseInt(body.maxParticipants) : undefined
+      ;(global as any).__tmp_kind = body?.kind || 'PERSONAL'
     }
 
     if (!name) {
@@ -91,6 +101,9 @@ export async function POST(request: NextRequest) {
         visibility: safeVisibility,
         category: safeCategory,
         posterUrl: posterUrl || null,
+        isTeamBased: Boolean((global as any).__tmp_isTeamBased),
+        maxParticipants: (global as any).__tmp_maxParticipants || null,
+        kind: ((global as any).__tmp_kind as any) || 'PERSONAL',
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         organizerId: userId,
@@ -152,10 +165,14 @@ export async function GET(request: NextRequest) {
         visibility: true,
         category: true,
         posterUrl: true,
+        isTeamBased: true,
+        maxParticipants: true,
+        kind: true,
         startDate: true,
         endDate: true,
         organizerId: true,
         createdAt: true,
+        _count: { select: { registrations: true } }
       },
     })
 

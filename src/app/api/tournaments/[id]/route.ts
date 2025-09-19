@@ -8,11 +8,12 @@ import path from 'path'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const tournament = await prisma.tournament.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         organizer: { select: { pseudo: true } },
         teams: {
@@ -21,6 +22,8 @@ export async function GET(
           },
         },
         matches: true,
+        _count: { select: { registrations: true } },
+        registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
       },
     })
 
@@ -37,14 +40,15 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const existing = await prisma.tournament.findUnique({ where: { id: params.id } })
+    const existing = await prisma.tournament.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
     if (existing.organizerId !== userId) {
       return NextResponse.json({ message: 'Interdit' }, { status: 403 })
@@ -54,7 +58,7 @@ export async function PATCH(
     const { name, description, game, format, visibility, startDate, endDate } = body || {}
 
     const updated = await prisma.tournament.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description } : {}),
@@ -75,14 +79,15 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const existing = await prisma.tournament.findUnique({ where: { id: params.id } })
+    const existing = await prisma.tournament.findUnique({ where: { id } })
     if (!existing) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
     if (existing.organizerId !== userId) return NextResponse.json({ message: 'Interdit' }, { status: 403 })
 
@@ -94,11 +99,12 @@ export async function DELETE(
       } catch {}
     }
 
-    await prisma.match.deleteMany({ where: { tournamentId: params.id } })
-    const teams = await prisma.team.findMany({ where: { tournamentId: params.id } })
+    await prisma.match.deleteMany({ where: { tournamentId: id } })
+    const teams = await prisma.team.findMany({ where: { tournamentId: id } })
     await prisma.teamMember.deleteMany({ where: { teamId: { in: teams.map(t => t.id) } } })
-    await prisma.team.deleteMany({ where: { tournamentId: params.id } })
-    await prisma.tournament.delete({ where: { id: params.id } })
+    await prisma.team.deleteMany({ where: { tournamentId: id } })
+    await prisma.tournamentRegistration.deleteMany({ where: { tournamentId: id } })
+    await prisma.tournament.delete({ where: { id } })
 
     return NextResponse.json({ message: 'Tournoi supprimé' })
   } catch (error) {

@@ -377,20 +377,55 @@ function MyTournaments() {
     )
   }
 
+  const now = new Date()
+  const ongoing = items.filter(t => !t.endDate || new Date(t.endDate) >= now)
+  const finished = items.filter(t => t.endDate && new Date(t.endDate) < now)
+
   return (
-    <ul style={{ display: 'grid', gap: 12 }}>
-      {items.map(t => (
-        <li key={t.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <strong>{t.name}</strong>
-            <div className="text-muted" style={{ marginTop: 4 }}>{t.game} · {t.format} · {t.visibility}</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-outline" onClick={() => router.push(`/tournaments/${t.id}`)}>Ouvrir</button>
-            <button className="btn btn-secondary" onClick={() => router.push(`/tournaments/${t.id}/admin`)}>Gérer</button>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <div style={{ display: 'grid', gap: 16 }}>
+      <div>
+        <h3 style={{ marginBottom: 8 }}>En cours</h3>
+        {ongoing.length === 0 ? (
+          <div className="text-muted">Aucun tournoi en cours.</div>
+        ) : (
+          <ul style={{ display: 'grid', gap: 12 }}>
+            {ongoing.map(t => (
+              <li key={t.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong>{t.name}</strong>
+                  <div className="text-muted" style={{ marginTop: 4 }}>{t.game} · {t.format} · {t.visibility}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-outline" onClick={() => router.push(`/tournaments/${t.id}`)}>Ouvrir</button>
+                  <button className="btn btn-secondary" onClick={() => router.push(`/tournaments/${t.id}/admin`)}>Gérer</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <h3 style={{ marginBottom: 8 }}>Terminés</h3>
+        {finished.length === 0 ? (
+          <div className="text-muted">Aucun tournoi terminé.</div>
+        ) : (
+          <ul style={{ display: 'grid', gap: 12 }}>
+            {finished.map(t => (
+              <li key={t.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <strong>{t.name}</strong>
+                  <div className="text-muted" style={{ marginTop: 4 }}>{t.game} · {t.format} · {t.visibility}</div>
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn btn-outline" onClick={() => router.push(`/tournaments/${t.id}`)}>Voir</button>
+                  <button className="btn btn-secondary" onClick={() => router.push(`/tournaments/${t.id}/admin`)}>Gérer</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
   )
 }

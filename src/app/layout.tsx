@@ -4,6 +4,7 @@ import "./globals.css";
 import AuthProvider from "../components/providers/auth-provider";
 import Navigation from "../components/Navigation";
 import { CategoryProvider } from "../components/providers/category-provider";
+import { NotificationProvider } from "../components/providers/notification-provider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,10 +32,12 @@ export default function RootLayout({
     <html lang="fr">
       <body className={inter.variable}>
         <AuthProvider>
-          <CategoryProvider>
-            <Navigation />
-            {children}
-          </CategoryProvider>
+          <NotificationProvider>
+            <CategoryProvider>
+              <Navigation />
+              {children}
+            </CategoryProvider>
+          </NotificationProvider>
         </AuthProvider>
       </body>
     </html>
