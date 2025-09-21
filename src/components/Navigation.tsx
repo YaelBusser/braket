@@ -21,6 +21,8 @@ export default function Navigation() {
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
     setSelectedCategory(value)
+    // Flag pour indiquer que le changement vient du header → rechargement sans animation de l'accueil
+    try { localStorage.setItem('lt_category_change_source', 'header') } catch {}
     setCategory(value as any)
     if (pathname !== '/') {
       window.location.href = '/'
@@ -46,7 +48,8 @@ export default function Navigation() {
             <div className={styles.loading}>Chargement...</div>
           ) : session ? (
             <div className={styles.userMenu}>
-              <Link href="/tournaments" className={styles.profileLink}>Tournois</Link>
+              <Link href="/games" className={styles.navLink}>Jeux</Link>
+              <Link href="/tournaments" className={styles.navLink}>Tournois</Link>
               <Link href="/profile" className={styles.profileLink}>
                 {session.user?.image ? (
                   <span className={styles.profileAvatar}>

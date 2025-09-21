@@ -66,6 +66,13 @@ enum TournamentKind {
   PROFESSIONAL
 }
 
+enum TournamentStatus {
+  DRAFT
+  REG_OPEN
+  IN_PROGRESS
+  COMPLETED
+}
+
 // ==========================
 // New Models
 // ==========================
@@ -86,6 +93,8 @@ model Tournament {
   teamMaxSize  Int?
   startDate    DateTime?
   endDate      DateTime?
+  registrationDeadline DateTime?
+  status       TournamentStatus     @default(REG_OPEN)
   organizerId  String
   organizer    User                 @relation("OrganizerTournaments", fields: [organizerId], references: [id], onDelete: Cascade)
   createdAt    DateTime             @default(now())

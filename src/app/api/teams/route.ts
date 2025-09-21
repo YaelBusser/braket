@@ -15,8 +15,34 @@ export async function POST(request: NextRequest) {
     }
 
     // vérifier tournoi
-    const tournament = await prisma.tournament.findUnique({ where: { id: tournamentId } })
+    const tournament = await prisma.tournament.findUnique({ 
+      where: { id: tournamentId },
+      select: { 
+        id: true, 
+        status: true, 
+        registrationDeadline: true, 
+        endDate: true, 
+        organizerId: true,
+        teamMinSize: true,
+        teamMaxSize: true
+      }
+    })
     if (!tournament) return NextResponse.json({ message: 'Tournoi introuvable' }, { status: 404 })
+
+    // inscriptions seules si statut ouvert
+    if (tournament.status !== 'REG_OPEN') {
+      return NextResponse.json({ message: 'Création d\'équipe impossible: inscriptions fermées' }, { status: 400 })
+    }
+
+    // Vérifier deadline d'inscription
+    if (tournament.registrationDeadline && tournament.registrationDeadline < new Date()) {
+      return NextResponse.json({ message: 'Création d\'équipe impossible: deadline d\'inscription dépassée' }, { status: 400 })
+    }
+
+    // Vérifier que le tournoi n'est pas terminé
+    if (tournament.endDate && tournament.endDate < new Date()) {
+      return NextResponse.json({ message: 'Création d\'équipe impossible: tournoi terminé' }, { status: 400 })
+    }
 
     // l'organisateur ne peut pas créer/rejoindre d'équipe
     if (tournament.organizerId === userId) {
@@ -27,6 +53,15 @@ export async function POST(request: NextRequest) {
     const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId, userId } } })
     if (!reg) {
       return NextResponse.json({ message: 'Inscrivez-vous au tournoi avant de créer une équipe' }, { status: 403 })
+    }
+
+    // un utilisateur ne peut appartenir qu'à UNE équipe pour ce tournoi
+    const alreadyInTournament = await prisma.teamMember.findFirst({
+      where: { userId, team: { tournamentId } },
+      include: { team: true }
+    })
+    if (alreadyInTournament) {
+      return NextResponse.json({ message: 'Vous faites déjà partie d\'une équipe de ce tournoi' }, { status: 400 })
     }
 
     const team = await prisma.team.create({

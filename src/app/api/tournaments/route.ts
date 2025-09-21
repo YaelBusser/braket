@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
     let startDate: string | undefined
     let endDate: string | undefined
     let posterUrl: string | undefined
+    let registrationDeadline: string | undefined
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData()
@@ -57,6 +58,8 @@ export async function POST(request: NextRequest) {
       if (isTeamBasedStr) (global as any).__tmp_isTeamBased = isTeamBasedStr === 'true'
       if (maxParticipantsStr) (global as any).__tmp_maxParticipants = parseInt(maxParticipantsStr)
       if (kindStr) (global as any).__tmp_kind = kindStr
+      const regDL = form.get('registrationDeadline') as string | null
+      if (regDL) registrationDeadline = regDL
     } else {
       const body = await request.json()
       name = body?.name
@@ -70,30 +73,42 @@ export async function POST(request: NextRequest) {
       ;(global as any).__tmp_isTeamBased = body?.isTeamBased === true
       ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? parseInt(body.maxParticipants) : undefined
       ;(global as any).__tmp_kind = body?.kind || 'PERSONAL'
+      registrationDeadline = body?.registrationDeadline
     }
 
     if (!name) {
       return NextResponse.json({ message: 'Nom requis' }, { status: 400 })
     }
 
-    // Bloquer création si un tournoi "en cours" existe pour cet organisateur
-    const ongoing = await prisma.tournament.findFirst({
-      where: { organizerId: userId, endDate: null },
-      select: { id: true }
+    // Vérifier la limite de 10 tournois actifs (non terminés)
+    const activeTournaments = await prisma.tournament.count({
+      where: { 
+        organizerId: userId, 
+        status: { not: 'COMPLETED' }
+      }
     })
-    if (ongoing) {
-      return NextResponse.json({ message: 'Vous avez déjà un tournoi en cours' }, { status: 409 })
+    if (activeTournaments >= 10) {
+      return NextResponse.json({ 
+        message: 'Limite atteinte : vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' 
+      }, { status: 409 })
+    }
+
+    // Vérifier que l'utilisateur existe (évite P2003 si session périmée)
+    const existingUser = await prisma.user.findUnique({ where: { id: userId } })
+    if (!existingUser) {
+      return NextResponse.json({ message: 'Session expirée. Veuillez vous reconnecter.' }, { status: 401 })
     }
 
     // Coercion des enums (MVP: toujours SINGLE_ELIMINATION + PUBLIC)
     const safeFormat = 'SINGLE_ELIMINATION'
     const safeVisibility = visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC'
-    const safeCategory = ['VIDEO_GAMES', 'SPORTS', 'BOARD_GAMES'].includes(category!)
-      ? category
-      : 'VIDEO_GAMES'
+    const safeCategory = (['VIDEO_GAMES', 'SPORTS', 'BOARD_GAMES'].includes(String(category))
+      ? (category as any)
+      : 'VIDEO_GAMES') as any
 
-    const tournament = await prisma.tournament.create({
-      data: {
+    try {
+      const tournament = await prisma.tournament.create({
+        data: {
         name: name!,
         description: description || null,
         game: game || null,
@@ -107,10 +122,17 @@ export async function POST(request: NextRequest) {
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         organizerId: userId,
-      },
-    })
-
-    return NextResponse.json({ tournament }, { status: 201 })
+        ...(true ? ({ status: 'REG_OPEN' } as any) : {}),
+        registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null,
+        },
+      })
+      return NextResponse.json({ tournament }, { status: 201 })
+    } catch (e: any) {
+      if (e?.code === 'P2003') {
+        return NextResponse.json({ message: 'Votre session n’est plus valide. Reconnectez‑vous.' }, { status: 401 })
+      }
+      throw e
+    }
   } catch (error: any) {
     console.error('Create tournament error:', error)
     return NextResponse.json({ message: error?.message || 'Erreur serveur' }, { status: 500 })
@@ -125,6 +147,7 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get('q') || undefined
     const game = searchParams.get('game') || undefined
     const sort = searchParams.get('sort') || 'created_desc'
+    const statusFilter = searchParams.get('status') || undefined
     const startMin = searchParams.get('startMin') || undefined
     const startMax = searchParams.get('startMax') || undefined
     const session = await getServerSession(authOptions)
@@ -140,23 +163,31 @@ export async function GET(request: NextRequest) {
       where.visibility = 'PUBLIC'
     }
     if (category) where.category = category
-    if (q) where.OR = [{ name: { contains: q } }, { game: { contains: q } }]
-    if (game) where.game = { contains: game }
+    if (q) {
+      where.OR = [{ name: { contains: q } }, { game: { contains: q } }]
+    }
+    if (game) {
+      where.game = { contains: game }
+    }
+    if (statusFilter && ['REG_OPEN','IN_PROGRESS','COMPLETED','DRAFT'].includes(statusFilter)) {
+      where.status = statusFilter
+    }
     if (startMin || startMax) {
       where.startDate = {}
       if (startMin) where.startDate.gte = new Date(startMin)
       if (startMax) where.startDate.lte = new Date(startMax)
     }
 
-    const orderBy =
+    const orderBy: any =
       sort === 'start_asc' ? { startDate: 'asc' } :
       sort === 'start_desc' ? { startDate: 'desc' } :
       { createdAt: 'desc' }
 
+
     const tournaments = await prisma.tournament.findMany({
       where,
       orderBy,
-      select: {
+      select: ({
         id: true,
         name: true,
         description: true,
@@ -170,10 +201,12 @@ export async function GET(request: NextRequest) {
         kind: true,
         startDate: true,
         endDate: true,
+        status: true,
+        registrationDeadline: true,
         organizerId: true,
         createdAt: true,
         _count: { select: { registrations: true } }
-      },
+      } as any),
     })
 
     return NextResponse.json({ tournaments })

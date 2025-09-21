@@ -39,17 +39,23 @@ function TournamentsList() {
       ) : items.length === 0 ? (
         <div className="text-muted">Aucun tournoi public</div>
       ) : (
-        <ul style={{ display: 'grid', gap: 12 }}>
-          {items.map(t => (
-            <li key={t.id} style={{ border: '1px solid #eee', borderRadius: 8, padding: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong>{t.name}</strong>
-                <div className="text-muted" style={{ marginTop: 4 }}>{t.game} · {t.format} · {t.visibility}</div>
-              </div>
-              <Link className="btn btn-outline" href={`/tournaments/${t.id}`}>Voir</Link>
-            </li>
-          ))}
-        </ul>
+        <div className="surface" style={{ padding: 12 }}>
+          <ul className="list">
+            {items.map(t => (
+              <li key={t.id} className="row">
+                {t.posterUrl ? (<img className="rowPoster" src={t.posterUrl} alt="" />) : (<div className="rowPoster" style={{ background: 'rgba(255,255,255,0.06)' }} />)}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <strong>{t.name}</strong>
+                    {(t as any).status && (<span className="chip">{(t as any).status}</span>)}
+                  </div>
+                  <div className="text-muted">{t.game} · {t.format} · {t.visibility}</div>
+                </div>
+                <Link className="btn btn-outline" href={`/tournaments/${t.id}`}>Voir</Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   )

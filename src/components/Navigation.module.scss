@@ -1,8 +1,8 @@
 @use '../styles/variables.module' as vars;
 
 .nav {
-  background: var(--nav-bg, #{vars.$white});
-  border-bottom: 1px solid vars.$border-light;
+  background: vars.$lt-dark-bg;
+  border-bottom: 1px solid vars.$lt-border;
   box-shadow: vars.$shadow-sm;
   position: sticky;
   top: 0;
@@ -21,11 +21,11 @@
 .logo {
   font-size: vars.$font-size-xl;
   font-weight: vars.$font-weight-bold;
-  color: vars.$primary;
+  color: vars.$lt-accent-blue;
   text-decoration: none;
   
   &:hover {
-    color: vars.$primary-hover;
+    color: vars.$lt-accent-purple;
   }
 }
 
@@ -35,16 +35,38 @@
   gap: vars.$spacing-4;
 }
 
+.navLink {
+  color: vars.$lt-text-secondary;
+  text-decoration: none;
+  font-weight: vars.$font-weight-medium;
+  padding: vars.$spacing-2 vars.$spacing-3;
+  border-radius: vars.$radius-md;
+  transition: all vars.$transition-fast;
+  
+  &:hover {
+    color: vars.$lt-text-primary;
+    background: rgba(255, 255, 255, 0.05);
+  }
+}
+
 .categorySelect {
   appearance: none;
-  background: vars.$bg-secondary;
-  border: 1px solid vars.$border-light;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
   border-radius: vars.$radius-md;
-  padding: 6px 10px;
+  padding: vars.$spacing-2 vars.$spacing-3;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  cursor: pointer;
+  
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-blue;
+  }
 }
 
 .loading {
-  color: vars.$text-muted;
+  color: vars.$lt-text-muted;
   font-size: vars.$font-size-sm;
 }
 
@@ -55,14 +77,14 @@
 }
 
 .profileLink {
-  color: vars.$text-primary;
+  color: vars.$lt-text-primary;
   text-decoration: none;
   font-weight: vars.$font-weight-medium;
   display: inline-flex;
   align-items: center;
   
   &:hover {
-    color: vars.$primary;
+    color: vars.$lt-accent-blue;
   }
 }
 
@@ -75,8 +97,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: vars.$bg-secondary;
-  color: vars.$text-primary;
+  background: vars.$lt-dark-secondary;
+  color: vars.$lt-text-primary;
   font-weight: vars.$font-weight-bold;
 }
 
@@ -84,6 +106,13 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.profileName {
+  margin-left: vars.$spacing-2;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
 }
 
 .authMenu {
@@ -105,12 +134,28 @@
   .authMenu {
     gap: vars.$spacing-2;
   }
+  
+  .profileName {
+    display: none;
+  }
 }
 
-
-.profileName {
-  font-size: vars.$font-size-sm;
-  font-weight: vars.$font-weight-medium;
-  color: vars.$text-primary;
-  margin-left: vars.$spacing-2;
+@media (max-width: vars.$breakpoint-sm) {
+  .container {
+    padding: vars.$spacing-2 vars.$spacing-3;
+  }
+  
+  .menu {
+    gap: vars.$spacing-1;
+  }
+  
+  .navLink {
+    padding: vars.$spacing-1 vars.$spacing-2;
+    font-size: vars.$font-size-sm;
+  }
+  
+  .categorySelect {
+    padding: vars.$spacing-1 vars.$spacing-2;
+    font-size: vars.$font-size-xs;
+  }
 }

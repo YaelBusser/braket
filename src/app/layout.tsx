@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "../components/providers/auth-provider";
 import Navigation from "../components/Navigation";
+import Footer from "../components/Footer";
 import { CategoryProvider } from "../components/providers/category-provider";
 import { NotificationProvider } from "../components/providers/notification-provider";
 
@@ -34,8 +35,13 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <CategoryProvider>
-              <Navigation />
-              {children}
+              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navigation />
+                <main style={{ flex: 1 }}>
+                  {children}
+                </main>
+                <Footer />
+              </div>
             </CategoryProvider>
           </NotificationProvider>
         </AuthProvider>

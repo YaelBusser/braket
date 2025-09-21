@@ -27,8 +27,8 @@ body {
   font-size: vars.$font-size-base;
   font-weight: vars.$font-weight-normal;
   line-height: vars.$line-height-normal;
-  color: vars.$text-primary;
-  background-color: vars.$bg-primary;
+  color: vars.$lt-text-primary;
+  background-color: vars.$lt-dark-bg;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -37,7 +37,7 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-weight: vars.$font-weight-semibold;
   line-height: vars.$line-height-tight;
-  color: vars.$text-primary;
+  color: vars.$lt-text-primary;
   margin: 0;
 }
 
@@ -101,19 +101,19 @@ p {
 }
 
 a {
-  color: vars.$primary;
+  color: vars.$lt-accent-blue;
   text-decoration: none;
   transition: color vars.$transition-fast;
   
   &:hover {
-    color: vars.$primary-hover;
+    color: vars.$lt-accent-purple;
   }
   
   &:focus {
     outline: none;
   }
   &:focus-visible {
-    outline: 2px solid vars.$primary;
+    outline: 2px solid vars.$lt-accent-blue;
     outline-offset: 2px;
   }
 }
@@ -182,6 +182,10 @@ button {
   }
 }
 
+// Notifications (keyframes)
+@keyframes lt_toast_in { from { opacity: 0; transform: translate(calc(var(--lt-toast-x, 0px)), 8px) } to { opacity: 1; transform: translate(0, 0) } }
+@keyframes lt_toast_out { from { opacity: 1; transform: translate(0, 0) } to { opacity: 0; transform: translate(calc(var(--lt-toast-x, 0px)), 8px) } }
+
 // Utility classes
 .container {
   width: 100%;
@@ -197,6 +201,29 @@ button {
     padding: 0 vars.$spacing-8;
   }
 }
+
+// Surfaces & list rows inspirées plateformes e-sport
+.surface {
+  background: linear-gradient(180deg, rgba(17,24,39,0.9), rgba(17,24,39,0.75));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.list {
+  display: grid;
+  gap: 8px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.row:hover { background: rgba(255,255,255,0.04); }
+.rowPoster { width: 56px; height: 40px; border-radius: 6px; object-fit: cover; }
+.chip { background: #111827; color: #fff; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
 
 .sr-only {
   position: absolute;
@@ -311,23 +338,23 @@ button {
 
 // Color utilities
 .text-primary {
-  color: vars.$text-primary;
+  color: vars.$lt-text-primary;
 }
 
 .text-secondary {
-  color: vars.$text-secondary;
+  color: vars.$lt-text-secondary;
 }
 
 .text-muted {
-  color: vars.$text-muted;
+  color: vars.$lt-text-muted;
 }
 
 .bg-primary {
-  background-color: vars.$bg-primary;
+  background-color: vars.$lt-dark-bg;
 }
 
 .bg-secondary {
-  background-color: vars.$bg-secondary;
+  background-color: vars.$lt-dark-secondary;
 }
 
 // Animation utilities

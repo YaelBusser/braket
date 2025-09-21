@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get('q') || ''
     const page = parseInt(searchParams.get('page') || '1')
-    const pageSize = parseInt(searchParams.get('page_size') || '20')
+    const pageSize = parseInt(searchParams.get('page_size') || '10')
     
     if (!query || query.trim().length < 2) {
       return NextResponse.json({ games: [], hasMore: false })
@@ -27,11 +27,16 @@ export async function GET(request: NextRequest) {
       'VALORANT': 'Valorant',
       'Mobile Legends: Bang Bang': 'Mobile Legends',
       'Free Fire': 'Garena Free Fire',
-      'PUBG Mobile': 'PUBG Mobile'
+      'PUBG Mobile': 'PUBG Mobile',
+      'gta': 'Grand Theft Auto',
+      'fifa': 'FIFA',
+      'lol': 'League of Legends',
+      'cs': 'Counter-Strike',
+      'valorant': 'Valorant'
     }
     
-    if (gameMappings[searchQuery]) {
-      searchQuery = gameMappings[searchQuery]
+    if (gameMappings[searchQuery.toLowerCase()]) {
+      searchQuery = gameMappings[searchQuery.toLowerCase()]
     }
     
     const url = `https://api.rawg.io/api/games?key=${apiKey}&search=${encodeURIComponent(searchQuery)}&page=${page}&page_size=${pageSize}`
@@ -49,16 +54,15 @@ export async function GET(request: NextRequest) {
       description_raw: g.description_raw,
       genres: g.genres || [],
       platforms: g.platforms || [],
-      metacritic: g.metacritic
+      metacritic: g.metacritic,
+      slug: g.slug
     }))
     
     const hasMore = data.next ? true : false
     
     return NextResponse.json({ games, hasMore, total: data.count || 0 })
   } catch (error) {
-    console.error('Games search error:', error)
+    console.error('Global games search error:', error)
     return NextResponse.json({ games: [], hasMore: false }, { status: 500 })
   }
 }
-
-

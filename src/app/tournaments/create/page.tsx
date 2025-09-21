@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
+import { useNotification } from '../../../components/providers/notification-provider'
 
 export default function CreateTournamentPage() {
   return (
@@ -14,6 +15,7 @@ export default function CreateTournamentPage() {
 
 function CreateForm() {
   const router = useRouter()
+  const { notify } = useNotification()
   const [isLoading, setIsLoading] = useState(false)
   const [form, setForm] = useState({
     name: '',
@@ -78,7 +80,7 @@ function CreateForm() {
     e.preventDefault()
     if (form.category === 'VIDEO_GAMES') {
       if (!selectedGameId || selectedGameName !== gameQuery) {
-        alert('Veuillez choisir un jeu parmi les résultats de recherche')
+        notify({ type: 'error', message: '❌ Veuillez choisir un jeu parmi les résultats de recherche' })
         return
       }
     }
@@ -106,15 +108,18 @@ function CreateForm() {
       if (!res.ok) {
         const data = await res.json().catch(() => ({} as any))
         if (res.status === 409) {
-          alert('Vous avez déjà un tournoi en cours. Terminez-le ou supprimez-le avant d\'en créer un nouveau.')
+          notify({ type: 'error', message: '⚠️ Limite atteinte ! Vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' })
           return
         }
         throw new Error(data.message || 'Erreur à la création')
       }
       const data = await res.json()
-      router.push(`/tournaments/${data.tournament.id}`)
+      notify({ type: 'success', message: '🎉 Tournoi créé avec succès ! Redirection vers votre tournoi...' })
+      setTimeout(() => {
+        router.push(`/tournaments/${data.tournament.id}`)
+      }, 1500)
     } catch (err) {
-      alert((err as Error).message)
+      notify({ type: 'error', message: `❌ ${(err as Error).message}` })
     } finally {
       setIsLoading(false)
     }

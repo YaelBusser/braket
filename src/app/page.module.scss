@@ -2,13 +2,11 @@
 
 .hero {
   min-height: 100vh;
-  background:
-    radial-gradient(1200px 400px at 10% 0%, rgba(255,255,255,0.35), transparent 60%),
-    radial-gradient(1200px 400px at 90% 0%, rgba(255,255,255,0.35), transparent 60%),
-    linear-gradient(135deg, vars.$primary-50 0%, vars.$white 100%);
+  background: vars.$gradient-dark;
   display: flex;
-  align-items: center;
-  padding: vars.$spacing-8 0;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 0 vars.$spacing-8;
 }
 
 .heroContent {
@@ -21,7 +19,7 @@
   font-size: vars.$font-size-4xl;
   font-weight: vars.$font-weight-bold;
   line-height: vars.$line-height-tight;
-  color: vars.$text-primary;
+  color: vars.$lt-text-primary;
   margin-bottom: vars.$spacing-6;
   
   @media (min-width: vars.$breakpoint-md) {
@@ -34,7 +32,7 @@
 }
 
 .heroAccent {
-  background: linear-gradient(135deg, vars.$primary 0%, vars.$accent 100%);
+  background: vars.$gradient-primary;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -43,7 +41,7 @@
 .heroDescription {
   font-size: vars.$font-size-lg;
   line-height: vars.$line-height-relaxed;
-  color: vars.$text-secondary;
+  color: vars.$lt-text-secondary;
   margin-bottom: vars.$spacing-8;
   max-width: 600px;
   margin-left: auto;
@@ -110,3 +108,437 @@
 .tTitle { font-size: vars.$font-size-lg; margin: 0 0 4px; }
 .tSub { color: vars.$text-secondary; margin: 0; }
 .tActions { padding: vars.$spacing-4; display: flex; justify-content: flex-end; }
+
+/* --- PANELS --- */
+.panels {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  transition: height 300ms ease;
+}
+
+/* Désactiver l'animation lors d'un rafraîchissement forcé */
+.panels[data-animated='0'] .panel { transition: none; }
+
+.panel {
+  flex: 1 1 0;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: flex-basis 450ms ease, transform 450ms ease, box-shadow 250ms ease, filter 250ms ease;
+  will-change: flex-basis, transform;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+}
+
+.panel:hover { transform: translateY(-2px); }
+
+.panelVideo { background: linear-gradient(135deg, #0f172a, #1e40af); }
+.panelSports { background: linear-gradient(135deg, #064e3b, #10b981); }
+.panelBoard { background: linear-gradient(135deg, #6d28d9, #f59e0b); }
+
+.panelTitle {
+  font-size: 28px;
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+.panelContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 18px;
+  background:
+    radial-gradient(600px 240px at 20% 20%, rgba(255,255,255,0.14), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,0) 20%, rgba(0,0,0,0.25) 65%, rgba(0,0,0,0.45) 100%);
+  overflow: auto;
+}
+
+.panelScrollable {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+}
+
+/* État actif: prendre plus de place */
+.panels[data-active='VIDEO_GAMES'] .panelVideo,
+.panels[data-active='SPORTS'] .panelSports,
+.panels[data-active='BOARD_GAMES'] .panelBoard {
+  flex-basis: 92%;
+}
+
+.panels[data-active='VIDEO_GAMES'] .panelSports,
+.panels[data-active='VIDEO_GAMES'] .panelBoard,
+.panels[data-active='SPORTS'] .panelVideo,
+.panels[data-active='SPORTS'] .panelBoard,
+.panels[data-active='BOARD_GAMES'] .panelVideo,
+.panels[data-active='BOARD_GAMES'] .panelSports {
+  flex-basis: 4%;
+}
+
+@media (max-width: 900px) {
+  .panels { height: 90vh; }
+  .panels[data-active='VIDEO_GAMES'] .panelVideo,
+  .panels[data-active='SPORTS'] .panelSports,
+  .panels[data-active='BOARD_GAMES'] .panelBoard { flex-basis: 88%; }
+  .panels[data-active='VIDEO_GAMES'] .panelSports,
+  .panels[data-active='VIDEO_GAMES'] .panelBoard,
+  .panels[data-active='SPORTS'] .panelVideo,
+  .panels[data-active='SPORTS'] .panelBoard,
+  .panels[data-active='BOARD_GAMES'] .panelVideo,
+  .panels[data-active='BOARD_GAMES'] .panelSports { flex-basis: 6%; }
+  .panelTitle { font-size: 22px; }
+}
+
+/* --- POPULAR GAMES --- */
+.popularGames {
+  margin-bottom: vars.$spacing-16;
+}
+
+.popularGamesTitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin-bottom: vars.$spacing-6;
+  text-align: center;
+}
+
+.popularGamesGrid {
+  display: flex;
+  gap: vars.$spacing-4;
+  overflow-x: auto;
+  padding-bottom: vars.$spacing-4;
+  scrollbar-width: thin;
+  scrollbar-color: vars.$lt-border transparent;
+  padding-top: 1rem;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: vars.$lt-border;
+    border-radius: vars.$radius-full;
+  }
+}
+
+.popularGameCard {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  padding: vars.$spacing-4;
+  min-width: 200px;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all vars.$transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: vars.$shadow-hover;
+    border-color: vars.$lt-accent-blue;
+  }
+}
+
+.popularGameImage {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: vars.$radius-lg;
+  margin-bottom: vars.$spacing-3;
+}
+
+.popularGameName {
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin-bottom: vars.$spacing-2;
+  line-height: vars.$line-height-tight;
+}
+
+.popularGameGenre {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+  margin-bottom: vars.$spacing-3;
+}
+
+.popularGameRating {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-1;
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-accent-blue;
+  font-weight: vars.$font-weight-medium;
+}
+
+/* --- TOURNAMENTS --- */
+.tournaments {
+  margin-bottom: vars.$spacing-16;
+}
+
+.tournamentsHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-6;
+}
+
+.tournamentsTitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+}
+
+.tournamentTabs {
+  display: flex;
+  gap: vars.$spacing-2;
+  background: vars.$lt-dark-tertiary;
+  padding: vars.$spacing-1;
+  border-radius: vars.$radius-lg;
+}
+
+.tournamentTab {
+  padding: vars.$spacing-2 vars.$spacing-4;
+  border-radius: vars.$radius-md;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$lt-text-secondary;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  border: none;
+  background: transparent;
+
+  &:hover {
+    color: vars.$lt-text-primary;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &.active {
+    background: vars.$lt-accent-blue;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.tournamentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: vars.$spacing-6;
+}
+
+.tournamentCard {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  overflow: hidden;
+  transition: all vars.$transition-base;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: vars.$shadow-hover;
+    border-color: vars.$lt-accent-blue;
+  }
+}
+
+.tournamentBanner {
+  height: 120px;
+  background: vars.$gradient-primary;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tournamentTrophy {
+  font-size: 2rem;
+  color: vars.$lt-text-primary;
+}
+
+.tournamentContent {
+  padding: vars.$spacing-4;
+}
+
+.tournamentHeader {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  margin-bottom: vars.$spacing-3;
+}
+
+.tournamentAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: vars.$radius-full;
+  object-fit: cover;
+}
+
+.tournamentInfo {
+  flex: 1;
+}
+
+.tournamentTitle {
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin-bottom: vars.$spacing-1;
+}
+
+.tournamentGame {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+}
+
+.tournamentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-3;
+}
+
+.tournamentDate {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-muted;
+}
+
+.tournamentStatus {
+  padding: vars.$spacing-1 vars.$spacing-2;
+  border-radius: vars.$radius-full;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-medium;
+  background: vars.$lt-accent-blue;
+  color: vars.$lt-text-primary;
+}
+
+.tournamentParticipants {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+}
+
+/* Responsive Design */
+@media (max-width: vars.$breakpoint-lg) {
+  .hero {
+    min-height: 80vh;
+  }
+  
+  .heroContent {
+    margin: 0 auto vars.$spacing-12;
+  }
+  
+  .popularGamesGrid {
+    gap: vars.$spacing-3;
+  }
+  
+  .tournamentGrid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: vars.$spacing-4;
+  }
+}
+
+@media (max-width: vars.$breakpoint-md) {
+  .hero {
+    min-height: 70vh;
+    padding: 0 0 vars.$spacing-6;
+  }
+  
+  .heroContent {
+    margin: 0 auto vars.$spacing-8;
+  }
+  
+  .heroTitle {
+    font-size: vars.$font-size-3xl;
+  }
+  
+  .heroDescription {
+    font-size: vars.$font-size-base;
+  }
+  
+  .popularGamesGrid {
+    gap: vars.$spacing-2;
+  }
+  
+  .popularGameCard {
+    min-width: 160px;
+    height: 240px;
+  }
+  
+  .tournamentGrid {
+    grid-template-columns: 1fr;
+    gap: vars.$spacing-4;
+  }
+  
+  .tournamentsHeader {
+    flex-direction: column;
+    gap: vars.$spacing-4;
+    align-items: stretch;
+  }
+  
+  .tournamentTabs {
+    justify-content: center;
+  }
+}
+
+@media (max-width: vars.$breakpoint-sm) {
+  .hero {
+    min-height: 60vh;
+    padding: 0 0 vars.$spacing-4;
+  }
+  
+  .heroContent {
+    margin: 0 auto vars.$spacing-6;
+  }
+  
+  .heroTitle {
+    font-size: vars.$font-size-2xl;
+  }
+  
+  .heroDescription {
+    font-size: vars.$font-size-sm;
+  }
+  
+  .popularGamesGrid {
+    gap: vars.$spacing-1;
+  }
+  
+  .popularGameCard {
+    min-width: 140px;
+    height: 200px;
+    padding: vars.$spacing-3;
+  }
+  
+  .popularGameImage {
+    height: 100px;
+  }
+  
+  .popularGameName {
+    font-size: vars.$font-size-sm;
+  }
+  
+  .popularGameGenre {
+    font-size: vars.$font-size-xs;
+  }
+  
+  .tournamentCard {
+    margin: 0 vars.$spacing-2;
+  }
+}

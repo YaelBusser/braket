@@ -1,0 +1,171 @@
+.bracketContainer {
+  background: #1f2937;
+  border-radius: 12px;
+  border: 1px solid #374151;
+  padding: 1.5rem;
+  overflow-x: auto;
+  min-height: 400px;
+}
+
+.bracketContent {
+  display: flex;
+  gap: 2rem;
+  min-width: fit-content;
+  padding: 1rem 0;
+}
+
+.round {
+  display: flex;
+  flex-direction: column;
+  min-width: 280px;
+}
+
+.roundHeader {
+  background: #374151;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  border: 1px solid #4b5563;
+}
+
+.matchesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.matchBox {
+  background: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #fff;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+}
+
+.matchBox:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #4b5563;
+}
+
+.matchNumber {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.matchStatus {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.teamsContainer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.team.winner {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.teamName {
+  font-weight: 500;
+  color: #fff;
+}
+
+.team.winner .teamName {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.vs {
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  background: #4b5563;
+  border-radius: 4px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.winnerBadge {
+  background: #10b981;
+  color: #fff;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.emptyText {
+  color: #9ca3af;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+// Status styles
+.statusCompleted {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.statusScheduled {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.statusInProgress {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.statusPending {
+  border-color: #6b7280;
+  background: rgba(107, 114, 128, 0.05);
+}

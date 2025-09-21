@@ -34,6 +34,47 @@ export async function POST(request: NextRequest) {
       data: { winnerTeamId, status: 'COMPLETED' }
     })
 
+    // Tentative d'avancement: si un autre match du même round est déjà complété
+    // et qu'aucun match du round suivant n'existe avec ces vainqueurs, créer le match suivant
+    try {
+      const sibling = await prisma.match.findFirst({
+        where: {
+          tournamentId: updated.tournamentId,
+          round: updated.round,
+          status: 'COMPLETED',
+          NOT: { id: updated.id }
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+
+      if (sibling && sibling.winnerTeamId) {
+        // Vérifier si un match r+1 existe déjà avec ces finalistes
+        const existsNext = await prisma.match.findFirst({
+          where: {
+            tournamentId: updated.tournamentId,
+            round: updated.round + 1,
+            OR: [
+              { teamAId: winnerTeamId, teamBId: sibling.winnerTeamId },
+              { teamAId: sibling.winnerTeamId, teamBId: winnerTeamId }
+            ]
+          }
+        })
+        if (!existsNext) {
+          await prisma.match.create({
+            data: {
+              tournamentId: updated.tournamentId,
+              round: updated.round + 1,
+              teamAId: winnerTeamId,
+              teamBId: sibling.winnerTeamId,
+              status: 'PENDING'
+            }
+          })
+        }
+      }
+    } catch (e) {
+      console.warn('Bracket advance warning:', e)
+    }
+
     return NextResponse.json({ match: updated })
   } catch (error) {
     console.error('Validate result error:', error)

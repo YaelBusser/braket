@@ -9,10 +9,10 @@ $primary-200: #bae6fd;
 $primary-300: #7dd3fc;
 $primary-400: #38bdf8;
 $primary-500: #0ea5e9;
-$primary-600: #0284c7;
-$primary-700: #0369a1;
-$primary-800: #075985;
-$primary-900: #0c4a6e;
+$primary-600: #3b82f6;  // Blue-500 - Updated for LeTournoi theme
+$primary-700: #2563eb;  // Blue-600
+$primary-800: #1d4ed8;  // Blue-700
+$primary-900: #1e40af;  // Blue-800
 
 $secondary-50: #f8fafc;
 $secondary-100: #f1f5f9;
@@ -24,6 +24,20 @@ $secondary-600: #475569;
 $secondary-700: #334155;
 $secondary-800: #1e293b;
 $secondary-900: #0f172a;
+
+// LeTournoi specific colors
+$lt-dark-bg: #0f172a;           // slate-900
+$lt-dark-secondary: #1e293b;    // slate-800
+$lt-dark-tertiary: #334155;     // slate-700
+$lt-border: #374151;            // gray-700
+$lt-text-primary: #ffffff;      // white
+$lt-text-secondary: #94a3b8;    // slate-400
+$lt-text-muted: #64748b;        // slate-500
+$lt-accent-blue: #3b82f6;       // blue-500
+$lt-accent-purple: #8b5cf6;     // violet-500
+$lt-success: #10b981;           // emerald-500
+$lt-warning: #f59e0b;           // amber-500
+$lt-error: #ef4444;             // red-500
 
 $accent-50: #fdf4ff;
 $accent-100: #fae8ff;
@@ -114,20 +128,22 @@ $gray-900: #111827;
 $bg-primary: $white;
 $bg-secondary: $gray-50;
 $bg-tertiary: $gray-100;
-$bg-dark: $gray-900;
-$bg-dark-secondary: $gray-800;
+$bg-dark: $lt-dark-bg;
+$bg-dark-secondary: $lt-dark-secondary;
+$bg-dark-tertiary: $lt-dark-tertiary;
 
 // Text colors
-$text-primary: $gray-900;
-$text-secondary: $gray-600;
+$text-primary: $lt-text-primary;
+$text-secondary: $lt-text-secondary;
 $text-tertiary: $gray-500;
 $text-inverse: $white;
-$text-muted: $gray-400;
+$text-muted: $lt-text-muted;
 
 // Border colors
 $border-light: $gray-200;
 $border-medium: $gray-300;
-$border-dark: $gray-400;
+$border-dark: $lt-border;
+$border-accent: $lt-accent-blue;
 
 // Typography
 $font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -217,3 +233,18 @@ $container-md: 768px;
 $container-lg: 1024px;
 $container-xl: 1280px;
 $container-2xl: 1536px;
+
+// LeTournoi specific gradients
+$gradient-primary: linear-gradient(135deg, $lt-accent-blue 0%, $lt-accent-purple 100%);
+$gradient-dark: linear-gradient(135deg, $lt-dark-bg 0%, $lt-dark-secondary 100%);
+$gradient-surface: linear-gradient(180deg, rgba(17,24,39,0.9), rgba(17,24,39,0.75));
+
+// LeTournoi specific shadows
+$shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+$shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+// LeTournoi specific border radius
+$radius-card: 12px;
+$radius-button: 8px;
+$radius-input: 6px;

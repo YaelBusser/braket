@@ -15,13 +15,20 @@ export async function POST(
     const { id } = await params
     const tournament = await prisma.tournament.findUnique({
       where: { id },
-      select: { id: true, isTeamBased: true, maxParticipants: true, endDate: true }
+      select: { id: true, isTeamBased: true, maxParticipants: true, endDate: true, registrationDeadline: true, status: true }
     })
     if (!tournament) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
 
     // Pour les tournois en équipe, on autorise l'inscription individuelle
 
-    // Considérer "terminé" uniquement si endDate est passée
+    // Inscriptions fermées si statut non REG_OPEN ou deadline dépassée
+    if (tournament.status !== 'REG_OPEN') {
+      return NextResponse.json({ message: 'Inscriptions fermées' }, { status: 400 })
+    }
+    if (tournament.registrationDeadline && tournament.registrationDeadline < new Date()) {
+      return NextResponse.json({ message: 'Inscriptions clôturées' }, { status: 400 })
+    }
+    // Considérer terminé si endDate passée
     if (tournament.endDate && tournament.endDate < new Date()) {
       return NextResponse.json({ message: 'Tournoi terminé' }, { status: 400 })
     }
