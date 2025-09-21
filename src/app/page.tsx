@@ -237,9 +237,17 @@ export default function Home() {
       <div className="container" style={{ padding: '2rem 0' }}>
         {/* Section Jeux populaires */}
         <div className={styles.popularGames}>
-          <h2 className={styles.popularGamesTitle}>
-            Jeux populaires
-          </h2>
+          <div className={styles.popularGamesHeader}>
+            <h2 className={styles.popularGamesTitle}>
+              Jeux populaires
+            </h2>
+            <button 
+              className={styles.browseGamesBtn}
+              onClick={() => router.push('/games')}
+            >
+              Parcourir les jeux
+            </button>
+          </div>
           
           {loadingGames ? (
             <div style={{
@@ -307,7 +315,7 @@ export default function Home() {
                     {game.genres?.[0]?.name || 'Jeu'}
                   </div>
                   <div className={styles.popularGameRating}>
-                    ⭐ {game.rating?.toFixed(1) || 'N/A'}
+                    {game.rating?.toFixed(1)}
                   </div>
                 </div>
               ))}

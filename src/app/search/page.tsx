@@ -201,7 +201,7 @@ export default function SearchPage() {
           
           {/* Filtres par catégorie */}
           <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '2rem' }}>
-            {['Tous', 'Jeux', 'Tournois', 'Circuits'].map((filter) => (
+            {['Tous', 'Jeux', 'Tournois'].map((filter) => (
               <button
                 key={filter}
                 style={{

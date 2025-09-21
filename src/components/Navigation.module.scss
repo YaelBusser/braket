@@ -18,6 +18,18 @@
   margin: 0 auto;
 }
 
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-8;
+}
+
+.navLinks {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+}
+
 .logo {
   font-size: vars.$font-size-xl;
   font-weight: vars.$font-weight-bold;
@@ -126,6 +138,14 @@
     padding: vars.$spacing-3 vars.$spacing-4;
   }
   
+  .leftSection {
+    gap: vars.$spacing-4;
+  }
+  
+  .navLinks {
+    gap: vars.$spacing-1;
+  }
+  
   .menu {
     gap: vars.$spacing-2;
   }
@@ -143,6 +163,10 @@
 @media (max-width: vars.$breakpoint-sm) {
   .container {
     padding: vars.$spacing-2 vars.$spacing-3;
+  }
+  
+  .navLinks {
+    margin-left: vars.$spacing-2;
   }
   
   .menu {

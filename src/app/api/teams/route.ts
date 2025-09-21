@@ -9,7 +9,57 @@ export async function POST(request: NextRequest) {
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const { tournamentId, name } = await request.json()
+    const { tournamentId, name, game, description, gameId } = await request.json()
+    
+    // Si c'est une création d'équipe indépendante (pas liée à un tournoi)
+    if (!tournamentId && game) {
+      if (!name || !game) {
+        return NextResponse.json({ message: 'Nom et jeu requis' }, { status: 400 })
+      }
+
+      // Vérifier que l'utilisateur n'a pas déjà une équipe pour ce jeu
+      const existingTeam = await prisma.team.findFirst({
+        where: {
+          game: game,
+          members: {
+            some: { userId }
+          }
+        }
+      })
+
+      if (existingTeam) {
+        return NextResponse.json({ message: 'Vous avez déjà une équipe pour ce jeu' }, { status: 400 })
+      }
+
+      const team = await prisma.team.create({
+        data: {
+          name,
+          game,
+          description,
+          gameId: gameId?.toString(),
+          members: {
+            create: { userId, isCaptain: true }
+          }
+        },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  pseudo: true,
+                  avatarUrl: true
+                }
+              }
+            }
+          }
+        }
+      })
+
+      return NextResponse.json({ team }, { status: 201 })
+    }
+
+    // Logique existante pour les équipes de tournoi
     if (!tournamentId || !name) {
       return NextResponse.json({ message: 'Champs requis manquants' }, { status: 400 })
     }
@@ -46,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // l'organisateur ne peut pas créer/rejoindre d'équipe
     if (tournament.organizerId === userId) {
-      return NextResponse.json({ message: 'L’organisateur ne peut pas créer d’équipe' }, { status: 403 })
+      return NextResponse.json({ message: 'L'organisateur ne peut pas créer d'équipe' }, { status: 403 })
     }
 
     // exiger inscription préalable au tournoi

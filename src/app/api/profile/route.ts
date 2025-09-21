@@ -117,6 +117,23 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // Vérifier l'unicité du pseudo si un nouveau pseudo est fourni
+    if (pseudoFromBody) {
+      const existingUserWithPseudo = await prisma.user.findFirst({
+        where: {
+          pseudo: pseudoFromBody,
+          id: { not: userId } // Exclure l'utilisateur actuel
+        }
+      })
+
+      if (existingUserWithPseudo) {
+        return NextResponse.json(
+          { message: 'Ce pseudo est déjà utilisé par un autre utilisateur' },
+          { status: 400 }
+        )
+      }
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {

@@ -12,6 +12,28 @@ export default function GamesPage() {
   const [searching, setSearching] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [loadingPopular, setLoadingPopular] = useState(true)
+
+  // Charger les jeux populaires au montage
+  useEffect(() => {
+    const loadPopularGames = async () => {
+      setLoadingPopular(true)
+      try {
+        const res = await fetch(`/api/games/popular?category=${category}&page=1&page_size=20`)
+        const data = await res.json()
+        setGames(data.games || [])
+        setHasMore(data.hasMore || false)
+      } catch (error) {
+        console.error('Erreur chargement jeux populaires:', error)
+        setGames([])
+        setHasMore(false)
+      } finally {
+        setLoadingPopular(false)
+      }
+    }
+    
+    loadPopularGames()
+  }, [category])
 
   // Recherche de jeux avec debounce
   useEffect(() => {
@@ -32,14 +54,26 @@ export default function GamesPage() {
           } finally {
             setSearching(false)
           }
-        } else {
-          setGames([])
-          setHasMore(false)
+        } else if (query.trim().length === 0) {
+          // Recharger les jeux populaires quand la recherche est effacée
+          setLoadingPopular(true)
+          try {
+            const res = await fetch(`/api/games/popular?category=${category}&page=1&page_size=20`)
+            const data = await res.json()
+            setGames(data.games || [])
+            setHasMore(data.hasMore || false)
+          } catch (error) {
+            console.error('Erreur chargement jeux populaires:', error)
+            setGames([])
+            setHasMore(false)
+          } finally {
+            setLoadingPopular(false)
+          }
         }
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [query])
+  }, [query, category])
 
   // Charger plus de jeux
   const loadMore = async () => {
@@ -47,7 +81,15 @@ export default function GamesPage() {
     
     setLoading(true)
     try {
-      const res = await fetch(`/api/games/search?q=${encodeURIComponent(query.trim())}&page=${page + 1}`)
+      let res
+      if (query.trim().length >= 2) {
+        // Charger plus de résultats de recherche
+        res = await fetch(`/api/games/search?q=${encodeURIComponent(query.trim())}&page=${page + 1}`)
+      } else {
+        // Charger plus de jeux populaires
+        res = await fetch(`/api/games/popular?category=${category}&page=${page + 1}&page_size=20`)
+      }
+      
       const data = await res.json()
       setGames(prev => [...prev, ...(data.games || [])])
       setHasMore(data.hasMore || false)
@@ -245,57 +287,103 @@ export default function GamesPage() {
                     <div key={index} style={{
                       background: '#1f2937',
                       borderRadius: '12px',
-                      padding: '1.5rem',
+                      overflow: 'hidden',
                       border: '1px solid #374151',
                       transition: 'all 0.2s ease',
                       cursor: 'pointer'
                     }}
                     onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#3b82f6'
                       e.currentTarget.style.transform = 'translateY(-2px)'
-                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)'
                     }}
                     onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#374151'
                       e.currentTarget.style.transform = 'translateY(0)'
                       e.currentTarget.style.boxShadow = 'none'
                     }}
                     onClick={() => {
                       window.location.href = `/games/${encodeURIComponent(game.name)}`
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                      {/* Image du jeu */}
+                      <div style={{
+                        width: '100%',
+                        height: '150px',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
                         {game.background_image ? (
-                          <img 
-                            src={game.background_image} 
-                            alt="" 
-                            style={{ 
-                              width: '60px', 
-                              height: '60px', 
-                              borderRadius: '12px', 
-                              objectFit: 'cover' 
-                            }} 
+                          <img
+                            src={game.background_image}
+                            alt={game.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
                           />
                         ) : (
                           <div style={{
-                            width: '60px',
-                            height: '60px',
-                            background: '#374151',
-                            borderRadius: '12px',
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#9ca3af',
-                            fontSize: '1.5rem'
+                            fontSize: '2rem',
+                            color: '#ffffff',
+                            fontWeight: 'bold'
                           }}>
-                            {game.name.charAt(0)}
+                            {game.name.charAt(0).toUpperCase()}
                           </div>
                         )}
-                        <div style={{ flex: 1 }}>
-                          <h3 style={{ margin: 0, color: '#fff', fontSize: '1.125rem', fontWeight: '600' }}>
-                            {game.name}
-                          </h3>
-                          <div style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                            {game.released ? new Date(game.released).getFullYear() : 'N/A'}
+                      </div>
+                      
+                      {/* Contenu de la carte */}
+                      <div style={{ padding: '1rem' }}>
+                        <h3 style={{
+                          color: '#ffffff',
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          marginBottom: '0.5rem',
+                          lineHeight: '1.3'
+                        }}>
+                          {game.name}
+                        </h3>
+                        
+                        {game.released && (
+                          <div style={{
+                            color: '#9ca3af',
+                            fontSize: '0.875rem',
+                            marginBottom: '0.5rem'
+                          }}>
+                            {new Date(game.released).getFullYear()}
                           </div>
-                        </div>
+                        )}
+                        
+                        {game.genres && game.genres.length > 0 && (
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.25rem',
+                            marginTop: '0.5rem'
+                          }}>
+                            {game.genres.slice(0, 2).map((genre: any) => (
+                              <span
+                                key={genre.id}
+                                style={{
+                                  background: '#374151',
+                                  color: '#9ca3af',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.75rem'
+                                }}
+                              >
+                                {genre.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       
                       <div style={{ color: '#9ca3af', fontSize: '0.875rem', lineHeight: '1.5' }}>
@@ -363,20 +451,178 @@ export default function GamesPage() {
               Jeux populaires
             </h2>
             
-            <div style={{
-              background: '#1f2937',
-              borderRadius: '12px',
-              padding: '2rem',
-              border: '1px solid #374151',
-              textAlign: 'center'
-            }}>
-              <div style={{ color: '#9ca3af', fontSize: '1.125rem', marginBottom: '1rem' }}>
-                Commencez à taper le nom d'un jeu pour le rechercher
+            {loadingPopular ? (
+              <div style={{
+                background: '#1f2937',
+                borderRadius: '12px',
+                padding: '2rem',
+                border: '1px solid #374151',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#9ca3af' }}>Chargement des jeux populaires...</div>
               </div>
-              <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
-                Utilisez la barre de recherche ci-dessus pour découvrir des milliers de jeux
+            ) : games.length === 0 ? (
+              <div style={{
+                background: '#1f2937',
+                borderRadius: '12px',
+                padding: '2rem',
+                border: '1px solid #374151',
+                textAlign: 'center'
+              }}>
+                <div style={{ color: '#9ca3af', fontSize: '1.125rem', marginBottom: '1rem' }}>
+                  Aucun jeu populaire trouvé pour cette catégorie
+                </div>
+                <div style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  Utilisez la barre de recherche ci-dessus pour découvrir des milliers de jeux
+                </div>
               </div>
-            </div>
+            ) : (
+              <div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+                  {games.map((game, index) => (
+                    <div key={index} style={{
+                      background: '#1f2937',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      border: '1px solid #374151',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#3b82f6'
+                      e.currentTarget.style.transform = 'translateY(-2px)'
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = '#374151'
+                      e.currentTarget.style.transform = 'translateY(0)'
+                      e.currentTarget.style.boxShadow = 'none'
+                    }}
+                    onClick={() => {
+                      window.location.href = `/games/${encodeURIComponent(game.name)}`
+                    }}>
+                      {/* Image du jeu */}
+                      <div style={{
+                        width: '100%',
+                        height: '150px',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}>
+                        {game.background_image ? (
+                          <img
+                            src={game.background_image}
+                            alt={game.name}
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover'
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '100%',
+                            height: '100%',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '2rem',
+                            color: '#ffffff',
+                            fontWeight: 'bold'
+                          }}>
+                            {game.name.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Contenu de la carte */}
+                      <div style={{ padding: '1rem' }}>
+                        <h3 style={{
+                          color: '#ffffff',
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          marginBottom: '0.5rem',
+                          lineHeight: '1.3'
+                        }}>
+                          {game.name}
+                        </h3>
+                        
+                        {game.released && (
+                          <div style={{
+                            color: '#9ca3af',
+                            fontSize: '0.875rem',
+                            marginBottom: '0.5rem'
+                          }}>
+                            {new Date(game.released).getFullYear()}
+                          </div>
+                        )}
+                        
+                        {game.rating && (
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            marginBottom: '0.5rem'
+                          }}>
+                            <span style={{ color: '#fbbf24' }}>⭐</span>
+                            <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+                              {game.rating.toFixed(1)}/{game.rating_top || 5}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {game.genres && game.genres.length > 0 && (
+                          <div style={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            gap: '0.25rem',
+                            marginTop: '0.5rem'
+                          }}>
+                            {game.genres.slice(0, 2).map((genre: any) => (
+                              <span
+                                key={genre.id}
+                                style={{
+                                  background: '#374151',
+                                  color: '#9ca3af',
+                                  padding: '0.25rem 0.5rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.75rem'
+                                }}
+                              >
+                                {genre.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {hasMore && (
+                  <div style={{ textAlign: 'center' }}>
+                    <button
+                      style={{
+                        background: '#3b82f6',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '0.75rem 2rem',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        opacity: loading ? 0.7 : 1,
+                        transition: 'all 0.2s ease'
+                      }}
+                      onClick={loadMore}
+                      disabled={loading}
+                    >
+                      {loading ? 'Chargement...' : 'Charger plus de jeux'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

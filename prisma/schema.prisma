@@ -110,8 +110,11 @@ model Tournament {
 model Team {
   id           String      @id @default(cuid())
   name         String
-  tournamentId String
-  tournament   Tournament  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId String?
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  game         String?
+  gameId       String?
+  description  String?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
@@ -128,6 +131,7 @@ model TeamMember {
   id        String   @id @default(cuid())
   teamId    String
   userId    String
+  isCaptain Boolean  @default(false)
   team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())

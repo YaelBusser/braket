@@ -28,13 +28,30 @@ interface Tournament {
   }
 }
 
+interface GameDetails {
+  id: number
+  name: string
+  background_image: string | null
+  released: string | null
+  rating: number
+  rating_top: number
+  genres: Array<{ id: number; name: string }>
+  platforms: Array<{ platform: { id: number; name: string } }>
+  description_raw: string | null
+  metacritic: number | null
+  playtime: number | null
+  esrb_rating: { id: number; name: string } | null
+}
+
 export default function GamePage() {
   const params = useParams()
   const router = useRouter()
   const { category } = useCategory()
   const [gameName, setGameName] = useState('')
+  const [gameDetails, setGameDetails] = useState<GameDetails | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
+  const [gameLoading, setGameLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('upcoming')
 
   useEffect(() => {
@@ -43,6 +60,30 @@ export default function GamePage() {
       setGameName(decodedGameName)
     }
   }, [params.gameName])
+
+  // Charger les détails du jeu
+  useEffect(() => {
+    const loadGameDetails = async () => {
+      if (!gameName) return
+      
+      setGameLoading(true)
+      try {
+        const res = await fetch(`/api/games/details?name=${encodeURIComponent(gameName)}`)
+        if (res.ok) {
+          const data = await res.json()
+          setGameDetails(data)
+        } else {
+          console.error('Erreur lors du chargement des détails du jeu')
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement des détails du jeu:', error)
+      } finally {
+        setGameLoading(false)
+      }
+    }
+    
+    loadGameDetails()
+  }, [gameName])
 
   useEffect(() => {
     const loadTournaments = async () => {
@@ -116,48 +157,169 @@ export default function GamePage() {
 
   return (
     <main style={{ background: '#0a0a0a', minHeight: '100vh' }}>
-      {/* Header avec bannière */}
+      {/* Header avec bannière du jeu */}
       <div style={{
-        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
-        padding: '2rem 0',
+        backgroundImage: gameDetails?.background_image 
+          ? `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%), url(${gameDetails.background_image})`
+          : 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed',
+        padding: '4rem 0',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        minHeight: '400px',
+        display: 'flex',
+        alignItems: 'center'
       }}>
         <div className="container" style={{ position: 'relative', zIndex: 2 }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '1rem',
-            marginBottom: '1rem'
+            gap: '2rem',
+            marginBottom: '2rem'
           }}>
+            {/* Image du jeu */}
             <div style={{
-              width: '60px',
-              height: '60px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '1.5rem',
-              fontWeight: 'bold',
-              color: '#ffffff'
+              width: '120px',
+              height: '120px',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              flexShrink: 0,
+              boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
             }}>
-              {gameName.charAt(0).toUpperCase()}
+              {gameLoading ? (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
+                  color: '#ffffff'
+                }}>
+                  {gameName.charAt(0).toUpperCase()}
+                </div>
+              ) : gameDetails?.background_image ? (
+                <img 
+                  src={gameDetails.background_image} 
+                  alt={gameName}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
+                  color: '#ffffff'
+                }}>
+                  {gameName.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
-            <div>
+            
+            {/* Informations du jeu */}
+            <div style={{ flex: 1 }}>
               <h1 style={{
                 color: '#ffffff',
-                fontSize: '2.5rem',
+                fontSize: '3rem',
                 fontWeight: '700',
                 margin: 0,
-                marginBottom: '0.5rem'
+                marginBottom: '1rem',
+                textShadow: '0 2px 10px rgba(0,0,0,0.5)'
               }}>
                 {gameName}
               </h1>
+              
+              {/* Métadonnées du jeu */}
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '1rem',
+                marginBottom: '1rem',
+                alignItems: 'center'
+              }}>
+                {gameDetails?.released && (
+                  <span style={{
+                    color: '#a78bfa',
+                    fontSize: '1rem',
+                    fontWeight: '500'
+                  }}>
+                    Sorti le {new Date(gameDetails.released).toLocaleDateString('fr-FR')}
+                  </span>
+                )}
+                
+                {gameDetails?.rating && (
+                  <span style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    color: '#ffffff',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}>
+                    ⭐ {gameDetails.rating.toFixed(1)}/{gameDetails.rating_top}
+                  </span>
+                )}
+                
+                {gameDetails?.metacritic && (
+                  <span style={{
+                    background: gameDetails.metacritic >= 75 ? '#10b981' : 
+                               gameDetails.metacritic >= 50 ? '#f59e0b' : '#ef4444',
+                    color: '#ffffff',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '999px',
+                    fontSize: '0.875rem',
+                    fontWeight: '500'
+                  }}>
+                    Metacritic: {gameDetails.metacritic}
+                  </span>
+                )}
+              </div>
+              
+              {/* Genres */}
+              {gameDetails?.genres && gameDetails.genres.length > 0 && (
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                  marginBottom: '1rem'
+                }}>
+                  {gameDetails.genres.slice(0, 3).map((genre) => (
+                    <span
+                      key={genre.id}
+                      style={{
+                        background: 'rgba(255,255,255,0.15)',
+                        color: '#ffffff',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '999px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500'
+                      }}
+                    >
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
               <p style={{
-                color: '#a78bfa',
+                color: '#e5e7eb',
                 fontSize: '1.125rem',
-                margin: 0
+                margin: 0,
+                textShadow: '0 1px 3px rgba(0,0,0,0.5)'
               }}>
                 {filteredTournaments.length} tournoi{filteredTournaments.length > 1 ? 's' : ''} disponible{filteredTournaments.length > 1 ? 's' : ''}
               </p>

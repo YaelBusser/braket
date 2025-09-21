@@ -71,73 +71,68 @@ function LoginPage() {
   if (status === 'authenticated') return null
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
+    <div className={styles.loginPage}>
+      <div className={styles.container}>
         <div className={styles.header}>
-          <h1>Se connecter</h1>
-          <p>Accédez à votre compte LeTournoi</p>
+          <h1 className={styles.title}>Se connecter</h1>
+          <p className={styles.subtitle}>Accédez à votre compte LeTournoi</p>
         </div>
 
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {errors.general && (
-            <div className="form-error">{errors.general}</div>
-          )}
+        <div className={styles.formContainer}>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            {errors.general && (
+              <div className={styles.errorMessage}>{errors.general}</div>
+            )}
 
-          <div className="form-group">
-            <label htmlFor="email" className="form-label form-label-required">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="votre@email.com"
-            />
+            <div className={styles.formGroup}>
+              <label htmlFor="email" className={styles.label}>
+                Email <span className={styles.required}>*</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="votre@email.com"
+                required
+              />
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="password" className={styles.label}>
+                Mot de passe <span className={styles.required}>*</span>
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={styles.input}
+                placeholder="Votre mot de passe"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className={`${styles.submitBtn} ${isLoading ? styles.loading : ''}`}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Connexion...' : 'Se connecter'}
+            </button>
+          </form>
+
+          <div className={styles.divider}>
+            <span>ou</span>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password" className="form-label form-label-required">
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className="form-input"
-              placeholder="Votre mot de passe"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className={`btn btn-primary btn-lg ${isLoading ? 'btn-loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Connexion...' : 'Se connecter'}
-          </button>
-        </form>
-
-        <div className={styles.divider}>
-          <span>ou</span>
+          <p className={styles.registerLink}>
+            Pas encore de compte ? <a href="/register">Créer un compte</a>
+          </p>
         </div>
-
-        {/* Temporairement désactivé
-        <button
-          onClick={() => signIn('google', { callbackUrl: '/profile' })}
-          className="btn btn-outline btn-lg"
-        >
-          Continuer avec Google
-        </button>
-        */}
-
-        <p className={styles.registerLink}>
-          Pas encore de compte ? <a href="/register">Créer un compte</a>
-        </p>
       </div>
     </div>
   )

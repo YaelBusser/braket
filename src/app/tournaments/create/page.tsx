@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import { useNotification } from '../../../components/providers/notification-provider'
+import styles from './page.module.scss'
 
 export default function CreateTournamentPage() {
   return (
@@ -51,17 +52,22 @@ function CreateForm() {
     // toute saisie manuelle invalide la sélection
     setSelectedGameId(null)
     setSelectedGameName('')
+    
     if (value.trim().length < 2) {
       setGameResults([])
       setIsSearching(false)
       return
     }
+    
     setIsSearching(true)
     try {
       const res = await fetch(`/api/games/search?q=${encodeURIComponent(value)}`)
       const data = await res.json()
-      setGameResults(data.results || [])
-    } catch {
+      console.log('API Response:', data)
+      console.log('Games array:', data.games)
+      setGameResults(data.games || [])
+    } catch (error) {
+      console.error('Search error:', error)
       setGameResults([])
     } finally {
       setIsSearching(false)
@@ -134,139 +140,198 @@ function CreateForm() {
   }
 
   return (
-    <div className="container" style={{ padding: '2rem 0' }}>
-      <div className="card">
-        <div className="card-header">
-          <h1>Créer un tournoi</h1>
+    <div className={styles.createTournamentPage}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Créer un tournoi</h1>
+          <p className={styles.subtitle}>Organisez votre propre tournoi et invitez des joueurs</p>
         </div>
-        <div className="card-body">
-          <form onSubmit={handleSubmit} className="form">
-            <div className="form-group">
-              <label className="form-label form-label-required" htmlFor="name">Nom</label>
-              <input className="form-input" id="name" name="name" value={form.name} onChange={handleChange} required />
+
+        <div className={styles.formContainer}>
+          <form onSubmit={handleSubmit} className={styles.form}>
+            {/* Première ligne - Nom et Catégorie */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={`${styles.label} ${styles.required}`} htmlFor="name">Nom</label>
+                <input className={styles.input} id="name" name="name" value={form.name} onChange={handleChange} required />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="category">Catégorie</label>
+                <select className={styles.select} id="category" name="category" value={form.category} onChange={handleChange}>
+                  <option value="VIDEO_GAMES">Jeux vidéo</option>
+                  <option value="SPORTS">Sports</option>
+                  <option value="BOARD_GAMES">Jeux de société</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="description">Description</label>
-              <textarea className="form-input" id="description" name="description" value={form.description} onChange={handleChange} />
+            {/* Description - Pleine largeur */}
+            <div className={styles.formGroup}>
+              <label className={styles.label} htmlFor="description">Description</label>
+              <textarea className={styles.textarea} id="description" name="description" value={form.description} onChange={handleChange} />
             </div>
 
-            <div className="form-group" style={{ display: form.category === 'VIDEO_GAMES' ? 'block' : 'none' }}>
-              <label className="form-label form-label-required" htmlFor="game">Jeu</label>
-              <input
-                className="form-input"
-                id="game"
-                name="game"
-                value={gameQuery}
-                onChange={handleGameInput}
-                placeholder="Rechercher un jeu..."
-                required
-              />
-              {(isSearching || gameResults.length > 0) && (
-                <ul style={{ marginTop: 8, border: '1px solid #eee', borderRadius: 8, overflow: 'hidden' }}>
-                  {isSearching && (
-                    <li style={{ padding: 8, color: '#666' }}>Chargement...</li>
-                  )}
-                  {gameResults.map(g => (
-                    <li key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: 8, cursor: 'pointer' }} onClick={() => handlePickGame(g.name, g.id)}>
-                      {g.background_image ? (
-                        <img src={g.background_image} alt="" style={{ width: 40, height: 24, objectFit: 'cover', borderRadius: 4 }} />
-                      ) : null}
-                      <span>{g.name}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+            {/* Jeu - Pleine largeur (seulement pour jeux vidéo) */}
+            <div className={styles.formGroup} style={{ display: form.category === 'VIDEO_GAMES' ? 'block' : 'none' }}>
+              <label className={`${styles.label} ${styles.required}`} htmlFor="game">Jeu</label>
+              <div className={styles.gameInputContainer}>
+                <input
+                  className={styles.input}
+                  id="game"
+                  name="game"
+                  value={gameQuery}
+                  onChange={handleGameInput}
+                  placeholder="Rechercher un jeu..."
+                  required
+                />
+                {gameQuery.length >= 2 && (
+                  <div className={styles.gameResults}>
+                    {/* Debug info */}
+                    <div style={{padding: '10px', background: '#333', color: '#fff', fontSize: '12px'}}>
+                      Debug: isSearching={isSearching.toString()}, gameResults.length={gameResults.length}, gameQuery="{gameQuery}"
+                    </div>
+                    {isSearching ? (
+                      <div className={styles.loadingItem}>
+                        <div className={styles.spinner}></div>
+                        <span>Recherche...</span>
+                      </div>
+                    ) : gameResults.length > 0 ? (
+                      gameResults.map(g => (
+                        <div key={g.id} className={styles.gameItem} onClick={() => handlePickGame(g.name, g.id)}>
+                          {g.background_image ? (
+                            <img src={g.background_image} alt="" className={styles.gameImage} />
+                          ) : (
+                            <div className={styles.gameImagePlaceholder}>
+                              {g.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className={styles.gameInfo}>
+                            <span className={styles.gameName}>{g.name}</span>
+                            {g.released && (
+                              <span className={styles.gameYear}>
+                                {new Date(g.released).getFullYear()}
+                              </span>
+                            )}
+                            {g.genres && g.genres.length > 0 && (
+                              <div className={styles.gameGenres}>
+                                {g.genres.slice(0, 2).map((genre: any) => (
+                                  <span key={genre.id} className={styles.gameGenre}>
+                                    {genre.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={styles.noResults}>
+                        <span>Aucun jeu trouvé pour "{gameQuery}"</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               {form.category === 'VIDEO_GAMES' && gameQuery && !selectedGameId && (
-                <div className="text-muted" style={{ marginTop: 6, fontSize: 12 }}>
+                <div className={styles.helpText}>
                   Veuillez sélectionner un jeu dans la liste.
                 </div>
               )}
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="category">Catégorie</label>
-              <select className="form-input" id="category" name="category" value={form.category} onChange={handleChange}>
-                <option value="VIDEO_GAMES">Jeux vidéo</option>
-                <option value="SPORTS">Sports</option>
-                <option value="BOARD_GAMES">Jeux de société</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Mode</label>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <label><input type="radio" name="isTeamBased" value="solo" checked={form.isTeamBased === 'solo'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} /> Solo</label>
-                <label><input type="radio" name="isTeamBased" value="team" checked={form.isTeamBased === 'team'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} /> Équipe</label>
+            {/* Deuxième ligne - Mode et Participants */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Mode</label>
+                <div className={styles.radioGroup}>
+                  <label>
+                    <input type="radio" name="isTeamBased" value="solo" checked={form.isTeamBased === 'solo'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
+                    Solo
+                  </label>
+                  <label>
+                    <input type="radio" name="isTeamBased" value="team" checked={form.isTeamBased === 'team'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
+                    Équipe
+                  </label>
+                </div>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="maxParticipants">Nombre de participants</label>
+                <input id="maxParticipants" name="maxParticipants" className={styles.input} type="number" min="2" placeholder="ex: 16" value={form.maxParticipants} onChange={(e) => setForm(p => ({ ...p, maxParticipants: e.target.value }))} />
               </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="maxParticipants">Nombre de participants</label>
-              <input id="maxParticipants" name="maxParticipants" className="form-input" type="number" min="2" placeholder="ex: 16" value={form.maxParticipants} onChange={(e) => setForm(p => ({ ...p, maxParticipants: e.target.value }))} />
-            </div>
-
+            {/* Taille des équipes - Seulement si mode équipe */}
             {form.isTeamBased === 'team' && (
-              <div style={{ display: 'grid', gap: 12, gridTemplateColumns: '1fr 1fr' }}>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="teamMinSize">Taille min. par équipe</label>
-                  <input id="teamMinSize" className="form-input" type="number" min="1" value={form.teamMinSize} onChange={(e) => setForm(p => ({ ...p, teamMinSize: e.target.value }))} />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label className={styles.label} htmlFor="teamMinSize">Taille min. par équipe</label>
+                  <input id="teamMinSize" className={styles.input} type="number" min="1" value={form.teamMinSize} onChange={(e) => setForm(p => ({ ...p, teamMinSize: e.target.value }))} />
                 </div>
-                <div className="form-group">
-                  <label className="form-label" htmlFor="teamMaxSize">Taille max. par équipe</label>
-                  <input id="teamMaxSize" className="form-input" type="number" min="1" value={form.teamMaxSize} onChange={(e) => setForm(p => ({ ...p, teamMaxSize: e.target.value }))} />
+                <div className={styles.formGroup}>
+                  <label className={styles.label} htmlFor="teamMaxSize">Taille max. par équipe</label>
+                  <input id="teamMaxSize" className={styles.input} type="number" min="1" value={form.teamMaxSize} onChange={(e) => setForm(p => ({ ...p, teamMaxSize: e.target.value }))} />
                 </div>
               </div>
             )}
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="kind">Type de tournoi</label>
-              <select id="kind" name="kind" className="form-input" value={form.kind} onChange={(e) => setForm(p => ({ ...p, kind: e.target.value }))}>
-                <option value="PERSONAL">Particulier</option>
-                <option value="PROFESSIONAL" disabled>Professionnel (bientôt)</option>
-              </select>
+            {/* Troisième ligne - Type et Format */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="kind">Type de tournoi</label>
+                <select id="kind" name="kind" className={styles.select} value={form.kind} onChange={(e) => setForm(p => ({ ...p, kind: e.target.value }))}>
+                  <option value="PERSONAL">Particulier</option>
+                  <option value="PROFESSIONAL" disabled>Professionnel (bientôt)</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="format">Format</label>
+                <select className={styles.select} id="format" name="format" value={form.format} onChange={handleChange}>
+                  <option value="SINGLE_ELIMINATION">Elimination directe</option>
+                  <option value="DOUBLE_ELIMINATION" disabled>Double élimination (bientôt)</option>
+                  <option value="ROUND_ROBIN" disabled>Round robin (bientôt)</option>
+                </select>
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="poster">Affiche du tournoi (PNG/JPG/WEBP)</label>
-              <input id="poster" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePosterChange} className="form-input" />
-              {posterPreview && (
-                <div style={{ marginTop: 8 }}>
-                  <img src={posterPreview} alt="Aperçu affiche" style={{ width: 240, height: 'auto', borderRadius: 8 }} />
+            {/* Quatrième ligne - Visibilité et Affiche */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="visibility">Visibilité</label>
+                <select className={styles.select} id="visibility" name="visibility" value={form.visibility} onChange={handleChange}>
+                  <option value="PUBLIC">Public</option>
+                  <option value="PRIVATE">Privé</option>
+                </select>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="poster">Affiche du tournoi</label>
+                <input id="poster" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePosterChange} className={styles.input} />
+              </div>
+            </div>
+
+            {/* Aperçu de l'affiche - Pleine largeur */}
+            {posterPreview && (
+              <div className={styles.formGroup}>
+                <div className={styles.posterPreview}>
+                  <img src={posterPreview} alt="Aperçu affiche" />
                 </div>
-              )}
+              </div>
+            )}
+
+            {/* Cinquième ligne - Dates */}
+            <div className={styles.formRow}>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="startDate">Date de début</label>
+                <input className={styles.input} id="startDate" name="startDate" type="datetime-local" value={form.startDate} onChange={handleChange} />
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="endDate">Date de fin</label>
+                <input className={styles.input} id="endDate" name="endDate" type="datetime-local" value={form.endDate} onChange={handleChange} />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="format">Format</label>
-              <select className="form-input" id="format" name="format" value={form.format} onChange={handleChange}>
-                <option value="SINGLE_ELIMINATION">Elimination directe</option>
-                <option value="DOUBLE_ELIMINATION" disabled>Double élimination (bientôt)</option>
-                <option value="ROUND_ROBIN" disabled>Round robin (bientôt)</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="visibility">Visibilité</label>
-              <select className="form-input" id="visibility" name="visibility" value={form.visibility} onChange={handleChange}>
-                <option value="PUBLIC">Public</option>
-                <option value="PRIVATE">Privé</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="startDate">Date de début</label>
-              <input className="form-input" id="startDate" name="startDate" type="datetime-local" value={form.startDate} onChange={handleChange} />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="endDate">Date de fin</label>
-              <input className="form-input" id="endDate" name="endDate" type="datetime-local" value={form.endDate} onChange={handleChange} />
-            </div>
-
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-secondary" onClick={() => router.push('/')}>Annuler</button>
-              <button type="submit" className={`btn btn-primary ${isLoading ? 'btn-loading' : ''}`} disabled={isLoading}>
+            <div className={styles.formActions}>
+              <button type="button" className={styles.cancelBtn} onClick={() => router.push('/')}>Annuler</button>
+              <button type="submit" className={`${styles.submitBtn} ${isLoading ? styles.loading : ''}`} disabled={isLoading}>
                 {isLoading ? 'Création...' : 'Créer'}
               </button>
             </div>

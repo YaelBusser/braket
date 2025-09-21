@@ -1,0 +1,400 @@
+@use '../../../styles/variables.module' as vars;
+
+.createTournamentPage {
+  min-height: 100vh;
+  background: vars.$lt-dark-bg;
+  color: vars.$lt-text-primary;
+  padding: vars.$spacing-8 0;
+}
+
+.container {
+  max-width: vars.$container-lg;
+  margin: 0 auto;
+  padding: 0 vars.$spacing-4;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: vars.$spacing-8;
+}
+
+.title {
+  font-size: vars.$font-size-4xl;
+  font-weight: vars.$font-weight-extrabold;
+  background: vars.$gradient-primary;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 vars.$spacing-2 0;
+
+  @media (max-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-3xl;
+  }
+}
+
+.subtitle {
+  font-size: vars.$font-size-lg;
+  color: vars.$lt-text-secondary;
+  margin: 0;
+}
+
+.formContainer {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  padding: vars.$spacing-8;
+  box-shadow: vars.$shadow-lg;
+
+  @media (max-width: vars.$breakpoint-md) {
+    padding: vars.$spacing-6;
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-6;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: vars.$spacing-6;
+  
+  @media (max-width: vars.$breakpoint-md) {
+    grid-template-columns: 1fr;
+    gap: vars.$spacing-4;
+  }
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+}
+
+.label {
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+
+  &.required::after {
+    content: ' *';
+    color: vars.$lt-error;
+  }
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: vars.$spacing-3;
+  background: vars.$lt-dark-bg;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-input;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  transition: all vars.$transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-blue;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: vars.$lt-text-muted;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.select {
+  cursor: pointer;
+}
+
+.radioGroup {
+  display: flex;
+  gap: vars.$spacing-4;
+  margin-top: vars.$spacing-2;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: vars.$spacing-2;
+    cursor: pointer;
+    font-weight: vars.$font-weight-normal;
+  }
+
+  input[type="radio"] {
+    width: auto;
+    margin: 0;
+  }
+}
+
+.teamSizeGrid {
+  display: grid;
+  gap: vars.$spacing-3;
+  grid-template-columns: 1fr 1fr;
+
+  @media (max-width: vars.$breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.gameInputContainer {
+  position: relative;
+}
+
+.gameResults {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: vars.$shadow-lg;
+  margin-top: vars.$spacing-1;
+}
+
+.loadingItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  padding: vars.$spacing-4;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  justify-content: center;
+}
+
+.gameItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  border-bottom: 1px solid vars.$lt-border;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    transform: translateX(2px);
+  }
+}
+
+.gameImage {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: vars.$radius-md;
+  flex-shrink: 0;
+}
+
+.gameImagePlaceholder {
+  width: 50px;
+  height: 50px;
+  background: vars.$gradient-primary;
+  border-radius: vars.$radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-lg;
+  flex-shrink: 0;
+}
+
+.gameInfo {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-1;
+  flex: 1;
+  min-width: 0;
+}
+
+.gameName {
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-semibold;
+  font-size: vars.$font-size-base;
+  line-height: vars.$line-height-tight;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gameYear {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+}
+
+.gameGenres {
+  display: flex;
+  gap: vars.$spacing-1;
+  flex-wrap: wrap;
+}
+
+.gameGenre {
+  background: vars.$lt-dark-tertiary;
+  color: vars.$lt-text-secondary;
+  padding: 2px vars.$spacing-2;
+  border-radius: vars.$radius-full;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-medium;
+}
+
+.noResults {
+  padding: vars.$spacing-4;
+  text-align: center;
+  color: vars.$lt-text-secondary;
+  font-style: italic;
+}
+
+.helpText {
+  font-size: vars.$font-size-xs;
+  color: vars.$lt-text-muted;
+  margin-top: vars.$spacing-1;
+}
+
+.posterPreview {
+  margin-top: vars.$spacing-3;
+  
+  img {
+    width: 240px;
+    height: auto;
+    border-radius: vars.$radius-md;
+    border: 1px solid vars.$lt-border;
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: vars.$spacing-4;
+  justify-content: flex-end;
+  margin-top: vars.$spacing-2;
+
+  @media (max-width: vars.$breakpoint-sm) {
+    flex-direction: column;
+  }
+}
+
+.cancelBtn {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: transparent;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-button;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-secondary;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.submitBtn {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$lt-accent-blue;
+  border: none;
+  border-radius: vars.$radius-button;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: darken(vars.$lt-accent-blue, 10%);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &.loading {
+    position: relative;
+    color: transparent;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: vars.$breakpoint-md) {
+  .createTournamentPage {
+    padding: vars.$spacing-6 0;
+  }
+
+  .container {
+    padding: 0 vars.$spacing-3;
+  }
+
+  .formContainer {
+    padding: vars.$spacing-6;
+  }
+}
+
+@media (max-width: vars.$breakpoint-sm) {
+  .title {
+    font-size: vars.$font-size-2xl;
+  }
+
+  .subtitle {
+    font-size: vars.$font-size-base;
+  }
+
+  .formContainer {
+    padding: vars.$spacing-4;
+  }
+
+  .form {
+    gap: vars.$spacing-4;
+  }
+}

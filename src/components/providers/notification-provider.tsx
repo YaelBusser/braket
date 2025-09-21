@@ -71,7 +71,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             color: '#fff',
             boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
             background: t.type === 'success' ? '#16a34a' : t.type === 'error' ? '#dc2626' : '#2563eb',
-            animation: `${t.closing ? 'lt_toast_out' : 'lt_toast_in'} 280ms ease forwards`,
+            animationName: t.closing ? 'lt_toast_out' : 'lt_toast_in',
+            animationDuration: '280ms',
+            animationTimingFunction: 'ease',
+            animationFillMode: 'forwards',
             animationDelay: t.closing ? '0ms' : `${i * 60}ms`,
             // Décalage horizontal configurable via CSS var utilisée par les keyframes
             // @ts-ignore - CSS custom properties

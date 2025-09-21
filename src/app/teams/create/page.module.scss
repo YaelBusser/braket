@@ -1,20 +1,16 @@
-@use '../../styles/variables.module' as vars;
+@use '../../../styles/variables.module' as vars;
 
-.loginPage {
+.createTeamPage {
   min-height: 100vh;
   background: vars.$lt-dark-bg;
   color: vars.$lt-text-primary;
   padding: vars.$spacing-8 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .container {
-  max-width: vars.$container-sm;
+  max-width: vars.$container-lg;
   margin: 0 auto;
   padding: 0 vars.$spacing-4;
-  width: 100%;
 }
 
 .header {
@@ -76,7 +72,8 @@
   color: vars.$lt-error;
 }
 
-.input {
+.input,
+.textarea {
   width: 100%;
   padding: vars.$spacing-3;
   background: vars.$lt-dark-bg;
@@ -97,14 +94,96 @@
   }
 }
 
-.errorMessage {
-  background: rgba(vars.$lt-error, 0.1);
-  border: 1px solid vars.$lt-error;
-  border-radius: vars.$radius-md;
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.gameInputContainer {
+  position: relative;
+}
+
+.gameResults {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: vars.$lt-dark-bg;
+  border: 1px solid vars.$lt-border;
+  border-top: none;
+  border-radius: 0 0 vars.$radius-input vars.$radius-input;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.loadingItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
   padding: vars.$spacing-3;
-  color: vars.$lt-error;
+  color: vars.$lt-text-secondary;
   font-size: vars.$font-size-sm;
-  text-align: center;
+}
+
+.gameItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3;
+  cursor: pointer;
+  transition: background vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-secondary;
+  }
+}
+
+.gameImage {
+  width: 40px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: vars.$radius-sm;
+}
+
+.gameName {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+}
+
+.helpText {
+  font-size: vars.$font-size-xs;
+  color: vars.$lt-text-muted;
+  margin-top: vars.$spacing-1;
+}
+
+.formActions {
+  display: flex;
+  gap: vars.$spacing-4;
+  justify-content: flex-end;
+  margin-top: vars.$spacing-2;
+
+  @media (max-width: vars.$breakpoint-sm) {
+    flex-direction: column;
+  }
+}
+
+.cancelBtn {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: transparent;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-button;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-secondary;
+    color: vars.$lt-text-primary;
+  }
 }
 
 .submitBtn {
@@ -149,43 +228,23 @@
   }
 }
 
-.divider {
-  position: relative;
-  text-align: center;
-  margin: vars.$spacing-6 0;
-  
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: vars.$lt-border;
-  }
-  
-  span {
-    background: vars.$lt-dark-secondary;
-    padding: 0 vars.$spacing-4;
-    color: vars.$lt-text-muted;
-    font-size: vars.$font-size-sm;
-  }
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  color: vars.$lt-text-secondary;
 }
 
-.registerLink {
-  text-align: center;
-  margin-top: vars.$spacing-6;
-  color: vars.$lt-text-secondary;
-  
-  a {
-    color: vars.$lt-accent-blue;
-    font-weight: vars.$font-weight-medium;
-    text-decoration: none;
-    
-    &:hover {
-      color: vars.$lt-accent-purple;
-    }
-  }
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top: 3px solid vars.$lt-accent-blue;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: vars.$spacing-4;
 }
 
 @keyframes spin {
@@ -194,7 +253,7 @@
 }
 
 @media (max-width: vars.$breakpoint-md) {
-  .loginPage {
+  .createTeamPage {
     padding: vars.$spacing-6 0;
   }
 
