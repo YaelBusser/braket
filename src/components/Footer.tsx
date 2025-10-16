@@ -8,10 +8,10 @@ export default function Footer() {
         <div className={styles.content}>
           {/* Logo et description */}
           <div className={styles.brand}>
-            <h3 className={styles.logo}>LeTournoi</h3>
+            <h3 className={styles.logo}>Bracket</h3>
             <p className={styles.description}>
               La plateforme moderne pour organiser et participer à des tournois de jeux vidéo, 
-              sport et jeux de société. Simple, rapide et professionnel.
+              jeux vidéo. Simple, rapide et professionnel.
             </p>
             <div className={styles.social}>
               <a href="#" className={styles.socialLink} aria-label="Twitter">
@@ -48,8 +48,6 @@ export default function Footer() {
             <h4 className={styles.title}>Catégories</h4>
             <ul className={styles.linkList}>
               <li><Link href="/?category=VIDEO_GAMES" className={styles.link}>Jeux Vidéo</Link></li>
-              <li><Link href="/?category=SPORTS" className={styles.link}>Sports</Link></li>
-              <li><Link href="/?category=BOARD_GAMES" className={styles.link}>Jeux de Société</Link></li>
             </ul>
           </div>
 

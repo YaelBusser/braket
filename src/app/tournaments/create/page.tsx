@@ -24,10 +24,8 @@ function CreateForm() {
     game: '',
     format: 'SINGLE_ELIMINATION',
     visibility: 'PUBLIC',
-    category: 'VIDEO_GAMES',
     isTeamBased: 'solo',
     maxParticipants: '',
-    kind: 'PERSONAL',
     teamMinSize: '',
     teamMaxSize: '',
     startDate: '',
@@ -84,11 +82,9 @@ function CreateForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (form.category === 'VIDEO_GAMES') {
-      if (!selectedGameId || selectedGameName !== gameQuery) {
-        notify({ type: 'error', message: '❌ Veuillez choisir un jeu parmi les résultats de recherche' })
-        return
-      }
+    if (!selectedGameId || selectedGameName !== gameQuery) {
+      notify({ type: 'error', message: '❌ Veuillez choisir un jeu parmi les résultats de recherche' })
+      return
     }
     setIsLoading(true)
     try {
@@ -96,13 +92,11 @@ function CreateForm() {
       const fd = new FormData()
       fd.append('name', form.name)
       if (form.description) fd.append('description', form.description)
-      if (form.category === 'VIDEO_GAMES') fd.append('game', selectedGameName)
+      fd.append('game', selectedGameName)
       fd.append('format', form.format)
       fd.append('visibility', form.visibility)
-      fd.append('category', form.category)
       fd.append('isTeamBased', String(form.isTeamBased === 'team'))
       if (form.maxParticipants) fd.append('maxParticipants', form.maxParticipants)
-      fd.append('kind', form.kind)
       if (form.isTeamBased === 'team') {
         if (form.teamMinSize) fd.append('teamMinSize', form.teamMinSize)
         if (form.teamMaxSize) fd.append('teamMaxSize', form.teamMaxSize)
@@ -155,14 +149,6 @@ function CreateForm() {
                 <label className={`${styles.label} ${styles.required}`} htmlFor="name">Nom</label>
                 <input className={styles.input} id="name" name="name" value={form.name} onChange={handleChange} required />
               </div>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="category">Catégorie</label>
-                <select className={styles.select} id="category" name="category" value={form.category} onChange={handleChange}>
-                  <option value="VIDEO_GAMES">Jeux vidéo</option>
-                  <option value="SPORTS">Sports</option>
-                  <option value="BOARD_GAMES">Jeux de société</option>
-                </select>
-              </div>
             </div>
 
             {/* Description - Pleine largeur */}
@@ -171,8 +157,8 @@ function CreateForm() {
               <textarea className={styles.textarea} id="description" name="description" value={form.description} onChange={handleChange} />
             </div>
 
-            {/* Jeu - Pleine largeur (seulement pour jeux vidéo) */}
-            <div className={styles.formGroup} style={{ display: form.category === 'VIDEO_GAMES' ? 'block' : 'none' }}>
+            {/* Jeu - Pleine largeur */}
+            <div className={styles.formGroup}>
               <label className={`${styles.label} ${styles.required}`} htmlFor="game">Jeu</label>
               <div className={styles.gameInputContainer}>
                 <input
@@ -232,7 +218,7 @@ function CreateForm() {
                   </div>
                 )}
               </div>
-              {form.category === 'VIDEO_GAMES' && gameQuery && !selectedGameId && (
+              {gameQuery && !selectedGameId && (
                 <div className={styles.helpText}>
                   Veuillez sélectionner un jeu dans la liste.
                 </div>
@@ -274,15 +260,8 @@ function CreateForm() {
               </div>
             )}
 
-            {/* Troisième ligne - Type et Format */}
+            {/* Troisième ligne - Format */}
             <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="kind">Type de tournoi</label>
-                <select id="kind" name="kind" className={styles.select} value={form.kind} onChange={(e) => setForm(p => ({ ...p, kind: e.target.value }))}>
-                  <option value="PERSONAL">Particulier</option>
-                  <option value="PROFESSIONAL" disabled>Professionnel (bientôt)</option>
-                </select>
-              </div>
               <div className={styles.formGroup}>
                 <label className={styles.label} htmlFor="format">Format</label>
                 <select className={styles.select} id="format" name="format" value={form.format} onChange={handleChange}>

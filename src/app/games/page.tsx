@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useCategory } from '@/components/providers/category-provider'
+import { SearchBar } from '@/components/ui'
 
 export default function GamesPage() {
-  const { category } = useCategory()
   const [query, setQuery] = useState('')
   const [games, setGames] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -19,7 +18,7 @@ export default function GamesPage() {
     const loadPopularGames = async () => {
       setLoadingPopular(true)
       try {
-        const res = await fetch(`/api/games/popular?category=${category}&page=1&page_size=20`)
+        const res = await fetch(`/api/games/popular?page=1&page_size=20`)
         const data = await res.json()
         setGames(data.games || [])
         setHasMore(data.hasMore || false)
@@ -33,7 +32,7 @@ export default function GamesPage() {
     }
     
     loadPopularGames()
-  }, [category])
+  }, [])
 
   // Recherche de jeux avec debounce
   useEffect(() => {
@@ -58,7 +57,7 @@ export default function GamesPage() {
           // Recharger les jeux populaires quand la recherche est effacée
           setLoadingPopular(true)
           try {
-            const res = await fetch(`/api/games/popular?category=${category}&page=1&page_size=20`)
+            const res = await fetch(`/api/games/popular?page=1&page_size=20`)
             const data = await res.json()
             setGames(data.games || [])
             setHasMore(data.hasMore || false)
@@ -73,7 +72,7 @@ export default function GamesPage() {
       }, 300)
       return () => clearTimeout(timer)
     }
-  }, [query, category])
+  }, [query])
 
   // Charger plus de jeux
   const loadMore = async () => {
@@ -87,7 +86,7 @@ export default function GamesPage() {
         res = await fetch(`/api/games/search?q=${encodeURIComponent(query.trim())}&page=${page + 1}`)
       } else {
         // Charger plus de jeux populaires
-        res = await fetch(`/api/games/popular?category=${category}&page=${page + 1}&page_size=20`)
+        res = await fetch(`/api/games/popular?page=${page + 1}&page_size=20`)
       }
       
       const data = await res.json()
@@ -102,21 +101,11 @@ export default function GamesPage() {
   }
 
   const getCategoryTitle = () => {
-    switch (category) {
-      case 'VIDEO_GAMES': return 'Jeux vidéo'
-      case 'SPORTS': return 'Sports'
-      case 'BOARD_GAMES': return 'Jeux de société'
-      default: return 'Jeux'
-    }
+    return 'Jeux vidéo'
   }
 
   const getCategoryGradient = () => {
-    switch (category) {
-      case 'VIDEO_GAMES': return 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #8b5cf6 100%)'
-      case 'SPORTS': return 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)'
-      case 'BOARD_GAMES': return 'linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #f59e0b 100%)'
-      default: return 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #8b5cf6 100%)'
-    }
+    return 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #8b5cf6 100%)'
   }
 
   return (
@@ -175,44 +164,12 @@ export default function GamesPage() {
           </p>
           
           {/* Barre de recherche */}
-          <div style={{
-            width: '100%',
-            maxWidth: '600px',
-            position: 'relative'
-          }}>
-            <input
-              style={{
-                width: '100%',
-                padding: '1rem 1.5rem',
-                borderRadius: '12px',
-                border: 'none',
-                background: 'rgba(255,255,255,0.9)',
-                backdropFilter: 'blur(10px)',
-                fontSize: '1rem',
-                outline: 'none',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-              }}
-              placeholder="Rechercher un jeu..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-            <div style={{
-              position: 'absolute',
-              right: '1rem',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: searching ? '#3b82f6' : '#6b7280'
-            }}>
-              {searching ? (
-                <div style={{ width: '20px', height: '20px', border: '2px solid #3b82f6', borderTop: '2px solid transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-              ) : (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <path d="m21 21-4.35-4.35"></path>
-                </svg>
-              )}
-            </div>
-          </div>
+          <SearchBar
+            placeholder="Rechercher un jeu..."
+            size="md"
+            variant="light"
+            onSearch={(query) => setQuery(query)}
+          />
         </div>
       </div>
 
@@ -557,19 +514,6 @@ export default function GamesPage() {
                           </div>
                         )}
                         
-                        {game.rating && (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <span style={{ color: '#fbbf24' }}>⭐</span>
-                            <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                              {game.rating.toFixed(1)}/{game.rating_top || 5}
-                            </span>
-                          </div>
-                        )}
                         
                         {game.genres && game.genres.length > 0 && (
                           <div style={{

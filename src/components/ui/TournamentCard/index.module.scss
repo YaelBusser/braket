@@ -1,0 +1,218 @@
+@use '../../../styles/variables.module' as vars;
+
+/* --- TOURNAMENT CARD --- */
+.tournamentCard {
+  display: block;
+  background: #2C283B;
+  border-radius: 16px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+}
+
+.cardImage {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.posterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  
+  .tournamentCard:hover & {
+    transform: scale(1.05);
+  }
+}
+
+.placeholderImage {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gameIcon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.cardContent {
+  padding: 1.5rem;
+  background: #2C283B;
+  position: relative;
+}
+
+.tournamentInfo {
+  margin-bottom: 1rem;
+}
+
+.tournamentTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tournamentDate {
+  font-size: 0.875rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
+}
+
+.tournamentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.participants {
+  font-size: 0.875rem;
+  color: #ffffff;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* --- OVERLAY ELEMENTS --- */
+.tournamentLogo {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  width: 60px;
+  height: 60px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.logoImage {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.gameLabel {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.participantsCounter {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .cardImage {
+    height: 160px;
+  }
+  
+  .cardContent {
+    padding: 1.25rem;
+  }
+  
+  .tournamentTitle {
+    font-size: 1.1rem;
+  }
+  
+  .tournamentLogo {
+    width: 50px;
+    height: 50px;
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+  
+  .logoImage {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .gameLabel {
+    bottom: 0.75rem;
+    left: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+  
+  .participantsCounter {
+    bottom: 0.75rem;
+    right: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .tournamentMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .tournamentLogo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .logoImage {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .gameLabel,
+  .participantsCounter {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.65rem;
+  }
+}

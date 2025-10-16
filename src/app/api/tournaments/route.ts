@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     let game: string | undefined
     let format: string | undefined
     let visibility: string | undefined
-    let category: string | undefined
     let startDate: string | undefined
     let endDate: string | undefined
     let posterUrl: string | undefined
@@ -33,7 +32,6 @@ export async function POST(request: NextRequest) {
       game = (form.get('game') as string) || undefined
       format = (form.get('format') as string) || 'SINGLE_ELIMINATION'
       visibility = (form.get('visibility') as string) || 'PUBLIC'
-      category = (form.get('category') as string) || 'VIDEO_GAMES'
       startDate = (form.get('startDate') as string) || undefined
       endDate = (form.get('endDate') as string) || undefined
       const file = form.get('poster') as File | null
@@ -67,12 +65,10 @@ export async function POST(request: NextRequest) {
       game = body?.game
       format = body?.format || 'SINGLE_ELIMINATION'
       visibility = body?.visibility || 'PUBLIC'
-      category = body?.category || 'VIDEO_GAMES'
       startDate = body?.startDate
       endDate = body?.endDate
       ;(global as any).__tmp_isTeamBased = body?.isTeamBased === true
       ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? parseInt(body.maxParticipants) : undefined
-      ;(global as any).__tmp_kind = body?.kind || 'PERSONAL'
       registrationDeadline = body?.registrationDeadline
     }
 
@@ -102,9 +98,6 @@ export async function POST(request: NextRequest) {
     // Coercion des enums (MVP: toujours SINGLE_ELIMINATION + PUBLIC)
     const safeFormat = 'SINGLE_ELIMINATION'
     const safeVisibility = visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC'
-    const safeCategory = (['VIDEO_GAMES', 'SPORTS', 'BOARD_GAMES'].includes(String(category))
-      ? (category as any)
-      : 'VIDEO_GAMES') as any
 
     try {
       const tournament = await prisma.tournament.create({
@@ -114,11 +107,9 @@ export async function POST(request: NextRequest) {
         game: game || null,
         format: safeFormat,
         visibility: safeVisibility,
-        category: safeCategory,
         posterUrl: posterUrl || null,
         isTeamBased: Boolean((global as any).__tmp_isTeamBased),
         maxParticipants: (global as any).__tmp_maxParticipants || null,
-        kind: ((global as any).__tmp_kind as any) || 'PERSONAL',
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         organizerId: userId,
@@ -143,7 +134,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const mine = searchParams.get('mine') === '1'
-    const category = searchParams.get('category') || undefined
     const q = searchParams.get('q') || undefined
     const game = searchParams.get('game') || undefined
     const sort = searchParams.get('sort') || 'created_desc'
@@ -162,7 +152,6 @@ export async function GET(request: NextRequest) {
     } else {
       where.visibility = 'PUBLIC'
     }
-    if (category) where.category = category
     if (q) {
       where.OR = [{ name: { contains: q } }, { game: { contains: q } }]
     }
@@ -194,11 +183,9 @@ export async function GET(request: NextRequest) {
         game: true,
         format: true,
         visibility: true,
-        category: true,
         posterUrl: true,
         isTeamBased: true,
         maxParticipants: true,
-        kind: true,
         startDate: true,
         endDate: true,
         status: true,

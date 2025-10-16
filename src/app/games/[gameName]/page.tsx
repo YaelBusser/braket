@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useCategory } from '../../../components/providers/category-provider'
 
 interface Tournament {
   id: string
@@ -46,7 +45,6 @@ interface GameDetails {
 export default function GamePage() {
   const params = useParams()
   const router = useRouter()
-  const { category } = useCategory()
   const [gameName, setGameName] = useState('')
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
@@ -92,7 +90,6 @@ export default function GamePage() {
       setLoading(true)
       try {
         const params = new URLSearchParams({ 
-          category,
           game: gameName
         })
         
@@ -107,7 +104,7 @@ export default function GamePage() {
     }
     
     loadTournaments()
-  }, [gameName, category])
+  }, [gameName])
 
   const getFilteredTournaments = () => {
     const now = new Date()
@@ -261,18 +258,6 @@ export default function GamePage() {
                   </span>
                 )}
                 
-                {gameDetails?.rating && (
-                  <span style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    color: '#ffffff',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '999px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                  }}>
-                    ⭐ {gameDetails.rating.toFixed(1)}/{gameDetails.rating_top}
-                  </span>
-                )}
                 
                 {gameDetails?.metacritic && (
                   <span style={{

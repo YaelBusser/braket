@@ -4,7 +4,6 @@ import "./globals.css";
 import AuthProvider from "../components/providers/auth-provider";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
-import { CategoryProvider } from "../components/providers/category-provider";
 import { NotificationProvider } from "../components/providers/notification-provider";
 
 const inter = Inter({
@@ -13,13 +12,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "LeTournoi - Plateforme de gestion de tournois",
-  description: "Organisez et participez à des tournois de jeux vidéo, sport et jeux de société. Simple, rapide et professionnel.",
-  keywords: "tournoi, jeux vidéo, sport, jeux de société, compétition, esport",
-  authors: [{ name: "LeTournoi" }],
+  title: "Bracket - Plateforme de gestion de tournois",
+  description: "Organisez et participez à des tournois de jeux vidéo. Simple, rapide et professionnel.",
+  keywords: "tournoi, jeux vidéo, compétition, esport",
+  authors: [{ name: "Bracket" }],
   openGraph: {
-    title: "LeTournoi - Plateforme de gestion de tournois",
-    description: "Organisez et participez à des tournois de jeux vidéo, sport et jeux de société.",
+    title: "Bracket - Plateforme de gestion de tournois",
+    description: "Organisez et participez à des tournois de jeux vidéo.",
     type: "website",
   },
 };
@@ -34,15 +33,13 @@ export default function RootLayout({
       <body className={inter.variable}>
         <AuthProvider>
           <NotificationProvider>
-            <CategoryProvider>
-              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Navigation />
-                <main style={{ flex: 1 }}>
-                  {children}
-                </main>
-                <Footer />
-              </div>
-            </CategoryProvider>
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Navigation />
+              <main style={{ flex: 1 }}>
+                {children}
+              </main>
+              <Footer />
+            </div>
           </NotificationProvider>
         </AuthProvider>
       </body>

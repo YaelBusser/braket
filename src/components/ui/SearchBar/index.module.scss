@@ -1,0 +1,189 @@
+@use '../../../styles/variables.module' as vars;
+
+/* --- SEARCH BAR COMPONENT --- */
+.searchContainer {
+  width: 100%;
+  position: relative;
+}
+
+.searchBar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.searchInput {
+  width: 100%;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  
+  &::placeholder {
+    transition: opacity 0.2s ease;
+  }
+  
+  &:focus {
+    &::placeholder {
+      opacity: 0.7;
+    }
+  }
+}
+
+.searchButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  min-width: 60px;
+  
+  &:hover {
+    transform: scale(1.05);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* --- SIZES --- */
+.size-sm {
+  .searchInput {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .searchButton {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+.size-md {
+  .searchInput {
+    padding: 1.25rem 1.5rem;
+    font-size: 1.1rem;
+  }
+  
+  .searchButton {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
+
+.size-lg {
+  .searchInput {
+    padding: 1.5rem 2rem;
+    font-size: 1.25rem;
+  }
+  
+  .searchButton {
+    padding: 1.25rem;
+    font-size: 1.1rem;
+  }
+}
+
+/* --- VARIANTS --- */
+.variant-default {
+  .searchBar {
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+  }
+  
+  .searchInput {
+    color: #f9fafb;
+    
+    &::placeholder {
+      color: rgba(249, 250, 251, 0.6);
+    }
+  }
+  
+  .searchButton {
+    background: transparent;
+    color: vars.$lt-accent-blue;
+    border-radius: 0 16px 16px 0;
+  }
+}
+
+.variant-dark {
+  .searchBar {
+    background: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid rgba(75, 85, 99, 0.3);
+  }
+  
+  .searchInput {
+    color: #f9fafb;
+    
+    &::placeholder {
+      color: rgba(249, 250, 251, 0.6);
+    }
+  }
+  
+  .searchButton {
+    background: transparent;
+    color: vars.$lt-accent-blue;
+    border-radius: 0 16px 16px 0;
+
+  }
+}
+
+.variant-light {
+  .searchBar {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .searchInput {
+    color: #1f2937;
+    
+    &::placeholder {
+      color: rgba(31, 41, 55, 0.6);
+    }
+  }
+  
+  .searchButton {
+    background: transparent;
+    color: vars.$lt-accent-blue;
+    border-radius: 0 16px 16px 0;
+  }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .size-md {
+    .searchInput {
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+    }
+    
+    .searchButton {
+      padding: 0.875rem;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .size-lg {
+    .searchInput {
+      padding: 1.25rem 1.5rem;
+      font-size: 1.1rem;
+    }
+    
+    .searchButton {
+      padding: 1rem;
+      font-size: 1rem;
+    }
+  }
+}

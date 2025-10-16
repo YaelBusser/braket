@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { TournamentCard } from '@/components/ui'
 import Link from 'next/link'
-import { useCategory } from '@/components/providers/category-provider'
 
 export default function SearchPage() {
   const router = useRouter()
-  const { category } = useCategory()
   const [q, setQ] = useState('')
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -54,7 +53,7 @@ export default function SearchPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      const params = new URLSearchParams({ category })
+      const params = new URLSearchParams()
       
       // Toujours utiliser la recherche globale (q) pour les tournois
       // La recherche dans les tournois cherche dans le nom ET le jeu
@@ -72,7 +71,7 @@ export default function SearchPage() {
       setLoading(false)
     }
     load()
-  }, [category, q, sort, startMin, startMax])
+  }, [q, sort, startMin, startMax])
 
   return (
     <main style={{ background: '#0a0a0a', minHeight: '100vh' }}>
@@ -427,139 +426,16 @@ export default function SearchPage() {
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-                gap: '1.5rem'
+                gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+                gap: '1.5rem',
+                maxWidth: '1200px',
+                margin: '0 auto'
               }}>
                 {items.map(t => (
-                  <Link
+                  <TournamentCard
                     key={t.id}
-                    href={`/tournaments/${t.id}`}
-                    style={{
-                      background: '#1f2937',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      border: '1px solid #374151',
-                      transition: 'all 0.2s ease',
-                      textDecoration: 'none',
-                      color: '#fff'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-4px)'
-                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)'
-                      e.currentTarget.style.boxShadow = 'none'
-                    }}
-                  >
-                    <div style={{
-                      width: '100%',
-                      height: '200px',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
-                      {t.posterUrl ? (
-                        <img 
-                          src={t.posterUrl} 
-                          alt={t.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                        />
-                      ) : (
-                        <div style={{
-                          width: '100%',
-                          height: '100%',
-                          background: 'linear-gradient(135deg, #374151, #4b5563)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#9ca3af',
-                          fontSize: '3rem'
-                        }}>
-                          🏆
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div style={{ padding: '1rem' }}>
-                      <h3 style={{ 
-                        margin: 0, 
-                        color: '#fff', 
-                        fontSize: '1.125rem', 
-                        fontWeight: '600',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {t.name}
-                      </h3>
-                      
-                      <div style={{ 
-                        color: '#9ca3af', 
-                        fontSize: '0.875rem',
-                        marginBottom: '0.5rem'
-                      }}>
-                        {new Date(t.createdAt).toLocaleDateString('fr-FR', { 
-                          day: 'numeric', 
-                          month: 'long', 
-                          year: 'numeric' 
-                        })}
-                      </div>
-                      
-                      {t.game && (
-                        <div style={{ 
-                          color: '#3b82f6', 
-                          fontSize: '0.75rem',
-                          marginBottom: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          🎮 {t.game}
-                        </div>
-                      )}
-                      
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{
-                            background: t.status === 'REG_OPEN' ? '#10b981' : 
-                                       t.status === 'IN_PROGRESS' ? '#f59e0b' : 
-                                       t.status === 'COMPLETED' ? '#6b7280' : '#374151',
-                            color: '#fff',
-                            borderRadius: '999px',
-                            padding: '0.25rem 0.75rem',
-                            fontSize: '0.75rem',
-                            fontWeight: '500'
-                          }}>
-                            {t.status === 'REG_OPEN' ? 'Inscriptions ouvertes' : 
-                             t.status === 'IN_PROGRESS' ? 'En cours' : 
-                             t.status === 'COMPLETED' ? 'Terminé' : 'Brouillon'}
-                          </span>
-                        </div>
-                        
-                        <div style={{ 
-                          color: '#9ca3af', 
-                          fontSize: '0.875rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem'
-                        }}>
-                          {t._count?.registrations || 0} {t.isTeamBased ? 'Équipes' : 'Joueurs'}
-                          <div style={{
-                            width: '24px',
-                            height: '24px',
-                            background: '#374151',
-                            borderRadius: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.75rem'
-                          }}>
-                            {t.isTeamBased ? '👥' : '👤'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+                    tournament={t}
+                  />
                 ))}
               </div>
             )}

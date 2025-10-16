@@ -154,8 +154,6 @@ function RegisterPage() {
               <label className="form-label" htmlFor="preferredCategory">Catégorie préférée</label>
               <select id="preferredCategory" name="preferredCategory" className="form-input" value={formData.preferredCategory} onChange={handleChange}>
                 <option value="VIDEO_GAMES">Jeux vidéo</option>
-                <option value="SPORTS">Sports</option>
-                <option value="BOARD_GAMES">Jeux de société</option>
               </select>
             </div>
 

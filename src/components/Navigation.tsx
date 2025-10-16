@@ -6,37 +6,18 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from './ui'
 import styles from './Navigation.module.scss'
-import { useCategory } from './providers/category-provider'
 
 export default function Navigation() {
   const { data: session, status } = useSession()
-  const { category, setCategory } = useCategory()
-  const [selectedCategory, setSelectedCategory] = useState('VIDEO_GAMES')
   const pathname = usePathname()
 
-  useEffect(() => {
-    setSelectedCategory(category)
-  }, [category])
-
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value
-    setSelectedCategory(value)
-    // Flag pour indiquer que le changement vient du header → rechargement sans animation de l'accueil
-    try { localStorage.setItem('lt_category_change_source', 'header') } catch {}
-    setCategory(value as any)
-    if (pathname !== '/') {
-      window.location.href = '/'
-    } else {
-      window.location.reload()
-    }
-  }
 
   return (
     <nav className={styles.nav}>
       <div className={styles.container}>
         <div className={styles.leftSection}>
           <Link href="/" className={styles.logo}>
-            LeTournoi
+            Bracket
           </Link>
           
           <div className={styles.navLinks}>
@@ -46,11 +27,6 @@ export default function Navigation() {
         </div>
         
         <div className={styles.menu}>
-          <select onChange={handleCategoryChange} value={selectedCategory} className={styles.categorySelect}>
-            <option value="VIDEO_GAMES">Jeux vidéo</option>
-            <option value="SPORTS">Sports</option>
-            <option value="BOARD_GAMES">Jeux de société</option>
-          </select>
           {status === 'loading' ? (
             <div className={styles.loading}>Chargement...</div>
           ) : session ? (
