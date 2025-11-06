@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../../../components/providers/notification-provider'
 import styles from './page.module.scss'
+import { GAMES, filterGames, GameInfo } from '@/data/games'
 
 export default function CreateTeamPage() {
   const { data: session, status } = useSession()
@@ -18,9 +19,9 @@ export default function CreateTeamPage() {
     description: ''
   })
   const [gameQuery, setGameQuery] = useState('')
-  const [gameResults, setGameResults] = useState<Array<{ id: number; name: string; background_image?: string }>>([])
+  const [gameResults, setGameResults] = useState<GameInfo[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(null)
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [selectedGameName, setSelectedGameName] = useState<string>('')
 
   useEffect(() => {
@@ -48,17 +49,14 @@ export default function CreateTeamPage() {
     
     setIsSearching(true)
     try {
-      const res = await fetch(`/api/games/search?q=${encodeURIComponent(value)}`)
-      const data = await res.json()
-      setGameResults(data.results || [])
-    } catch {
-      setGameResults([])
+      const results = filterGames(value)
+      setGameResults(results)
     } finally {
       setIsSearching(false)
     }
   }
 
-  const handlePickGame = (name: string, id: number) => {
+  const handlePickGame = (name: string, id: string) => {
     setForm(prev => ({ ...prev, game: name }))
     setGameQuery(name)
     setSelectedGameId(id)
@@ -180,9 +178,9 @@ export default function CreateTeamPage() {
                         className={styles.gameItem}
                         onClick={() => handlePickGame(game.name, game.id)}
                       >
-                        {game.background_image && (
+                        {game.image && (
                           <img
-                            src={game.background_image}
+                            src={game.image}
                             alt={game.name}
                             className={styles.gameImage}
                           />

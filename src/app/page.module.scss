@@ -8,19 +8,34 @@
 
 /* --- HERO SECTION --- */
 .heroSection {
-  background: url('/images/games.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  height: 400px;
+  background: #000; /* vidéo en fond */
+  height: clamp(360px, 75vh, 700px);
   position: relative;
   overflow: hidden;
+}
+
+.heroVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .heroOverlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0.8) 100%);
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.15) 0%, rgba(10, 10, 10, 0.5) 50%, rgba(10, 10, 10, 0.6) 70%, rgba(10, 10, 10, 0.7) 100%);
+}
+
+.heroBottomFade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  background: linear-gradient(180deg, rgba(10,10,10,0) 0%, #0a0a0a 100%);
+  pointer-events: none;
 }
 
 .heroContent {
@@ -35,7 +50,7 @@
 
 .heroTitle {
   margin: 0;
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 4px 20px rgba(0,0,0,0.7);
@@ -51,6 +66,24 @@
   margin-bottom: vars.$spacing-8;
   text-align: center;
   font-weight: 400;
+}
+
+.heroCtaButton {
+  margin-top: vars.$spacing-4;
+  background: linear-gradient(135deg, vars.$lt-accent-blue, vars.$lt-accent-purple);
+  color: #ffffff;
+  border: none;
+  padding: vars.$spacing-2 vars.$spacing-5;
+  border-radius: vars.$radius-md;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 10px 28px rgba(139, 92, 246, 0.35);
+  }
 }
 
 /* --- SEARCH BAR --- */
@@ -118,6 +151,13 @@
   margin-bottom: vars.$spacing-16;
 }
 
+.popularGamesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: vars.$spacing-4;
+}
+
 .popularGamesTitle {
   font-size: 2rem;
   font-weight: 700;
@@ -126,14 +166,40 @@
   text-align: center;
 }
 
+.popularGamesHeader .popularGamesTitle {
+  margin-bottom: 0;
+  text-align: left;
+}
+
+.browseGamesBtn {
+  background: transparent;
+  color: vars.$text-primary;
+  border: 1px solid vars.$border-dark;
+  padding: 0.5rem 0.75rem;
+  border-radius: vars.$radius-md;
+  cursor: pointer;
+}
+
+.popularGamesTrack {
+  display: flex;
+  gap: vars.$spacing-4;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: vars.$spacing-2;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}
+
 .popularGamesGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: vars.$spacing-4;
   margin-bottom: vars.$spacing-8;
-  max-width: 1000px;
-  margin-left: auto;
-  margin-right: auto;
+  width: 100%;
 }
 
 .popularGameCard {
@@ -141,6 +207,7 @@
   flex-direction: column;
   cursor: pointer;
   transition: transform 0.2s ease;
+  /* taille gérée par la grille */
   
   &:hover {
     transform: translateY(-4px);
@@ -150,7 +217,7 @@
 .popularGameImageContainer {
   position: relative;
   width: 100%;
-  aspect-ratio: 3/2;
+  aspect-ratio: 2/3;
   border-radius: vars.$radius-lg;
   overflow: hidden;
 }
@@ -197,7 +264,7 @@
   font-weight: 700;
   color: vars.$text-primary;
   margin-bottom: vars.$spacing-6;
-  text-align: center;
+  text-align: start;
 }
 
 .tournamentsGrid {
@@ -435,18 +502,31 @@
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
   .heroTitle {
-    font-size: 2.5rem;
+    font-size: 2.25rem;
   }
   
   .heroSubtitle {
     font-size: 1rem;
   }
   
+  .popularGameCard {
+    width: auto;
+  }
+  
   .popularGamesGrid {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
   }
   
   .tournamentsGrid {
     grid-template-columns: 1fr;
   }
+}
+
+.carouselButton {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid vars.$border-dark;
+  color: vars.$text-primary;
+  padding: 0.4rem 0.6rem;
+  border-radius: vars.$radius-md;
+  cursor: pointer;
 }

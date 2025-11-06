@@ -4,7 +4,7 @@ import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from './ui'
+import { Button, SearchBar } from './ui'
 import styles from './Navigation.module.scss'
 
 export default function Navigation() {
@@ -24,6 +24,13 @@ export default function Navigation() {
             <Link href="/games" className={styles.navLink}>Jeux</Link>
             <Link href="/tournaments" className={styles.navLink}>Tournois</Link>
           </div>
+        </div>
+        <div className={styles.searchWrapper}>
+          <SearchBar
+            placeholder="Rechercher des jeux, tournois..."
+            size="xs"
+            variant="dark"
+          />
         </div>
         
         <div className={styles.menu}>

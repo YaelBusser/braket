@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { findGameByName, GameInfo } from '@/data/games'
 
 interface Tournament {
   id: string
@@ -27,20 +28,7 @@ interface Tournament {
   }
 }
 
-interface GameDetails {
-  id: number
-  name: string
-  background_image: string | null
-  released: string | null
-  rating: number
-  rating_top: number
-  genres: Array<{ id: number; name: string }>
-  platforms: Array<{ platform: { id: number; name: string } }>
-  description_raw: string | null
-  metacritic: number | null
-  playtime: number | null
-  esrb_rating: { id: number; name: string } | null
-}
+type GameDetails = GameInfo
 
 export default function GamePage() {
   const params = useParams()
@@ -59,28 +47,13 @@ export default function GamePage() {
     }
   }, [params.gameName])
 
-  // Charger les détails du jeu
+  // Charger les détails du jeu depuis la liste statique
   useEffect(() => {
-    const loadGameDetails = async () => {
-      if (!gameName) return
-      
-      setGameLoading(true)
-      try {
-        const res = await fetch(`/api/games/details?name=${encodeURIComponent(gameName)}`)
-        if (res.ok) {
-          const data = await res.json()
-          setGameDetails(data)
-        } else {
-          console.error('Erreur lors du chargement des détails du jeu')
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des détails du jeu:', error)
-      } finally {
-        setGameLoading(false)
-      }
-    }
-    
-    loadGameDetails()
+    if (!gameName) return
+    setGameLoading(true)
+    const found = findGameByName(gameName)
+    setGameDetails(found || null)
+    setGameLoading(false)
   }, [gameName])
 
   useEffect(() => {
@@ -156,8 +129,8 @@ export default function GamePage() {
     <main style={{ background: '#0a0a0a', minHeight: '100vh' }}>
       {/* Header avec bannière du jeu */}
       <div style={{
-        backgroundImage: gameDetails?.background_image 
-          ? `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%), url(${gameDetails.background_image})`
+        backgroundImage: gameDetails?.image 
+          ? `linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%), url(${gameDetails.image})`
           : 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
@@ -200,9 +173,9 @@ export default function GamePage() {
                 }}>
                   {gameName.charAt(0).toUpperCase()}
                 </div>
-              ) : gameDetails?.background_image ? (
+              ) : gameDetails?.image ? (
                 <img 
-                  src={gameDetails.background_image} 
+                  src={gameDetails.image} 
                   alt={gameName}
                   style={{
                     width: '100%',
@@ -240,65 +213,8 @@ export default function GamePage() {
                 {gameName}
               </h1>
               
-              {/* Métadonnées du jeu */}
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '1rem',
-                marginBottom: '1rem',
-                alignItems: 'center'
-              }}>
-                {gameDetails?.released && (
-                  <span style={{
-                    color: '#a78bfa',
-                    fontSize: '1rem',
-                    fontWeight: '500'
-                  }}>
-                    Sorti le {new Date(gameDetails.released).toLocaleDateString('fr-FR')}
-                  </span>
-                )}
-                
-                
-                {gameDetails?.metacritic && (
-                  <span style={{
-                    background: gameDetails.metacritic >= 75 ? '#10b981' : 
-                               gameDetails.metacritic >= 50 ? '#f59e0b' : '#ef4444',
-                    color: '#ffffff',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: '999px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                  }}>
-                    Metacritic: {gameDetails.metacritic}
-                  </span>
-                )}
-              </div>
-              
-              {/* Genres */}
-              {gameDetails?.genres && gameDetails.genres.length > 0 && (
-                <div style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '0.5rem',
-                  marginBottom: '1rem'
-                }}>
-                  {gameDetails.genres.slice(0, 3).map((genre) => (
-                    <span
-                      key={genre.id}
-                      style={{
-                        background: 'rgba(255,255,255,0.15)',
-                        color: '#ffffff',
-                        padding: '0.25rem 0.75rem',
-                        borderRadius: '999px',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}
-                    >
-                      {genre.name}
-                    </span>
-                  ))}
-                </div>
-              )}
+              {/* Métadonnées simplifiées */}
+              <div style={{ height: '1rem' }} />
               
               <p style={{
                 color: '#e5e7eb',

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import { useNotification } from '../../../components/providers/notification-provider'
 import styles from './page.module.scss'
+import { filterGames, GameInfo } from '@/data/games'
 
 export default function CreateTournamentPage() {
   return (
@@ -32,9 +33,9 @@ function CreateForm() {
     endDate: ''
   })
   const [gameQuery, setGameQuery] = useState('')
-  const [gameResults, setGameResults] = useState<Array<{ id: number; name: string; background_image?: string }>>([])
+  const [gameResults, setGameResults] = useState<GameInfo[]>([])
   const [isSearching, setIsSearching] = useState(false)
-  const [selectedGameId, setSelectedGameId] = useState<number | null>(null)
+  const [selectedGameId, setSelectedGameId] = useState<string | null>(null)
   const [selectedGameName, setSelectedGameName] = useState<string>('')
   const [posterFile, setPosterFile] = useState<File | null>(null)
   const [posterPreview, setPosterPreview] = useState<string | null>(null)
@@ -59,20 +60,14 @@ function CreateForm() {
     
     setIsSearching(true)
     try {
-      const res = await fetch(`/api/games/search?q=${encodeURIComponent(value)}`)
-      const data = await res.json()
-      console.log('API Response:', data)
-      console.log('Games array:', data.games)
-      setGameResults(data.games || [])
-    } catch (error) {
-      console.error('Search error:', error)
-      setGameResults([])
+      const results = filterGames(value)
+      setGameResults(results)
     } finally {
       setIsSearching(false)
     }
   }
 
-  const handlePickGame = (name: string, id: number) => {
+  const handlePickGame = (name: string, id: string) => {
     setForm(prev => ({ ...prev, game: name }))
     setGameQuery(name)
     setSelectedGameId(id)
@@ -184,8 +179,8 @@ function CreateForm() {
                     ) : gameResults.length > 0 ? (
                       gameResults.map(g => (
                         <div key={g.id} className={styles.gameItem} onClick={() => handlePickGame(g.name, g.id)}>
-                          {g.background_image ? (
-                            <img src={g.background_image} alt="" className={styles.gameImage} />
+                          {g.image ? (
+                            <img src={g.image} alt="" className={styles.gameImage} />
                           ) : (
                             <div className={styles.gameImagePlaceholder}>
                               {g.name.charAt(0).toUpperCase()}
@@ -193,20 +188,6 @@ function CreateForm() {
                           )}
                           <div className={styles.gameInfo}>
                             <span className={styles.gameName}>{g.name}</span>
-                            {g.released && (
-                              <span className={styles.gameYear}>
-                                {new Date(g.released).getFullYear()}
-                              </span>
-                            )}
-                            {g.genres && g.genres.length > 0 && (
-                              <div className={styles.gameGenres}>
-                                {g.genres.slice(0, 2).map((genre: any) => (
-                                  <span key={genre.id} className={styles.gameGenre}>
-                                    {genre.name}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
                           </div>
                         </div>
                       ))

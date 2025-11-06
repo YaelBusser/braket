@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: vars.$spacing-4 vars.$spacing-6;
+  padding: vars.$spacing-2 vars.$spacing-6;
   max-width: vars.$container-xl;
   margin: 0 auto;
 }
@@ -31,7 +31,7 @@
 }
 
 .logo {
-  font-size: vars.$font-size-xl;
+  font-size: calc(vars.$font-size-xl - 2px);
   font-weight: vars.$font-weight-bold;
   color: vars.$lt-accent-blue;
   text-decoration: none;
@@ -47,13 +47,21 @@
   gap: vars.$spacing-4;
 }
 
+.searchWrapper {
+  flex: 0 0 auto;
+  width: 420px;
+  max-width: 420px;
+  margin: 0 vars.$spacing-4;
+}
+
 .navLink {
   color: vars.$lt-text-secondary;
   text-decoration: none;
   font-weight: vars.$font-weight-medium;
-  padding: vars.$spacing-2 vars.$spacing-3;
+  padding: vars.$spacing-1 vars.$spacing-2;
   border-radius: vars.$radius-md;
   transition: all vars.$transition-fast;
+  font-size: 0.9rem;
   
   &:hover {
     color: vars.$lt-text-primary;
@@ -102,8 +110,8 @@
 
 .profileAvatar,
 .profileAvatarPlaceholder {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   overflow: hidden;
   display: inline-flex;
@@ -142,6 +150,12 @@
     gap: vars.$spacing-4;
   }
   
+  .searchWrapper {
+    margin: 0 vars.$spacing-3;
+    width: 360px;
+    max-width: 360px;
+  }
+  
   .navLinks {
     gap: vars.$spacing-1;
   }
@@ -171,6 +185,10 @@
   
   .menu {
     gap: vars.$spacing-1;
+  }
+  
+  .searchWrapper {
+    display: none; /* on peut masquer sur très petit écran si nécessaire */
   }
   
   .navLink {

@@ -9,7 +9,7 @@ interface SearchBarProps {
   placeholder?: string
   onSearch?: (query: string) => void
   className?: string
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'xs' | 'sm' | 'md' | 'lg'
   variant?: 'default' | 'dark' | 'light'
 }
 

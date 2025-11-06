@@ -3,7 +3,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
-import { SearchBar, TournamentCard } from '@/components/ui'
+import { TournamentCard } from '@/components/ui'
+import { GAMES, GameInfo } from '@/data/games'
 
 // Jeux populaires - noms pour recherche API (limité à 6)
 const POPULAR_GAMES_NAMES = [
@@ -20,53 +21,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [animated, setAnimated] = useState(false)
-  const [popularGames, setPopularGames] = useState<any[]>([])
+  const [popularGames, setPopularGames] = useState<GameInfo[]>([])
   const [loadingGames, setLoadingGames] = useState(false)
-  const [activeTab, setActiveTab] = useState('upcoming')
   const router = useRouter()
 
-  // Charger les jeux populaires avec leurs images
+  // Charger les jeux populaires depuis la liste statique
   useEffect(() => {
-    const loadPopularGames = async () => {
-      setLoadingGames(true)
-      try {
-        const gameNames = POPULAR_GAMES_NAMES
-        const games = []
-        
-        for (const gameName of gameNames.slice(0, 8)) { // Limiter à 8 jeux
-          try {
-            const res = await fetch(`/api/games/search?q=${encodeURIComponent(gameName)}&page_size=1`)
-            const data = await res.json()
-            if (data.games && data.games.length > 0) {
-              games.push(data.games[0])
-            } else {
-              // Fallback si pas trouvé
-              games.push({
-                name: gameName,
-                background_image: null,
-                released: null
-              })
-            }
-          } catch (error) {
-            console.error(`Erreur pour ${gameName}:`, error)
-            games.push({
-              name: gameName,
-              background_image: null,
-              released: null
-            })
-          }
-        }
-        
-        setPopularGames(games)
-      } catch (error) {
-        console.error('Erreur chargement jeux populaires:', error)
-        setPopularGames([])
-      } finally {
-        setLoadingGames(false)
-      }
-    }
-    
-    loadPopularGames()
+    setLoadingGames(true)
+    // Sélectionner les 6 premiers jeux de la liste
+    setPopularGames(GAMES.slice(0, 6))
+    setLoadingGames(false)
   }, [])
 
   useEffect(() => {
@@ -103,43 +67,75 @@ export default function Home() {
           100% { transform: rotate(360deg); }
         }
       `}</style>
-      {/* Header avec bannière colorée */}
+      {/* Header avec vidéo */}
       <div className={styles.heroSection}>
-        {/* Overlay avec gradient */}
+        <video className={styles.heroVideo} src="/videos/hero.mp4" autoPlay muted loop playsInline />
+        {/* Overlays */}
         <div className={styles.heroOverlay} />
+        <div className={styles.heroBottomFade} />
         
         {/* Contenu du header */}
         <div className={`container ${styles.heroContent}`}>
           <h1 className={styles.heroTitle}>
             Organisez votre tournoi de rêve
           </h1>
-          <p className={styles.heroSubtitle}>
-            Créez, participez et gagnez dans les meilleurs tournois de jeux vidéo
-          </p>
+          <button
+            className={styles.heroCtaButton}
+            onClick={() => router.push('/tournaments/create')}
+            type="button"
+          >
+            Créer un tournoi
+          </button>
           
-          {/* Barre de recherche globale */}
-          <SearchBar
-            placeholder="Rechercher des jeux, tournois..."
-            size="md"
-            variant="dark"
-            className={styles.searchContainer}
-          />
+          {/* Barre de recherche déplacée dans le header */}
         </div>
       </div>
 
       {/* Contenu principal */}
       <div className={`container ${styles.mainContent}`}>
-        {/* Section Jeux populaires */}
+        {/* Section Tournois (remontée) */}
+        <div className={styles.tournaments}>
+          {/* En-tête simplifié: uniquement le titre */}
+          <div className={styles.tournamentsHeader}>
+            <h2 className={styles.tournamentsTitle}>Tournois recommandés</h2>
+          </div>
+          
+          {loading ? (
+            <div className={styles.loadingTournamentsContainer}>
+              <div>Chargement des tournois...</div>
+            </div>
+          ) : tournaments.length === 0 ? (
+            <div className={styles.emptyTournamentsContainer}>
+              <div>Aucun tournoi public dans cette catégorie.</div>
+            </div>
+          ) : (
+            <div className={styles.tournamentsGrid}>
+              {tournaments
+                .filter(t => (t as any).status !== 'COMPLETED')
+                .sort((a, b) => {
+                  const getTime = (x: any) => new Date(x?.startDate || x?.createdAt || x?.updatedAt || 0).getTime()
+                  return getTime(b as any) - getTime(a as any)
+                })
+                .slice(0, 6)
+                .map((t) => (
+                  <TournamentCard
+                    key={t.id}
+                    tournament={t}
+                  />
+                ))}
+            </div>
+          )}
+        </div>
+
+        {/* Section Jeux populaires (grille) */}
         <div className={styles.popularGames}>
           <div className={styles.popularGamesHeader}>
-            <h2 className={styles.popularGamesTitle}>
-              Jeux populaires
-            </h2>
+            <h2 className={styles.popularGamesTitle}>Parcourir les jeux</h2>
             <button 
               className={styles.browseGamesBtn}
               onClick={() => router.push('/games')}
             >
-              Parcourir les jeux
+              Voir tout
             </button>
           </div>
           
@@ -161,14 +157,13 @@ export default function Home() {
                   key={index}
                   className={styles.popularGameCard}
                   onClick={() => {
-                    // Rediriger directement vers la page dédiée du jeu
                     router.push(`/games/${encodeURIComponent(game.name)}`)
                   }}
                 >
                   <div className={styles.popularGameImageContainer}>
-                    {game.background_image ? (
+                    {game.image ? (
                       <img 
-                        src={game.background_image} 
+                        src={game.image} 
                         alt={game.name}
                         className={styles.popularGameImage}
                       />
@@ -192,62 +187,9 @@ export default function Home() {
                     <div className={styles.popularGameTitle}>
                       {game.name}
                     </div>
-                    <div className={styles.popularGameSubtitle}>
-                      {game.genres?.[0]?.name || 'Jeu'}
-                    </div>
                   </div>
                 </div>
               ))}
-            </div>
-          )}
-        </div>
-
-        {/* Section Tournois */}
-        <div className={styles.tournaments}>
-          {/* Onglets de catégories */}
-          <div className={styles.tournamentsHeader}>
-            <h2 className={styles.tournamentsTitle}>Tournois</h2>
-            <div className={styles.tournamentTabs}>
-              {[
-                { key: 'upcoming', label: 'Tournois à venir' },
-                { key: 'in_progress', label: 'Tournois en cours' },
-                { key: 'completed', label: 'Tournois terminés' }
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`${styles.tournamentTab} ${activeTab === tab.key ? styles.active : ''}`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-          
-          {loading ? (
-            <div className={styles.loadingTournamentsContainer}>
-              <div>Chargement des tournois...</div>
-            </div>
-          ) : tournaments.length === 0 ? (
-            <div className={styles.emptyTournamentsContainer}>
-              <div>Aucun tournoi public dans cette catégorie.</div>
-            </div>
-          ) : (
-            <div className={styles.tournamentsGrid}>
-              {tournaments
-                .filter(t => {
-                  if (activeTab === 'upcoming') return (t as any).status === 'REG_OPEN'
-                  if (activeTab === 'in_progress') return (t as any).status === 'IN_PROGRESS'
-                  if (activeTab === 'completed') return (t as any).status === 'COMPLETED'
-                  return true
-                })
-                .slice(0, 6)
-                .map((t) => (
-                  <TournamentCard
-                    key={t.id}
-                    tournament={t}
-                  />
-                ))}
             </div>
           )}
         </div>
