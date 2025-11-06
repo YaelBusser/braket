@@ -38,7 +38,6 @@ export default function Footer() {
             <ul className={styles.linkList}>
               <li><Link href="/" className={styles.link}>Accueil</Link></li>
               <li><Link href="/tournaments" className={styles.link}>Tournois</Link></li>
-              <li><Link href="/games" className={styles.link}>Jeux</Link></li>
               <li><Link href="/search" className={styles.link}>Recherche</Link></li>
             </ul>
           </div>

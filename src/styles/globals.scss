@@ -191,14 +191,26 @@ button {
   width: 100%;
   max-width: vars.$container-xl;
   margin: 0 auto;
-  padding: 0 vars.$spacing-4;
+  padding: 0 vars.$spacing-6;
+  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
   
   @media (min-width: vars.$breakpoint-sm) {
-    padding: 0 vars.$spacing-6;
+    padding: 0 vars.$spacing-8;
+    padding-left: calc(vars.$spacing-8 + vars.$spacing-4);
   }
   
   @media (min-width: vars.$breakpoint-lg) {
-    padding: 0 vars.$spacing-8;
+    padding: 0 vars.$spacing-10;
+    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+    max-width: vars.$container-2xl;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-8;
+    }
   }
 }
 
@@ -310,6 +322,20 @@ button {
 
 .text-right {
   text-align: right;
+}
+
+// Layout avec sidebar
+.mainContentWrapper {
+  margin-left: vars.$sidebar-width;
+  margin-top: vars.$header-height;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{vars.$header-height});
+  flex: 1;
+
+  @media (max-width: 1024px) {
+    margin-left: 0;
+  }
 }
 
 .text-sm {

@@ -1,0 +1,128 @@
+@use '@/styles/variables.module' as vars;
+
+.main {
+  background: #0a0a0a;
+  min-height: 100vh;
+  padding: vars.$spacing-8 0;
+}
+
+.container {
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  padding: 0 vars.$spacing-6;
+  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
+
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: 0 vars.$spacing-10;
+    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+
+    @media (min-width: vars.$breakpoint-lg) {
+      padding-left: vars.$spacing-10;
+    }
+  }
+}
+
+.loading {
+  text-align: center;
+  color: #9ca3af;
+  padding: vars.$spacing-8;
+}
+
+.profileCard {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: vars.$spacing-8;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-6;
+  margin-bottom: vars.$spacing-8;
+  padding-bottom: vars.$spacing-6;
+  border-bottom: 1px solid #374151;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #3b82f6;
+}
+
+.avatarPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 3rem;
+  font-weight: 700;
+  border: 3px solid #3b82f6;
+}
+
+.profileInfo {
+  flex: 1;
+}
+
+.name {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 vars.$spacing-2 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: vars.$spacing-2;
+}
+
+.memberSince {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin: vars.$spacing-2 0 0 0;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: vars.$spacing-6;
+}
+
+.statItem {
+  text-align: center;
+  padding: vars.$spacing-4;
+  background: #0a0a0a;
+  border-radius: 8px;
+  border: 1px solid #374151;
+}
+
+.statValue {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: vars.$spacing-1;
+}
+
+.statLabel {
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+

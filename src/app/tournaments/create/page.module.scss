@@ -4,18 +4,35 @@
   min-height: 100vh;
   background: vars.$lt-dark-bg;
   color: vars.$lt-text-primary;
-  padding: vars.$spacing-8 0;
+  padding: vars.$spacing-10 0 vars.$spacing-8 0;
 }
 
 .container {
-  max-width: vars.$container-lg;
+  max-width: vars.$container-xl;
   margin: 0 auto;
-  padding: 0 vars.$spacing-4;
+  padding: 0 vars.$spacing-6;
+  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: 0 vars.$spacing-8;
+    padding-left: calc(vars.$spacing-8 + vars.$spacing-6);
+    max-width: vars.$container-2xl;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+    
+    @media (min-width: vars.$breakpoint-lg) {
+      padding-left: vars.$spacing-8;
+    }
+  }
 }
 
 .header {
   text-align: center;
-  margin-bottom: vars.$spacing-8;
+  margin-bottom: vars.$spacing-10;
+  padding-bottom: vars.$spacing-6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .title {
@@ -39,15 +56,157 @@
 }
 
 .formContainer {
-  background: vars.$lt-dark-secondary;
-  border: 1px solid vars.$lt-border;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: vars.$radius-card;
   padding: vars.$spacing-8;
-  box-shadow: vars.$shadow-lg;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
 
   @media (max-width: vars.$breakpoint-md) {
     padding: vars.$spacing-6;
   }
+}
+
+.stepIndicator {
+  position: sticky;
+  top: calc(vars.$header-height + vars.$spacing-2);
+  z-index: 10;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  backdrop-filter: blur(10px);
+  margin-bottom: vars.$spacing-6;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: vars.$radius-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.stepSteps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: vars.$spacing-1;
+  flex-wrap: wrap;
+
+  @media (max-width: vars.$breakpoint-md) {
+    gap: vars.$spacing-1;
+  }
+}
+
+.stepStepItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  position: relative;
+}
+
+.stepStepCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  transition: all vars.$transition-fast;
+  cursor: default;
+  position: relative;
+  z-index: 2;
+
+  &.stepStepCircleActive {
+    background: vars.$gradient-primary;
+    border-color: transparent;
+    color: vars.$lt-text-primary;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+
+  &.stepStepCircleCurrent {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: vars.$lt-accent-blue;
+    color: vars.$lt-accent-blue;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+
+  &:has(+ *) {
+    cursor: pointer;
+  }
+}
+
+.stepStepLabel {
+  margin-top: vars.$spacing-1;
+  font-size: vars.$font-size-xs;
+  color: vars.$lt-text-secondary;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+
+  @media (max-width: vars.$breakpoint-md) {
+    font-size: 10px;
+    margin-top: 4px;
+  }
+}
+
+.stepStepLine {
+  position: absolute;
+  top: 20px;
+  left: calc(50% + 24px);
+  right: calc(-50% + 20px);
+  height: 3px;
+  z-index: 0;
+  transition: all vars.$transition-fast;
+  pointer-events: none;
+  
+  // Ligne par défaut en pointillés (étape non validée)
+  background: transparent;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.3) 0px,
+    rgba(255, 255, 255, 0.3) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+
+  // Ligne pleine quand l'étape est validée
+  &.stepStepLineActive {
+    background: vars.$gradient-primary !important;
+    opacity: 1 !important;
+  }
+}
+
+.stepTitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin: 0 0 vars.$spacing-6 0;
+}
+
+.formSection {
+  margin-bottom: vars.$spacing-8;
+  padding-bottom: vars.$spacing-6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:last-of-type {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.sectionTitle {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin: 0 0 vars.$spacing-4 0;
+  padding-bottom: vars.$spacing-2;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .form {
@@ -132,11 +291,27 @@
     gap: vars.$spacing-2;
     cursor: pointer;
     font-weight: vars.$font-weight-normal;
+    padding: vars.$spacing-3 vars.$spacing-4;
+    border: 2px solid vars.$lt-border;
+    border-radius: vars.$radius-md;
+    transition: all vars.$transition-fast;
+    background: vars.$lt-dark-bg;
+
+    &:hover {
+      border-color: vars.$lt-accent-blue;
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    &:has(input[type="radio"]:checked) {
+      border-color: vars.$lt-accent-blue;
+      background: rgba(59, 130, 246, 0.2);
+    }
   }
 
   input[type="radio"] {
     width: auto;
     margin: 0;
+    cursor: pointer;
   }
 }
 
@@ -150,23 +325,113 @@
   }
 }
 
-.gameInputContainer {
-  position: relative;
+.searchGameContainer {
+  margin-bottom: vars.$spacing-6;
 }
 
-.gameResults {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: vars.$lt-dark-secondary;
-  border: 1px solid vars.$lt-border;
+.searchGameInput {
+  width: 100%;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: vars.$lt-dark-bg;
+  border: 2px solid vars.$lt-border;
   border-radius: vars.$radius-md;
-  max-height: 400px;
-  overflow-y: auto;
-  z-index: 10;
-  box-shadow: vars.$shadow-lg;
-  margin-top: vars.$spacing-1;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  transition: all vars.$transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-blue;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: vars.$lt-text-muted;
+  }
+}
+
+.gamesGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-6;
+  padding: vars.$spacing-2;
+
+  @media (max-width: vars.$breakpoint-lg) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  @media (max-width: vars.$breakpoint-md) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: vars.$breakpoint-sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.gameCard {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  border-radius: vars.$radius-lg;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: vars.$lt-dark-bg;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: vars.$lt-border;
+    box-shadow: vars.$shadow-lg;
+  }
+
+  &.gameCardSelected {
+    border-color: vars.$lt-accent-blue;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+}
+
+.gameCardImageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+.gameCardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gameCardImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  background: vars.$gradient-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-2xl;
+}
+
+.gameCardText {
+  padding: vars.$spacing-3;
+}
+
+.gameCardTitle {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .loadingItem {
@@ -272,12 +537,161 @@
   margin-top: vars.$spacing-1;
 }
 
+.selectedGameDisplay {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3;
+  background: vars.$lt-dark-bg;
+  border: 2px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+}
+
+.selectedGameImage {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: vars.$radius-md;
+}
+
+.selectedGameImagePlaceholder {
+  width: 48px;
+  height: 48px;
+  background: vars.$gradient-primary;
+  border-radius: vars.$radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-lg;
+}
+
+.selectedGameName {
+  flex: 1;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+}
+
+.changeGameBtn {
+  padding: vars.$spacing-2 vars.$spacing-3;
+  background: transparent;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    border-color: vars.$lt-accent-blue;
+    color: vars.$lt-accent-blue;
+  }
+}
+
+.seeMoreBtn {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: transparent;
+  border: 2px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    border-color: vars.$lt-accent-blue;
+    color: vars.$lt-accent-blue;
+    background: rgba(59, 130, 246, 0.1);
+  }
+}
+
 .posterPreview {
   margin-top: vars.$spacing-3;
   
   img {
     width: 240px;
+    max-width: 100%;
     height: auto;
+    border-radius: vars.$radius-md;
+    border: 1px solid vars.$lt-border;
+  }
+}
+
+.logoPreview {
+  margin-top: vars.$spacing-3;
+  
+  img {
+    width: 120px;
+    height: 120px;
+    object-fit: contain;
+    border-radius: vars.$radius-md;
+    border: 1px solid vars.$lt-border;
+    background: vars.$lt-dark-bg;
+    padding: vars.$spacing-2;
+  }
+}
+
+.summarySection {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+  padding: vars.$spacing-6;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: vars.$radius-md;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+  padding-bottom: vars.$spacing-4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.summaryLabel {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryValue {
+  font-size: vars.$font-size-base;
+  color: vars.$lt-text-primary;
+  line-height: 1.6;
+}
+
+.summaryVisuals {
+  display: flex;
+  gap: vars.$spacing-4;
+  margin-top: vars.$spacing-2;
+  flex-wrap: wrap;
+}
+
+.summaryVisualItem {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+  align-items: center;
+
+  span {
+    font-size: vars.$font-size-xs;
+    color: vars.$lt-text-secondary;
+  }
+
+  img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
     border-radius: vars.$radius-md;
     border: 1px solid vars.$lt-border;
   }
@@ -397,4 +811,114 @@
   .form {
     gap: vars.$spacing-4;
   }
+}
+
+// Card Preview Styles
+.cardPreview {
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 400px;
+  margin-top: vars.$spacing-4;
+}
+
+.cardPreviewImage {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+.cardPreviewPoster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardPreviewPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardPreviewGameIcon {
+  font-size: 4rem;
+  opacity: 0.8;
+}
+
+.cardPreviewGameLogo {
+  position: absolute;
+  top: vars.$spacing-3;
+  left: vars.$spacing-3;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 8px;
+  padding: vars.$spacing-1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.cardPreviewContent {
+  padding: vars.$spacing-4;
+  background: #0a0a0a;
+}
+
+.cardPreviewDate {
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  margin-bottom: vars.$spacing-3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardPreviewInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-3;
+}
+
+.cardPreviewTournamentLogo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #1f2937;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.cardPreviewText {
+  flex: 1;
+}
+
+.cardPreviewTitle {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 vars.$spacing-2 0;
+  line-height: 1.3;
+}
+
+.cardPreviewDetails {
+  color: #9ca3af;
+  font-size: 0.875rem;
 }

@@ -9,12 +9,21 @@ interface TournamentCardProps {
     name: string
     description?: string | null
     game?: string | null
+    gameRef?: {
+      id: string
+      name: string
+      imageUrl: string | null
+    } | null
     posterUrl?: string | null
     logoUrl?: string | null
     startDate?: string | null
     endDate?: string | null
     status: string
+    format?: string
     maxParticipants?: number | null
+    isTeamBased?: boolean
+    teamMinSize?: number | null
+    teamMaxSize?: number | null
     _count?: {
       registrations: number
     }
@@ -27,10 +36,12 @@ export default function TournamentCard({ tournament, className = '' }: Tournamen
     if (!dateString) return ''
     const date = new Date(dateString)
     return date.toLocaleDateString('fr-FR', { 
+      weekday: 'short',
       day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
-    })
+      month: 'long',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(',', '').toUpperCase()
   }
 
   const getStatusInfo = (status: string) => {
@@ -51,66 +62,81 @@ export default function TournamentCard({ tournament, className = '' }: Tournamen
   const statusInfo = getStatusInfo(tournament.status)
   const participantsCount = tournament._count?.registrations || 0
   const maxParticipants = tournament.maxParticipants || 0
+  
+  // Utiliser gameRef si disponible, sinon fallback sur game
+  const gameName = tournament.gameRef?.name || tournament.game || ''
+  const gameImage = tournament.gameRef?.imageUrl || null
+  
+  // Image de fond : poster ou image du jeu
+  const backgroundImage = tournament.posterUrl || gameImage
 
   return (
     <Link href={`/tournaments/${tournament.id}`} className={`${styles.tournamentCard} ${className}`}>
+      {/* Section supérieure avec image de fond (2/3) */}
       <div className={styles.cardImage}>
-        {tournament.posterUrl ? (
+        {backgroundImage ? (
           <img 
-            src={tournament.posterUrl} 
+            src={backgroundImage} 
             alt={tournament.name}
             className={styles.posterImage}
           />
         ) : (
           <div className={styles.placeholderImage}>
-            <div className={styles.gameIcon}>
-              🎮
-            </div>
+            <div className={styles.gameIcon}>🎮</div>
           </div>
         )}
         
-        {/* Logo du tournoi en overlay */}
-        {tournament.logoUrl && (
-          <div className={styles.tournamentLogo}>
-            <img 
-              src={tournament.logoUrl} 
-              alt={`${tournament.name} logo`}
-              className={styles.logoImage}
-            />
+        {/* Logo du jeu en haut à gauche */}
+        {gameImage && !tournament.posterUrl && (
+          <div className={styles.gameLogo}>
+            <img src={gameImage} alt={gameName} />
           </div>
         )}
         
-        {/* Étiquette du jeu en bas à gauche */}
-        {tournament.game && (
-          <div className={styles.gameLabel}>
-            {tournament.game}
-          </div>
-        )}
-        
-        {/* Compteur d'inscrits en bas à droite */}
-        <div className={styles.participantsCounter}>
-          {participantsCount}/{maxParticipants || '∞'}
+        {/* Banner de statut en haut */}
+        <div className={styles.statusBanner} style={{ backgroundColor: statusInfo.color }}>
+          {statusInfo.text}
         </div>
       </div>
       
+      {/* Section inférieure avec informations (1/3) */}
       <div className={styles.cardContent}>
-        <div className={styles.tournamentInfo}>
-          <div className={styles.tournamentTitle}>
-            {tournament.name}
+        {/* Date en haut */}
+        {tournament.startDate && (
+          <div className={styles.tournamentDate}>
+            {formatDate(tournament.startDate)}
           </div>
-          
-          {tournament.startDate && (
-            <div className={styles.tournamentDate}>
-              {formatDate(tournament.startDate)}
+        )}
+        
+        {/* Logo du tournoi et titre */}
+        <div className={styles.tournamentInfo}>
+          {tournament.logoUrl && (
+            <div className={styles.tournamentLogo}>
+              <img 
+                src={tournament.logoUrl} 
+                alt={`${tournament.name} logo`}
+                className={styles.logoImage}
+              />
             </div>
           )}
-          
-          <div className={styles.tournamentMeta}>
-            <div className={styles.status} style={{ color: statusInfo.color }}>
-              {statusInfo.text}
-            </div>
-            <div className={styles.participants}>
-              {participantsCount} Équipes
+          <div className={styles.tournamentText}>
+            <h3 className={styles.tournamentTitle}>
+              {tournament.name}
+            </h3>
+            <div className={styles.tournamentDetails}>
+              {tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize && (
+                <span>{tournament.teamMinSize}v{tournament.teamMaxSize}</span>
+              )}
+              {tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize && tournament.format && ' • '}
+              {tournament.format === 'SINGLE_ELIMINATION' && 'Elimination directe'}
+              {tournament.format === 'DOUBLE_ELIMINATION' && 'Double élimination'}
+              {tournament.format === 'ROUND_ROBIN' && 'Round robin'}
+              {maxParticipants > 0 && (
+                <>
+                  {' • '}
+                  <span>{participantsCount}/{maxParticipants}</span>
+                </>
+              )}
             </div>
           </div>
         </div>

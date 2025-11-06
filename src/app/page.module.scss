@@ -12,6 +12,15 @@
   height: clamp(360px, 75vh, 700px);
   position: relative;
   overflow: hidden;
+  margin-left: calc(-1 * vars.$sidebar-width);
+  padding-left: vars.$sidebar-width;
+  width: calc(100% + vars.$sidebar-width);
+  
+  @media (max-width: 1024px) {
+    margin-left: 0;
+    padding-left: 0;
+    width: 100%;
+  }
 }
 
 .heroVideo {
@@ -46,6 +55,18 @@
   justify-content: center;
   flex-direction: column;
   padding-top: vars.$spacing-8;
+  padding-left: vars.$spacing-6 !important;
+  padding-right: vars.$spacing-6 !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: vars.$spacing-8 !important;
+    padding-right: vars.$spacing-8 !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: vars.$spacing-10 !important;
+    padding-right: vars.$spacing-10 !important;
+  }
 }
 
 .heroTitle {
@@ -70,19 +91,18 @@
 
 .heroCtaButton {
   margin-top: vars.$spacing-4;
-  background: linear-gradient(135deg, vars.$lt-accent-blue, vars.$lt-accent-purple);
+  background: vars.$lt-accent-blue;
   color: #ffffff;
   border: none;
   padding: vars.$spacing-2 vars.$spacing-5;
   border-radius: vars.$radius-md;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(59, 130, 246, 0.35);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+  transition: background 0.2s ease;
 
   &:hover {
-    transform: translateY(-1px) scale(1.02);
-    box-shadow: 0 10px 28px rgba(139, 92, 246, 0.35);
+    background: darken(vars.$lt-accent-blue, 4%);
   }
 }
 
@@ -99,7 +119,7 @@
   align-items: center;
   background: rgba(17, 24, 39, 0.9);
   backdrop-filter: blur(20px);
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   border: 1px solid rgba(75, 85, 99, 0.3);
   overflow: hidden;
@@ -132,7 +152,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0 16px 16px 0;
+  border-radius: 0 10px 10px 0;
   min-width: 60px;
   
   &:hover {
@@ -143,26 +163,42 @@
 
 /* --- MAIN CONTENT --- */
 .mainContent {
-  padding: vars.$spacing-8 0;
+  padding: vars.$spacing-8 vars.$spacing-8;
+  padding-left: calc(vars.$spacing-8 + vars.$spacing-4);
+  max-width: 1800px;
+  margin: 0 auto;
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: vars.$spacing-8 vars.$spacing-10;
+    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-8;
+    
+    @media (min-width: vars.$breakpoint-lg) {
+      padding-left: vars.$spacing-10;
+    }
+  }
 }
 
 /* --- POPULAR GAMES --- */
 .popularGames {
-  margin-bottom: vars.$spacing-16;
+  margin-bottom: vars.$spacing-10;
 }
 
 .popularGamesHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: vars.$spacing-4;
+  margin-bottom: vars.$spacing-3;
 }
 
 .popularGamesTitle {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: vars.$text-primary;
-  margin-bottom: vars.$spacing-6;
+  margin-bottom: vars.$spacing-4;
   text-align: center;
 }
 
@@ -197,8 +233,8 @@
 .popularGamesGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: vars.$spacing-4;
-  margin-bottom: vars.$spacing-8;
+  gap: vars.$spacing-3;
+  margin-bottom: vars.$spacing-6;
   width: 100%;
 }
 
@@ -216,8 +252,8 @@
 
 .popularGameImageContainer {
   position: relative;
-  width: 100%;
-  aspect-ratio: 2/3;
+  width: 90%;
+  aspect-ratio: 4/5;
   border-radius: vars.$radius-lg;
   overflow: hidden;
 }
@@ -256,23 +292,22 @@
 
 /* --- TOURNAMENTS --- */
 .tournaments {
-  margin-bottom: vars.$spacing-16;
+  margin-bottom: vars.$spacing-10;
 }
 
 .tournamentsTitle {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: vars.$text-primary;
-  margin-bottom: vars.$spacing-6;
+  margin-bottom: vars.$spacing-4;
   text-align: start;
 }
 
 .tournamentsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: vars.$spacing-6;
-  max-width: 1200px;
-  margin: 0 auto;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-4;
+  width: 100%;
 }
 
 .tournamentCard {

@@ -19,10 +19,12 @@ export async function POST(request: NextRequest) {
     let description: string | undefined
     let game: string | undefined
     let format: string | undefined
+    let gameId: string | undefined
     let visibility: string | undefined
     let startDate: string | undefined
     let endDate: string | undefined
     let posterUrl: string | undefined
+    let logoUrl: string | undefined
     let registrationDeadline: string | undefined
 
     if (contentType.includes('multipart/form-data')) {
@@ -30,24 +32,43 @@ export async function POST(request: NextRequest) {
       name = (form.get('name') as string) || undefined
       description = (form.get('description') as string) || undefined
       game = (form.get('game') as string) || undefined
+      gameId = (form.get('gameId') as string) || undefined
       format = (form.get('format') as string) || 'SINGLE_ELIMINATION'
       visibility = (form.get('visibility') as string) || 'PUBLIC'
       startDate = (form.get('startDate') as string) || undefined
       endDate = (form.get('endDate') as string) || undefined
-      const file = form.get('poster') as File | null
-      if (file) {
+      const posterFile = form.get('poster') as File | null
+      if (posterFile) {
         const allowed = ['image/png', 'image/jpeg', 'image/webp']
-        if (!allowed.includes(file.type)) {
+        if (!allowed.includes(posterFile.type)) {
           return NextResponse.json({ message: 'Affiche: type non supporté' }, { status: 400 })
         }
         const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'posters')
         if (!fs.existsSync(uploadDir)) await fsp.mkdir(uploadDir, { recursive: true })
-        const ext = file.type === 'image/png' ? '.png' : file.type === 'image/webp' ? '.webp' : '.jpg'
+        const ext = posterFile.type === 'image/png' ? '.png' : posterFile.type === 'image/webp' ? '.webp' : '.jpg'
         const fileName = `${userId}-${Date.now()}${ext}`
         const filePath = path.join(uploadDir, fileName)
-        const buf = Buffer.from(await file.arrayBuffer())
+        const buf = Buffer.from(await posterFile.arrayBuffer())
         await fsp.writeFile(filePath, buf)
         posterUrl = `/uploads/posters/${fileName}`
+      }
+      
+      const logoFile = form.get('logo') as File | null
+      if (logoFile) {
+        const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml']
+        if (!allowed.includes(logoFile.type)) {
+          return NextResponse.json({ message: 'Logo: type non supporté' }, { status: 400 })
+        }
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'logos')
+        if (!fs.existsSync(uploadDir)) await fsp.mkdir(uploadDir, { recursive: true })
+        const ext = logoFile.type === 'image/png' ? '.png' : 
+                   logoFile.type === 'image/webp' ? '.webp' : 
+                   logoFile.type === 'image/svg+xml' ? '.svg' : '.jpg'
+        const fileName = `${userId}-${Date.now()}${ext}`
+        const filePath = path.join(uploadDir, fileName)
+        const buf = Buffer.from(await logoFile.arrayBuffer())
+        await fsp.writeFile(filePath, buf)
+        logoUrl = `/uploads/logos/${fileName}`
       }
       // options
       const isTeamBasedStr = form.get('isTeamBased') as string | null
@@ -63,6 +84,7 @@ export async function POST(request: NextRequest) {
       name = body?.name
       description = body?.description
       game = body?.game
+      gameId = body?.gameId
       format = body?.format || 'SINGLE_ELIMINATION'
       visibility = body?.visibility || 'PUBLIC'
       startDate = body?.startDate
@@ -76,23 +98,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Nom requis' }, { status: 400 })
     }
 
-    // Vérifier la limite de 10 tournois actifs (non terminés)
-    const activeTournaments = await prisma.tournament.count({
-      where: { 
-        organizerId: userId, 
-        status: { not: 'COMPLETED' }
-      }
-    })
-    if (activeTournaments >= 10) {
-      return NextResponse.json({ 
-        message: 'Limite atteinte : vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' 
-      }, { status: 409 })
-    }
-
     // Vérifier que l'utilisateur existe (évite P2003 si session périmée)
     const existingUser = await prisma.user.findUnique({ where: { id: userId } })
     if (!existingUser) {
       return NextResponse.json({ message: 'Session expirée. Veuillez vous reconnecter.' }, { status: 401 })
+    }
+
+    // Vérifier la limite de 10 tournois actifs (non terminés) - uniquement pour les particuliers
+    if (!existingUser.isEnterprise) {
+      const activeTournaments = await prisma.tournament.count({
+        where: { 
+          organizerId: userId, 
+          status: { not: 'COMPLETED' }
+        }
+      })
+      if (activeTournaments >= 10) {
+        return NextResponse.json({ 
+          message: 'Limite atteinte : vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' 
+        }, { status: 409 })
+      }
     }
 
     // Coercion des enums (MVP: toujours SINGLE_ELIMINATION + PUBLIC)
@@ -100,14 +124,21 @@ export async function POST(request: NextRequest) {
     const safeVisibility = visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC'
 
     try {
+      // Si uniquement gameId fourni, récupérer le nom pour le champ legacy
+      if (!game && gameId) {
+        const g = await prisma.game.findUnique({ where: { id: gameId } })
+        if (g) game = g.name
+      }
       const tournament = await prisma.tournament.create({
         data: {
         name: name!,
         description: description || null,
         game: game || null,
+        gameId: gameId || null,
         format: safeFormat,
         visibility: safeVisibility,
         posterUrl: posterUrl || null,
+        logoUrl: logoUrl || null,
         isTeamBased: Boolean((global as any).__tmp_isTeamBased),
         maxParticipants: (global as any).__tmp_maxParticipants || null,
         startDate: startDate ? new Date(startDate) : null,
@@ -143,6 +174,16 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     const userId = (session?.user as any)?.id as string | undefined
 
+    // Récupérer le type d'utilisateur si connecté
+    let userIsEnterprise = false
+    if (userId) {
+      const user = await prisma.user.findUnique({ 
+        where: { id: userId },
+        select: { isEnterprise: true }
+      })
+      userIsEnterprise = user?.isEnterprise || false
+    }
+
     const where: any = {}
     if (mine) {
       if (!userId) {
@@ -151,6 +192,19 @@ export async function GET(request: NextRequest) {
       where.organizerId = userId
     } else {
       where.visibility = 'PUBLIC'
+      // Séparation entreprises/particuliers : filtrer selon le type d'utilisateur
+      // Par défaut (non connecté ou particulier), on montre uniquement les tournois de particuliers
+      if (userIsEnterprise) {
+        // Les entreprises ne voient que les tournois d'entreprises
+        where.organizer = {
+          isEnterprise: true
+        }
+      } else {
+        // Les particuliers (et non connectés) ne voient que les tournois de particuliers
+        where.organizer = {
+          isEnterprise: false
+        }
+      }
     }
     if (q) {
       where.OR = [{ name: { contains: q } }, { game: { contains: q } }]
@@ -176,24 +230,27 @@ export async function GET(request: NextRequest) {
     const tournaments = await prisma.tournament.findMany({
       where,
       orderBy,
-      select: ({
-        id: true,
-        name: true,
-        description: true,
-        game: true,
-        format: true,
-        visibility: true,
-        posterUrl: true,
-        isTeamBased: true,
-        maxParticipants: true,
-        startDate: true,
-        endDate: true,
-        status: true,
-        registrationDeadline: true,
-        organizerId: true,
-        createdAt: true,
-        _count: { select: { registrations: true } }
-      } as any),
+      include: {
+        organizer: {
+          select: {
+            id: true,
+            pseudo: true,
+            isEnterprise: true
+          }
+        },
+        gameRef: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true
+          }
+        },
+        _count: {
+          select: {
+            registrations: true
+          }
+        }
+      }
     })
 
     return NextResponse.json({ tournaments })

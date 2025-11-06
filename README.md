@@ -41,10 +41,18 @@ npm install
    - Ajouter les variables d'environnement pour Google OAuth
    - Configurer `NEXTAUTH_SECRET`
 
-5. **Initialiser la base de données**
+5. **Initialiser la base de données + seed des jeux**
 ```bash
-npm run db:push
+# Générer le client Prisma
+npm run db:generate
+
+# Créer/appliquer les migrations (crée les tables dont `games`)
+npm run db:migrate
+
+# Peupler la table `games` avec les 10 jeux par défaut
+npx prisma db seed
 ```
+Après ces commandes, la table `games` contient: CS 2, Valorant, Rocket League, League of Legends, Dota 2, Street Fighter 6, Fortnite, PUBG, Apex Legends, Call of Duty 7.
 
 6. **Lancer le serveur de développement**
 ```bash

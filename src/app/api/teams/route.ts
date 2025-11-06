@@ -131,4 +131,48 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const q = searchParams.get('q') || ''
+    
+    if (!q.trim() || q.trim().length < 2) {
+      return NextResponse.json({ teams: [] })
+    }
+
+    const teams = await prisma.team.findMany({
+      where: {
+        name: { contains: q }
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                pseudo: true,
+                avatarUrl: true
+              }
+            }
+          }
+        },
+        tournament: {
+          select: {
+            id: true,
+            name: true,
+            game: true
+          }
+        }
+      },
+      take: 20,
+      orderBy: { createdAt: 'desc' }
+    })
+
+    return NextResponse.json({ teams })
+  } catch (error) {
+    console.error('GET /api/teams error', error)
+    return NextResponse.json({ teams: [] }, { status: 500 })
+  }
+}
+
 

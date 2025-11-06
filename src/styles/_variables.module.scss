@@ -234,6 +234,10 @@ $container-lg: 1024px;
 $container-xl: 1280px;
 $container-2xl: 1536px;
 
+// Layout dimensions
+$header-height: 58px; // Hauteur du header (utilisée pour margin-top du contenu)
+$sidebar-width: 64px; // Largeur de la sidebar
+
 // LeTournoi specific gradients
 $gradient-primary: linear-gradient(135deg, $lt-accent-blue 0%, $lt-accent-purple 100%);
 $gradient-dark: linear-gradient(135deg, $lt-dark-bg 0%, $lt-dark-secondary 100%);

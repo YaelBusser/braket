@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import { TournamentCard } from '@/components/ui'
-import { GAMES, GameInfo } from '@/data/games'
 
 // Jeux populaires - noms pour recherche API (limité à 6)
 const POPULAR_GAMES_NAMES = [
@@ -21,16 +20,28 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [animated, setAnimated] = useState(false)
-  const [popularGames, setPopularGames] = useState<GameInfo[]>([])
+  const [popularGames, setPopularGames] = useState<any[]>([])
   const [loadingGames, setLoadingGames] = useState(false)
   const router = useRouter()
 
-  // Charger les jeux populaires depuis la liste statique
+  // Charger les jeux populaires depuis la DB
   useEffect(() => {
-    setLoadingGames(true)
-    // Sélectionner les 6 premiers jeux de la liste
-    setPopularGames(GAMES.slice(0, 6))
-    setLoadingGames(false)
+    const load = async () => {
+      setLoadingGames(true)
+      try {
+        const res = await fetch('/api/games')
+        const data = await res.json()
+        const games = (data.games || []).slice(0, 6).map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          image: g.imageUrl
+        }))
+        setPopularGames(games)
+      } finally {
+        setLoadingGames(false)
+      }
+    }
+    load()
   }, [])
 
   useEffect(() => {

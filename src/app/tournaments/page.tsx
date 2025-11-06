@@ -32,9 +32,9 @@ function TournamentsList() {
   }, [q])
 
   return (
-    <div className="container" style={{ padding: '2rem 0' }}>
-      <h1 style={{ color: '#fff', fontSize: '2rem', fontWeight: 700, marginBottom: '1rem' }}>Tournois</h1>
-      <div style={{ maxWidth: '560px', marginBottom: '1.5rem' }}>
+    <div className="container" style={{ padding: '3rem 0 3rem 0' }}>
+      <h1 style={{ color: '#fff', fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>Tournois</h1>
+      <div style={{ maxWidth: '560px', marginBottom: '2rem' }}>
         <SearchBar
           placeholder="Rechercher un tournoi..."
           size="sm"
@@ -49,10 +49,9 @@ function TournamentsList() {
       ) : (
         <div style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
           gap: '1.5rem',
-          maxWidth: '1200px',
-          margin: '0 auto'
+          width: '100%'
         }}>
           {items.map(t => (
             <TournamentCard

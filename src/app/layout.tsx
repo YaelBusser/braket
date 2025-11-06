@@ -5,6 +5,7 @@ import AuthProvider from "../components/providers/auth-provider";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { NotificationProvider } from "../components/providers/notification-provider";
+import Sidebar from "../components/Sidebar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,11 +35,14 @@ export default function RootLayout({
         <AuthProvider>
           <NotificationProvider>
             <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+              <Sidebar />
               <Navigation />
-              <main style={{ flex: 1 }}>
-                {children}
-              </main>
-              <Footer />
+              <div className="mainContentWrapper">
+                <main style={{ flex: 1 }}>
+                  {children}
+                </main>
+                <Footer />
+              </div>
             </div>
           </NotificationProvider>
         </AuthProvider>

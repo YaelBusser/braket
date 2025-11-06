@@ -16,6 +16,7 @@ model User {
   passwordHash  String?
   pseudo        String
   avatarUrl     String?
+  isEnterprise  Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
@@ -72,10 +73,13 @@ model Tournament {
   id           String               @id @default(cuid())
   name         String
   description  String?
-  game         String?
+  game         String? // legacy text field (deprecated)
+  gameId       String?
+  gameRef      Game?                @relation(fields: [gameId], references: [id])
   format       TournamentFormat     @default(SINGLE_ELIMINATION)
   visibility   TournamentVisibility @default(PUBLIC)
   posterUrl    String?
+  logoUrl      String?
   isTeamBased  Boolean              @default(false)
   maxParticipants Int?
   teamMinSize  Int?
@@ -94,6 +98,19 @@ model Tournament {
   registrations TournamentRegistration[]
 
   @@map("tournaments")
+}
+
+model Game {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  slug        String       @unique
+  imageUrl    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  tournaments Tournament[]
+
+  @@map("games")
 }
 
 model Team {

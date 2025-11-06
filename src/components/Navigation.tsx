@@ -21,19 +21,20 @@ export default function Navigation() {
           </Link>
           
           <div className={styles.navLinks}>
-            <Link href="/games" className={styles.navLink}>Jeux</Link>
             <Link href="/tournaments" className={styles.navLink}>Tournois</Link>
           </div>
         </div>
-        <div className={styles.searchWrapper}>
-          <SearchBar
-            placeholder="Rechercher des jeux, tournois..."
-            size="xs"
-            variant="dark"
-          />
-        </div>
-        
         <div className={styles.menu}>
+          <div className={styles.searchWrapper}>
+            <SearchBar
+              placeholder="Rechercher..."
+              size="xs"
+              variant="header"
+              hideButton
+              autoSearchDelay={500}
+              redirectHomeOnEmpty
+            />
+          </div>
           {status === 'loading' ? (
             <div className={styles.loading}>Chargement...</div>
           ) : session ? (

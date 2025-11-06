@@ -1,0 +1,312 @@
+@use '@/styles/variables.module' as vars;
+
+.main {
+  background: #0a0a0a;
+  min-height: 100vh;
+  padding: vars.$spacing-8 0;
+}
+
+.container {
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  padding: 0 vars.$spacing-6;
+  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
+
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: 0 vars.$spacing-10;
+    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+
+    @media (min-width: vars.$breakpoint-lg) {
+      padding-left: vars.$spacing-10;
+    }
+  }
+}
+
+.header {
+  margin-bottom: vars.$spacing-8;
+}
+
+.title {
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: vars.$spacing-6;
+}
+
+.filters {
+  display: flex;
+  gap: vars.$spacing-2;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: vars.$spacing-2 vars.$spacing-4;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #374151;
+    color: #fff;
+  }
+}
+
+.filterBtnActive {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+
+  &:hover {
+    background: #3b82f6;
+  }
+}
+
+.section {
+  margin-bottom: vars.$spacing-10;
+}
+
+.sectionTitle {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: vars.$spacing-6;
+}
+
+.emptyState {
+  background: #1f2937;
+  border-radius: 12px;
+  padding: vars.$spacing-8;
+  border: 1px solid #374151;
+  text-align: center;
+  color: #9ca3af;
+}
+
+// Tournaments
+.tournamentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-6;
+}
+
+// Games
+.gamesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: vars.$spacing-4;
+}
+
+.gameCard {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+.gameImageContainer {
+  width: 100%;
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1f2937;
+  margin-bottom: vars.$spacing-2;
+}
+
+.gameImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gameImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.gameText {
+  padding: 0 vars.$spacing-1;
+}
+
+.gameTitle {
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Users
+.usersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: vars.$spacing-4;
+}
+
+.userCard {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-4;
+  padding: vars.$spacing-4;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #374151;
+    border-color: #4b5563;
+  }
+}
+
+.userAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.userAvatarPlaceholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.userInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-1;
+}
+
+.userName {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.userBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+// Teams
+.teamsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-4;
+}
+
+.teamCard {
+  padding: vars.$spacing-6;
+  background: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #374151;
+    border-color: #4b5563;
+  }
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+}
+
+.teamName {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.teamGame {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.teamDescription {
+  color: #d1d5db;
+  font-size: 0.875rem;
+  margin: vars.$spacing-2 0;
+  line-height: 1.5;
+}
+
+.teamTournament {
+  color: #3b82f6;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.teamMembers {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  margin-top: vars.$spacing-3;
+}
+
+.teamMemberAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.teamMembersMore {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-left: vars.$spacing-1;
+}
+

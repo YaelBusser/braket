@@ -3,17 +3,20 @@
 .nav {
   background: vars.$lt-dark-bg;
   border-bottom: 1px solid vars.$lt-border;
-  box-shadow: vars.$shadow-sm;
-  position: sticky;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  position: fixed;
   top: 0;
-  z-index: vars.$z-sticky;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  z-index: vars.$z-fixed; /* Au-dessus de la sidebar */
 }
 
 .container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: vars.$spacing-2 vars.$spacing-6;
+  padding: vars.$spacing-3 vars.$spacing-6;
   max-width: vars.$container-xl;
   margin: 0 auto;
 }
@@ -49,9 +52,9 @@
 
 .searchWrapper {
   flex: 0 0 auto;
-  width: 420px;
-  max-width: 420px;
-  margin: 0 vars.$spacing-4;
+  width: 300px;
+  max-width: 300px;
+  margin: 0 vars.$spacing-3 0 0;
 }
 
 .navLink {
@@ -152,8 +155,8 @@
   
   .searchWrapper {
     margin: 0 vars.$spacing-3;
-    width: 360px;
-    max-width: 360px;
+    width: 260px;
+    max-width: 260px;
   }
   
   .navLinks {
