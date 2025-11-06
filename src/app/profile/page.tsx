@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
+import { useAuthModal } from '../../components/AuthModalContext'
 import styles from './page.module.scss'
 import { getCroppedImg } from '../../lib/image'
 
@@ -13,6 +14,7 @@ function ProfilePage() {
   const { data: session, status, update } = useSession()
   const router = useRouter()
   const { notify } = useNotification()
+  const { openAuthModal } = useAuthModal()
   
   // États pour la gestion du profil
   const [isEditing, setIsEditing] = useState(false)
@@ -72,10 +74,12 @@ function ProfilePage() {
   // Redirection hors rendu pour éviter les problèmes d'ordre des hooks
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login')
+      try { localStorage.setItem('lt_returnTo', '/profile') } catch {}
+      openAuthModal('login')
+      router.push('/')
       return
     }
-  }, [status, router])
+  }, [status, router, openAuthModal])
 
   // Charger les données utilisateur
   useEffect(() => {

@@ -186,7 +186,7 @@ export default function TournamentAdminPage() {
       case 'DRAFT': return '#6b7280'
       case 'REG_OPEN': return '#10b981'
       case 'IN_PROGRESS': return '#f59e0b'
-      case 'COMPLETED': return '#3b82f6'
+      case 'COMPLETED': return '#ff008c'
       default: return '#6b7280'
     }
   }
@@ -259,7 +259,7 @@ export default function TournamentAdminPage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#3b82f6' }}>
+            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ff008c' }}>
               {tournament._count.registrations}
             </div>
             <div style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
@@ -303,7 +303,7 @@ export default function TournamentAdminPage() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
               style={{
-                background: activeTab === tab.key ? '#3b82f6' : 'transparent',
+                background: activeTab === tab.key ? '#ff008c' : 'transparent',
                 color: activeTab === tab.key ? '#ffffff' : '#9ca3af',
                 border: 'none',
                 padding: '0.75rem 1rem',
@@ -374,7 +374,7 @@ export default function TournamentAdminPage() {
                 onClick={() => callAction('finish')}
                 disabled={tournament.status === 'COMPLETED'}
                 style={{
-                  background: tournament.status === 'COMPLETED' ? '#374151' : '#3b82f6',
+                  background: tournament.status === 'COMPLETED' ? '#374151' : '#ff008c',
                   color: '#ffffff',
                   border: 'none',
                   padding: '0.75rem 1.5rem',
@@ -435,7 +435,7 @@ export default function TournamentAdminPage() {
                         {team.name}
                       </h4>
                       <span style={{
-                        background: '#3b82f6',
+                        background: '#ff008c',
                         color: '#ffffff',
                         padding: '0.25rem 0.5rem',
                         borderRadius: '4px',

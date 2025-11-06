@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../../../components/providers/notification-provider'
+import { useAuthModal } from '../../../components/AuthModalContext'
 import styles from './page.module.scss'
 import { GAMES, filterGames, GameInfo } from '@/data/games'
 
@@ -11,6 +12,7 @@ export default function CreateTeamPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { notify } = useNotification()
+  const { openAuthModal } = useAuthModal()
   
   const [isLoading, setIsLoading] = useState(false)
   const [form, setForm] = useState({
@@ -26,9 +28,11 @@ export default function CreateTeamPage() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login')
+      try { localStorage.setItem('lt_returnTo', '/teams/create') } catch {}
+      openAuthModal('login')
+      router.push('/')
     }
-  }, [status, router])
+  }, [status, router, openAuthModal])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target

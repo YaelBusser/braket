@@ -2,7 +2,7 @@
 
 .teamsPage {
   min-height: 100vh;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   color: vars.$lt-text-primary;
 }
 
@@ -87,7 +87,7 @@
 .activeTab {
   color: vars.$lt-text-primary;
   border-bottom-color: vars.$lt-accent-blue;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(255, 0, 140, 0.1);
 }
 
 /* Content */
@@ -120,7 +120,7 @@
 
 .filterSelect {
   padding: vars.$spacing-2 vars.$spacing-3;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 1px solid vars.$lt-border;
   border-radius: vars.$radius-input;
   color: vars.$lt-text-primary;
@@ -131,7 +131,7 @@
   &:focus {
     outline: none;
     border-color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
   }
 }
 
@@ -163,7 +163,7 @@
 .teamIcon {
   width: 60px;
   height: 60px;
-  background: rgba(59, 130, 246, 0.1);
+  background: rgba(255, 0, 140, 0.1);
   border-radius: vars.$radius-lg;
   display: flex;
   align-items: center;

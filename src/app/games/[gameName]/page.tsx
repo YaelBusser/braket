@@ -126,7 +126,7 @@ export default function GamePage() {
   const filteredTournaments = getFilteredTournaments()
 
   return (
-    <main style={{ background: '#0a0a0a', minHeight: '100vh' }}>
+    <main style={{ background: 'var(--bg-page)', minHeight: '100vh' }}>
       {/* Header avec bannière du jeu */}
       <div style={{
         backgroundImage: gameDetails?.image 
@@ -163,7 +163,7 @@ export default function GamePage() {
                 <div style={{
                   width: '100%',
                   height: '100%',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                  background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -187,7 +187,7 @@ export default function GamePage() {
                 <div style={{
                   width: '100%',
                   height: '100%',
-                  background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
+                  background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -249,12 +249,12 @@ export default function GamePage() {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: activeTab === tab.id ? '#3b82f6' : '#9ca3af',
+                  color: activeTab === tab.id ? '#ff008c' : '#9ca3af',
                   padding: '0.75rem 1.5rem',
                   fontSize: '1rem',
                   fontWeight: '500',
                   cursor: 'pointer',
-                  borderBottom: activeTab === tab.id ? '2px solid #3b82f6' : '2px solid transparent',
+                  borderBottom: activeTab === tab.id ? '2px solid #ff008c' : '2px solid transparent',
                   transition: 'all 0.2s ease'
                 }}
                 onMouseEnter={(e) => {
@@ -318,9 +318,9 @@ export default function GamePage() {
                   cursor: 'pointer'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6'
+                  e.currentTarget.style.borderColor = '#ff008c'
                   e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.15)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 0, 140, 0.15)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.borderColor = '#374151'
@@ -409,7 +409,7 @@ export default function GamePage() {
                 <Link
                   href={`/tournaments/${tournament.id}`}
                   style={{
-                    background: '#3b82f6',
+                    background: '#ff008c',
                     color: '#ffffff',
                     textDecoration: 'none',
                     padding: '0.75rem 1.5rem',
@@ -420,10 +420,10 @@ export default function GamePage() {
                     flexShrink: 0
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#2563eb'
+                    e.currentTarget.style.background = '#cc0070'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#3b82f6'
+                    e.currentTarget.style.background = '#ff008c'
                   }}
                 >
                   Voir le tournoi

@@ -216,7 +216,7 @@ function CreateForm() {
                     <div 
                       className={`${styles.stepStepLine} ${step > s.step ? styles.stepStepLineActive : ''}`}
                       style={step > s.step ? { 
-                        background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                        background: 'linear-gradient(90deg, #ff008c 0%, #6748ff 100%)',
                         backgroundImage: 'none'
                       } : {}}
                     ></div>

@@ -5,16 +5,6 @@ import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import { TournamentCard } from '@/components/ui'
 
-// Jeux populaires - noms pour recherche API (limité à 6)
-const POPULAR_GAMES_NAMES = [
-  'EA Sports FC 25',
-  'League of Legends', 
-  'Mobile Legends: Bang Bang',
-  'Altered TCG',
-  'Counter-Strike 2',
-  'eFootball 2024'
-]
-
 export default function Home() {
   const [tournaments, setTournaments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -180,7 +170,7 @@ export default function Home() {
                       />
                     ) : (
                       <div className={styles.popularGameImage} style={{
-                        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                        background: 'linear-gradient(135deg, #ff008c, #6748ff)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

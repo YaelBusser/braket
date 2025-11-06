@@ -70,7 +70,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
             borderRadius: 10,
             color: '#fff',
             boxShadow: '0 10px 24px rgba(0,0,0,0.18)',
-            background: t.type === 'success' ? '#16a34a' : t.type === 'error' ? '#dc2626' : '#2563eb',
+            background: t.type === 'success' ? '#16a34a' : t.type === 'error' ? '#dc2626' : '#ff008c',
             animationName: t.closing ? 'lt_toast_out' : 'lt_toast_in',
             animationDuration: '280ms',
             animationTimingFunction: 'ease',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useNotification } from '../../../components/providers/notification-provider'
 import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
+import { useAuthModal } from '../../../components/AuthModalContext'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import Bracket from '../../../components/Bracket'
 
@@ -30,6 +31,7 @@ export default function TournamentPage() {
 function TournamentView() {
   const { data: session } = useSession()
   const { notify } = useNotification()
+  const { openAuthModal } = useAuthModal()
   const params = useParams<{ id: string }>()
   const id = params?.id as string
   const [tournament, setTournament] = useState<any>(null)
@@ -146,7 +148,7 @@ function TournamentView() {
   const regClosed = status !== 'REG_OPEN' || (tournament.registrationDeadline && new Date(tournament.registrationDeadline) < new Date())
 
   return (
-    <div style={{ background: '#0a0a0a', minHeight: '100vh' }}>
+    <div style={{ background: 'var(--bg-page)', minHeight: '100vh' }}>
       {/* Bannière hero */}
       <div style={{
         background: tournament.posterUrl 
@@ -260,11 +262,11 @@ function TournamentView() {
                   padding: '1rem 1.5rem',
                   background: 'transparent',
                   border: 'none',
-                  color: tab === key ? '#3b82f6' : '#9ca3af',
+                  color: tab === key ? '#ff008c' : '#9ca3af',
                   fontSize: '0.95rem',
                   fontWeight: '500',
                   cursor: 'pointer',
-                  borderBottom: tab === key ? '2px solid #3b82f6' : '2px solid transparent',
+                  borderBottom: tab === key ? '2px solid #ff008c' : '2px solid transparent',
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap'
                 }}
@@ -303,7 +305,7 @@ function TournamentView() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <h2 style={{ margin: 0, color: '#fff', fontSize: '1.25rem', fontWeight: '600' }}>Informations</h2>
                   <button style={{
-                    background: '#3b82f6',
+                    background: '#ff008c',
                     color: '#fff',
                     border: 'none',
                     borderRadius: '6px',
@@ -410,7 +412,7 @@ function TournamentView() {
                     ) : (
                       <button
                         style={{
-                          background: regClosed ? '#6b7280' : '#3b82f6',
+                          background: regClosed ? '#6b7280' : '#ff008c',
                           color: '#fff',
                           border: 'none',
                           borderRadius: '8px',
@@ -424,7 +426,7 @@ function TournamentView() {
                         onClick={() => {
                           if (!session?.user) {
                             try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
-                            window.location.href = '/login'
+                            openAuthModal('login')
                             return
                           }
                           fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
@@ -471,7 +473,7 @@ function TournamentView() {
                   ) : (
                     <button
                       style={{
-                        background: regClosed || (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants) ? '#6b7280' : '#3b82f6',
+                        background: regClosed || (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants) ? '#6b7280' : '#ff008c',
                         color: '#fff',
                         border: 'none',
                         borderRadius: '8px',
@@ -484,7 +486,7 @@ function TournamentView() {
                       onClick={() => {
                         if (!session?.user) {
                           try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
-                          window.location.href = '/login'
+                          openAuthModal('login')
                           return
                         }
                         fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
@@ -544,7 +546,7 @@ function TournamentView() {
                 border: '1px solid #374151'
               }}>
                 <h3 style={{ margin: 0, color: '#fff', fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>Organisateur & contact</h3>
-                <div style={{ color: '#3b82f6', fontSize: '0.875rem' }}>
+                <div style={{ color: '#ff008c', fontSize: '0.875rem' }}>
                   {tournament.organizer?.pseudo || 'Organisateur'}@example.com
                 </div>
               </div>
@@ -588,7 +590,7 @@ function TournamentView() {
                   />
                   <button 
                     style={{
-                      background: '#3b82f6',
+                      background: '#ff008c',
                       color: '#fff',
                       border: 'none',
                       borderRadius: '8px',
@@ -645,7 +647,7 @@ function TournamentView() {
                 <a
                   href={`/tournaments/${id}/admin`}
                   style={{
-                    background: '#3b82f6',
+                    background: '#ff008c',
                     color: '#ffffff',
                     padding: '0.75rem 1.5rem',
                     borderRadius: '8px',
@@ -656,10 +658,10 @@ function TournamentView() {
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#2563eb'
+                    e.currentTarget.style.background = '#cc0070'
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '#3b82f6'
+                    e.currentTarget.style.background = '#ff008c'
                   }}
                 >
                   🛠️ Administration du tournoi
@@ -743,7 +745,7 @@ function TournamentView() {
                     
                     {team.id === myTeamId && (
                       <span style={{
-                        background: '#3b82f6',
+                        background: '#ff008c',
                         color: '#fff',
                         borderRadius: '999px',
                         padding: '0.25rem 0.75rem',
@@ -773,7 +775,7 @@ function TournamentView() {
                       ) : (
                         <button
                           style={{
-                            background: hasTeam || (tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize) ? '#6b7280' : '#3b82f6',
+                            background: hasTeam || (tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize) ? '#6b7280' : '#ff008c',
                             color: '#fff',
                             border: 'none',
                             borderRadius: '8px',
@@ -854,7 +856,7 @@ function TournamentView() {
               paddingBottom: '1rem'
             }}>
               <button style={{
-                background: '#3b82f6',
+                background: '#ff008c',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '6px',

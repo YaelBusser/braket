@@ -8,7 +8,7 @@ export default function Footer() {
         <div className={styles.content}>
           {/* Logo et description */}
           <div className={styles.brand}>
-            <h3 className={styles.logo}>Bracket</h3>
+            <h3 className={styles.logo}>Braket</h3>
             <p className={styles.description}>
               La plateforme moderne pour organiser et participer à des tournois de jeux vidéo, 
               jeux vidéo. Simple, rapide et professionnel.

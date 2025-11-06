@@ -1,5 +1,7 @@
 @use 'variables.module' as vars;
 @use 'components/index';
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap');
+
 
 // ===========================================
 // GLOBAL STYLES
@@ -20,51 +22,56 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --bg-page: #{vars.$bg-page};
 }
 
 body {
-  font-family: vars.$font-family-primary;
-  font-size: vars.$font-size-base;
-  font-weight: vars.$font-weight-normal;
+  font-family: vars.$font-family-secondary;
+  font-size: vars.$font-size-base; // 16pt
+  font-weight: vars.$font-weight-normal; // Regular
   line-height: vars.$line-height-normal;
   color: vars.$lt-text-primary;
-  background-color: vars.$lt-dark-bg;
+  background-color: vars.$bg-page;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 // Typography
+// Police principale : Funnel Display pour les titres
 h1, h2, h3, h4, h5, h6 {
-  font-weight: vars.$font-weight-semibold;
+  font-family: vars.$font-family-primary; // Funnel Display
   line-height: vars.$line-height-tight;
   color: vars.$lt-text-primary;
   margin: 0;
 }
 
+// H1 : Funnel Display Bold, 48pt
 h1 {
-  font-size: vars.$font-size-4xl;
-  font-weight: vars.$font-weight-bold;
+  font-size: 3rem; // 48pt (48/16 = 3rem)
+  font-weight: 700; // Bold
   
   @media (min-width: vars.$breakpoint-md) {
-    font-size: vars.$font-size-5xl;
+    font-size: 3rem; // 48pt
   }
 }
 
+// H2 : Funnel Display Medium, 32pt
 h2 {
-  font-size: vars.$font-size-3xl;
-  font-weight: vars.$font-weight-bold;
+  font-size: 2rem; // 32pt (32/16 = 2rem)
+  font-weight: 500; // Medium
   
   @media (min-width: vars.$breakpoint-md) {
-    font-size: vars.$font-size-4xl;
+    font-size: 2rem; // 32pt
   }
 }
 
+// H3 : Funnel Display Regular, 24pt
 h3 {
-  font-size: vars.$font-size-2xl;
-  font-weight: vars.$font-weight-semibold;
+  font-size: 1.5rem; // 24pt (24/16 = 1.5rem)
+  font-weight: 400; // Regular
   
   @media (min-width: vars.$breakpoint-md) {
-    font-size: vars.$font-size-3xl;
+    font-size: 1.5rem; // 24pt
   }
 }
 
@@ -95,9 +102,43 @@ h6 {
   }
 }
 
+// Corps de texte : Red Hat Display Regular, 16pt
 p {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 1rem; // 16pt (16/16 = 1rem)
+  font-weight: 400; // Regular
   margin: 0;
   line-height: vars.$line-height-relaxed;
+}
+
+// Texte secondaire/légendes : Red Hat Display Light, 12pt
+.text-secondary,
+.text-muted,
+small,
+.text-sm {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 0.75rem; // 12pt (12/16 = 0.75rem)
+  font-weight: 300; // Light
+}
+
+// Appels à l'action/mots importants : Red Hat Display Bold, 16pt
+strong,
+b,
+.font-bold {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 1rem; // 16pt (16/16 = 1rem)
+  font-weight: 700; // Bold
+}
+
+// Citations/exemples : Red Hat Display Italic, 12pt
+em,
+i,
+cite,
+blockquote {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 0.75rem; // 12pt (12/16 = 0.75rem)
+  font-style: italic;
+  font-weight: 400; // Regular
 }
 
 a {
@@ -332,6 +373,7 @@ button {
   flex-direction: column;
   min-height: calc(100vh - #{vars.$header-height});
   flex: 1;
+  background-color: vars.$bg-page;
 
   @media (max-width: 1024px) {
     margin-left: 0;

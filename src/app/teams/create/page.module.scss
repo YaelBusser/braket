@@ -2,7 +2,7 @@
 
 .createTeamPage {
   min-height: 100vh;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   color: vars.$lt-text-primary;
   padding: vars.$spacing-8 0;
 }
@@ -76,7 +76,7 @@
 .textarea {
   width: 100%;
   padding: vars.$spacing-3;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 1px solid vars.$lt-border;
   border-radius: vars.$radius-input;
   color: vars.$lt-text-primary;
@@ -86,7 +86,7 @@
   &:focus {
     outline: none;
     border-color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
   }
 
   &::placeholder {
@@ -108,7 +108,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 1px solid vars.$lt-border;
   border-top: none;
   border-radius: 0 0 vars.$radius-input vars.$radius-input;

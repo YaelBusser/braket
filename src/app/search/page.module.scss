@@ -1,7 +1,7 @@
 @use '@/styles/variables.module' as vars;
 
 .main {
-  background: #0a0a0a;
+  background: vars.$bg-page;
   min-height: 100vh;
   padding: vars.$spacing-8 0;
 }
@@ -61,12 +61,12 @@
 }
 
 .filterBtnActive {
-  background: #3b82f6;
+  background: #ff008c;
   color: #fff;
-  border-color: #3b82f6;
+  border-color: #ff008c;
 
   &:hover {
-    background: #3b82f6;
+    background: #ff008c;
   }
 }
 
@@ -136,7 +136,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #ff008c 0%, #6748ff 100%);
   color: #fff;
   font-size: 2rem;
   font-weight: 700;
@@ -191,7 +191,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #ff008c 0%, #6748ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -217,7 +217,7 @@
 .userBadge {
   display: inline-block;
   padding: 2px 8px;
-  background: #3b82f6;
+  background: #ff008c;
   color: #fff;
   border-radius: 4px;
   font-size: 0.75rem;
@@ -272,7 +272,7 @@
 }
 
 .teamTournament {
-  color: #3b82f6;
+  color: #ff008c;
   font-size: 0.875rem;
   margin: 0;
 }

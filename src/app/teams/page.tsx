@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
+import { useAuthModal } from '../../components/AuthModalContext'
 import styles from './page.module.scss'
 
 interface Team {
@@ -31,19 +32,22 @@ export default function TeamsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { notify } = useNotification()
+  const { openAuthModal } = useAuthModal()
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'my-teams' | 'all-teams'>('my-teams')
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login')
+      try { localStorage.setItem('lt_returnTo', '/teams') } catch {}
+      openAuthModal('login')
+      router.push('/')
       return
     }
     if (session?.user) {
       loadTeams()
     }
-  }, [session, status, router])
+  }, [session, status, router, openAuthModal])
 
   const loadTeams = async () => {
     setLoading(true)

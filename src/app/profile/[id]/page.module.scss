@@ -1,7 +1,7 @@
 @use '@/styles/variables.module' as vars;
 
 .main {
-  background: #0a0a0a;
+  background: vars.$bg-page;
   min-height: 100vh;
   padding: vars.$spacing-8 0;
 }
@@ -55,21 +55,21 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid #3b82f6;
+  border: 3px solid #ff008c;
 }
 
 .avatarPlaceholder {
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #ff008c 0%, #6748ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
   font-size: 3rem;
   font-weight: 700;
-  border: 3px solid #3b82f6;
+  border: 3px solid #ff008c;
 }
 
 .profileInfo {
@@ -86,7 +86,7 @@
 .badge {
   display: inline-block;
   padding: 4px 12px;
-  background: #3b82f6;
+  background: #ff008c;
   color: #fff;
   border-radius: 6px;
   font-size: 0.875rem;
@@ -109,7 +109,7 @@
 .statItem {
   text-align: center;
   padding: vars.$spacing-4;
-  background: #0a0a0a;
+  background: vars.$bg-page;
   border-radius: 8px;
   border: 1px solid #374151;
 }

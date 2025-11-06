@@ -4,7 +4,7 @@ import { prisma } from '../../../../../lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, pseudo, preferredCategory } = await request.json()
+    const { email, password, pseudo } = await request.json()
 
     // Validation
     if (!email || !password || !pseudo) {

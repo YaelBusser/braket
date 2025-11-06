@@ -2,8 +2,8 @@
 
 /* --- MAIN LAYOUT --- */
 .main {
-  background: #0a0a0a;
-  min-height: 100vh;
+  background: vars.$bg-page;
+  min-height: 100%;
 }
 
 /* --- HERO SECTION --- */
@@ -42,8 +42,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 100%;
-  background: linear-gradient(180deg, rgba(10,10,10,0) 0%, #0a0a0a 100%);
+  height: 40%;
+  background: linear-gradient(180deg, rgba(10,10,10,0) 0%, vars.$bg-page 100%);
   pointer-events: none;
 }
 
@@ -54,7 +54,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  padding-top: vars.$spacing-8;
+  padding-top: vars.$spacing-16;
   padding-left: vars.$spacing-6 !important;
   padding-right: vars.$spacing-6 !important;
   
@@ -132,7 +132,7 @@
   background: transparent;
   font-size: 1.1rem;
   outline: none;
-  color: #f9fafb;
+  color: #fbf8ff;
   font-weight: 500;
   
   &::placeholder {
@@ -142,7 +142,7 @@
 
 .searchButton {
   padding: 1rem;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #ff008c, #6748ff);
   border: none;
   color: white;
   cursor: pointer;
@@ -157,7 +157,7 @@
   
   &:hover {
     transform: scale(1.05);
-    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 0, 140, 0.4);
   }
 }
 
@@ -233,7 +233,7 @@
 .popularGamesGrid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: vars.$spacing-3;
+  gap: vars.$spacing-5;
   margin-bottom: vars.$spacing-6;
   width: 100%;
 }
@@ -252,8 +252,8 @@
 
 .popularGameImageContainer {
   position: relative;
-  width: 90%;
-  aspect-ratio: 4/5;
+  width: 100%;
+  aspect-ratio: 7/10;
   border-radius: vars.$radius-lg;
   overflow: hidden;
 }
@@ -404,7 +404,7 @@
 .loadingSpinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(59, 130, 246, 0.2);
+  border: 4px solid rgba(255, 0, 140, 0.2);
   border-top: 4px solid vars.$lt-accent-blue;
   border-radius: 50%;
   animation: spin 1s linear infinite;

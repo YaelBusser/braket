@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../../components/providers/notification-provider'
+import { useAuthModal } from '../../../components/AuthModalContext'
 import styles from './page.module.scss'
 
 interface Team {
@@ -42,6 +43,7 @@ export default function TeamPage({ params }: { params: { id: string } }) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { notify } = useNotification()
+  const { openAuthModal } = useAuthModal()
   const [team, setTeam] = useState<Team | null>(null)
   const [teamStats, setTeamStats] = useState<TeamStats>({
     totalMatches: 0,
@@ -57,13 +59,15 @@ export default function TeamPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      router.push('/login')
+      try { localStorage.setItem('lt_returnTo', `/teams/${params.id}`) } catch {}
+      openAuthModal('login')
+      router.push('/')
       return
     }
     if (params.id) {
       loadTeamData()
     }
-  }, [params.id, status, router])
+  }, [params.id, status, router, openAuthModal])
 
   const loadTeamData = async () => {
     setLoading(true)
@@ -96,7 +100,8 @@ export default function TeamPage({ params }: { params: { id: string } }) {
 
   const handleJoinTeam = async () => {
     if (!session?.user) {
-      router.push('/login')
+      try { localStorage.setItem('lt_returnTo', `/teams/${params.id}`) } catch {}
+      openAuthModal('login')
       return
     }
 

@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
     // l'organisateur ne peut pas créer/rejoindre d'équipe
     if (tournament.organizerId === userId) {
-      return NextResponse.json({ message: 'L'organisateur ne peut pas créer d'équipe' }, { status: 403 })
+      return NextResponse.json({ message: "L\'organisateur ne peut pas créer d\'équipe" }, { status: 403 })
     }
 
     // exiger inscription préalable au tournoi

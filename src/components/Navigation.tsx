@@ -4,20 +4,25 @@ import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { Button, SearchBar } from './ui'
+import { SearchBar } from './ui'
+import { useAuthModal } from './AuthModalContext'
 import styles from './Navigation.module.scss'
 
 export default function Navigation() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
-
+  const { openAuthModal } = useAuthModal()
 
   return (
     <nav className={styles.nav}>
       <div className={styles.container}>
         <div className={styles.leftSection}>
           <Link href="/" className={styles.logo}>
-            Bracket
+            <img 
+              src="/icons/icon_text_dark.svg" 
+              alt="Braket" 
+              style={{ height: '28px', width: 'auto' }}
+            />
           </Link>
           
           <div className={styles.navLinks}>
@@ -60,16 +65,18 @@ export default function Navigation() {
             </div>
           ) : (
             <div className={styles.authMenu}>
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Connexion
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button variant="primary" size="sm">
-                  Inscription
-                </Button>
-              </Link>
+              <button 
+                className={styles.authButtonLogin}
+                onClick={() => openAuthModal('login')}
+              >
+                Se connecter
+              </button>
+              <button 
+                className={styles.authButtonRegister}
+                onClick={() => openAuthModal('register')}
+              >
+                S'inscrire
+              </button>
             </div>
           )}
         </div>

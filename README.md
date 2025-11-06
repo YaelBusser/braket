@@ -37,9 +37,34 @@ npm install
    - Configurer la variable `DATABASE_URL` (voir SETUP.md)
    - Créer la base de données MariaDB
 
-4. **Configuration NextAuth.js**
-   - Ajouter les variables d'environnement pour Google OAuth
-   - Configurer `NEXTAUTH_SECRET`
+4. **Configuration des variables d'environnement**
+   
+   Créer un fichier `.env.local` à la racine du projet avec les variables suivantes :
+   
+   ```env
+   # Base de données
+   DATABASE_URL="mysql://user:password@localhost:3306/letournoi"
+   
+   # NextAuth
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=votre_secret_nextauth
+   
+   # Google OAuth (optionnel - voir CONFIGURATION_AUTH.md)
+   GOOGLE_CLIENT_ID=votre_client_id_google
+   GOOGLE_CLIENT_SECRET=votre_client_secret_google
+   
+   # Discord OAuth (optionnel - voir CONFIGURATION_AUTH.md)
+   DISCORD_CLIENT_ID=votre_client_id_discord
+   DISCORD_CLIENT_SECRET=votre_client_secret_discord
+   ```
+   
+   **Générer NEXTAUTH_SECRET :**
+   ```bash
+   openssl rand -base64 32
+   ```
+   Ou en ligne : https://generate-secret.vercel.app/32
+   
+   **Note :** Pour configurer Google et Discord OAuth, consultez le fichier `CONFIGURATION_AUTH.md` pour les instructions détaillées.
 
 5. **Initialiser la base de données + seed des jeux**
 ```bash
@@ -98,9 +123,12 @@ Le projet utilise un design system moderne avec :
 ## 🔐 Authentification
 
 - **Email/Password** : Inscription et connexion classiques
-- **Google OAuth** : Connexion via Google
+- **Google OAuth** : Connexion via Google (optionnel)
+- **Discord OAuth** : Connexion via Discord (optionnel)
 - **Sessions JWT** : Gestion sécurisée des sessions
 - **Protection des routes** : Middleware d'authentification
+
+Pour configurer l'authentification OAuth, consultez le fichier `CONFIGURATION_AUTH.md`.
 
 ## 📝 Prochaines étapes
 

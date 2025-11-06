@@ -1,8 +1,9 @@
+@use 'sass:color';
 @use '../../../styles/variables.module' as vars;
 
 .createTournamentPage {
   min-height: 100vh;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   color: vars.$lt-text-primary;
   padding: vars.$spacing-10 0 vars.$spacing-8 0;
 }
@@ -123,14 +124,14 @@
     background: vars.$gradient-primary;
     border-color: transparent;
     color: vars.$lt-text-primary;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 4px rgba(255, 0, 140, 0.2);
   }
 
   &.stepStepCircleCurrent {
-    background: rgba(59, 130, 246, 0.2);
+    background: rgba(255, 0, 140, 0.2);
     border-color: vars.$lt-accent-blue;
     color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 4px rgba(255, 0, 140, 0.1);
   }
 
   &:has(+ *) {
@@ -248,7 +249,7 @@
 .select {
   width: 100%;
   padding: vars.$spacing-3;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 1px solid vars.$lt-border;
   border-radius: vars.$radius-input;
   color: vars.$lt-text-primary;
@@ -258,7 +259,7 @@
   &:focus {
     outline: none;
     border-color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
   }
 
   &::placeholder {
@@ -295,16 +296,16 @@
     border: 2px solid vars.$lt-border;
     border-radius: vars.$radius-md;
     transition: all vars.$transition-fast;
-    background: vars.$lt-dark-bg;
+    background: vars.$bg-page;
 
     &:hover {
       border-color: vars.$lt-accent-blue;
-      background: rgba(59, 130, 246, 0.1);
+      background: rgba(255, 0, 140, 0.1);
     }
 
     &:has(input[type="radio"]:checked) {
       border-color: vars.$lt-accent-blue;
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(255, 0, 140, 0.2);
     }
   }
 
@@ -332,7 +333,7 @@
 .searchGameInput {
   width: 100%;
   padding: vars.$spacing-3 vars.$spacing-4;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 2px solid vars.$lt-border;
   border-radius: vars.$radius-md;
   color: vars.$lt-text-primary;
@@ -342,7 +343,7 @@
   &:focus {
     outline: none;
     border-color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
   }
 
   &::placeholder {
@@ -378,7 +379,7 @@
   border-radius: vars.$radius-lg;
   overflow: hidden;
   border: 2px solid transparent;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
 
   &:hover {
     transform: translateY(-4px);
@@ -388,7 +389,7 @@
 
   &.gameCardSelected {
     border-color: vars.$lt-accent-blue;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.2);
   }
 }
 
@@ -542,7 +543,7 @@
   align-items: center;
   gap: vars.$spacing-3;
   padding: vars.$spacing-3;
-  background: vars.$lt-dark-bg;
+  background: vars.$bg-page;
   border: 2px solid vars.$lt-border;
   border-radius: vars.$radius-md;
 }
@@ -603,7 +604,7 @@
   &:hover {
     border-color: vars.$lt-accent-blue;
     color: vars.$lt-accent-blue;
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(255, 0, 140, 0.1);
   }
 }
 
@@ -628,7 +629,7 @@
     object-fit: contain;
     border-radius: vars.$radius-md;
     border: 1px solid vars.$lt-border;
-    background: vars.$lt-dark-bg;
+    background: vars.$bg-page;
     padding: vars.$spacing-2;
   }
 }
@@ -737,7 +738,7 @@
   transition: all vars.$transition-fast;
 
   &:hover:not(:disabled) {
-    background: darken(vars.$lt-accent-blue, 10%);
+    background: color.adjust(vars.$lt-accent-blue, $lightness: -10%);
     transform: translateY(-1px);
   }
 
@@ -828,7 +829,7 @@
   width: 100%;
   height: 240px;
   overflow: hidden;
-  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  background: linear-gradient(135deg, #ff008c, #6748ff);
 }
 
 .cardPreviewPoster {
@@ -872,7 +873,7 @@
 
 .cardPreviewContent {
   padding: vars.$spacing-4;
-  background: #0a0a0a;
+  background: vars.$bg-page;
 }
 
 .cardPreviewDate {

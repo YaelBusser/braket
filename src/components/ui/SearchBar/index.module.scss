@@ -113,7 +113,7 @@
   }
   
   .searchInput {
-    color: #f9fafb;
+    color: #fbf8ff;
     
     &::placeholder {
       color: rgba(249, 250, 251, 0.6);
@@ -136,7 +136,7 @@
   }
   
   .searchInput {
-    color: #f9fafb;
+    color: #fbf8ff;
     
     &::placeholder {
       color: rgba(249, 250, 251, 0.6);
@@ -167,6 +167,13 @@
     background: transparent;
     color: #cbd5e1; /* slate-300 */
     border-radius: 0 10px 10px 0;
+  }
+
+  // Augmentation légère de la taille du texte pour la variante header
+  &.size-xs {
+    .searchInput {
+      font-size: 0.875rem; // Légèrement plus grand que 0.8rem
+    }
   }
 }
 
