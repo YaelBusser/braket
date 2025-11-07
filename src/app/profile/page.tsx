@@ -1,17 +1,21 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
+import { Tabs, ContentWithTabs, type Tab } from '../../components/ui'
 import styles from './page.module.scss'
+
+type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
 
 function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const pathname = usePathname()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
   
@@ -23,8 +27,35 @@ function ProfilePage() {
   const [loadingData, setLoadingData] = useState(false)
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
   
-  // Navigation par onglets
-  const [activeTab, setActiveTab] = useState<'overview' | 'tournaments' | 'teams' | 'registrations'>('overview')
+  // Navigation par onglets - déterminer l'onglet actif depuis l'URL
+  const getActiveTabFromPath = (): TabKey => {
+    if (pathname === '/profile/tournaments') return 'tournaments'
+    if (pathname === '/profile/participations') return 'participations'
+    if (pathname === '/profile/overview') return 'overview'
+    if (pathname === '/profile/teams') return 'teams'
+    return 'tournaments' // Par défaut
+  }
+  
+  const [activeTab, setActiveTab] = useState<TabKey>(getActiveTabFromPath())
+  
+  // Synchroniser l'onglet avec l'URL
+  useEffect(() => {
+    const tab = getActiveTabFromPath()
+    setActiveTab(tab)
+  }, [pathname])
+  
+  // Rediriger /profile vers /profile/tournaments
+  useEffect(() => {
+    if (pathname === '/profile' && status === 'authenticated') {
+      router.replace('/profile/tournaments')
+    }
+  }, [pathname, status, router])
+  
+  const handleTabChange = (key: string) => {
+    const tabKey = key as TabKey
+    setActiveTab(tabKey)
+    router.push(`/profile/${tabKey}`)
+  }
   
   // Statistiques utilisateur
   const [userStats, setUserStats] = useState({
@@ -80,7 +111,7 @@ function ProfilePage() {
         if (profile.user?.bannerUrl) {
           setBannerUrl(profile.user.bannerUrl)
         } else {
-          setBannerUrl('/images/games/games.jpg')
+          setBannerUrl('/images/games.jpg')
         }
       }
 
@@ -122,7 +153,7 @@ function ProfilePage() {
         <div 
           className={styles.profileHeader}
           style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl || '/images/games/games.jpg'})`,
+            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl || '/images/games.jpg'})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -138,16 +169,6 @@ function ProfilePage() {
                     {session?.user?.name?.charAt(0) || 'U'}
                   </div>
                 )}
-                <button 
-                  className={styles.cameraButton} 
-                  title="Changer la photo"
-                  onClick={() => router.push('/settings')}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
-                </button>
               </div>
             </div>
             <div className={styles.userInfo}>
@@ -169,25 +190,18 @@ function ProfilePage() {
           </div>
         </div>
 
-
-        {/* Navigation par onglets */}
-        <div className={styles.tabNavigation}>
-          <div className={styles.tabContainer}>
-            {[
+        <ContentWithTabs style={{ padding: '2rem 0' }}>
+          {/* Navigation par onglets */}
+          <Tabs
+            tabs={[
+              { key: 'tournaments', label: 'Mes tournois' },
+              { key: 'participations', label: 'Participations' },
               { key: 'overview', label: 'Aperçu' },
-              { key: 'tournaments', label: 'Tournois' },
-              { key: 'teams', label: 'Équipes' },
-              { key: 'registrations', label: 'Inscriptions' }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                data-tab={tab.key}
-                className={`${styles.tab} ${activeTab === tab.key ? styles.activeTab : ''}`}
-                onClick={() => setActiveTab(tab.key as any)}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { key: 'teams', label: 'Équipes' }
+            ]}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          >
             <button
               className={styles.settingsButton}
               onClick={() => router.push('/settings')}
@@ -196,11 +210,10 @@ function ProfilePage() {
               <SettingsIcon width={20} height={20} />
               <span>Paramètres</span>
             </button>
-          </div>
-        </div>
+          </Tabs>
 
-        {/* Contenu principal */}
-        <div className={styles.tabContent}>
+          {/* Contenu principal */}
+          <div className={styles.tabContent}>
           {activeTab === 'overview' && (
             <div className={styles.overviewTab}>
               <div className={styles.activityCard}>
@@ -258,7 +271,12 @@ function ProfilePage() {
                   </div>
                 ) : (
                   userTournaments.map((tournament) => (
-                    <div key={tournament.id} className={styles.tournamentCard}>
+                    <div 
+                      key={tournament.id} 
+                      className={styles.tournamentCard}
+                      onClick={() => router.push(`/tournaments/${tournament.id}`)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <div className={styles.tournamentIcon}>🏆</div>
                       <div className={styles.tournamentInfo}>
                         <h4>{tournament.name}</h4>
@@ -297,19 +315,20 @@ function ProfilePage() {
             </div>
           )}
 
-          {activeTab === 'registrations' && (
+          {activeTab === 'participations' && (
             <div className={styles.registrationsTab}>
               <div className={styles.tabHeader}>
-                <h3>Mes inscriptions</h3>
+                <h3>Mes participations</h3>
               </div>
               
               <div className={styles.emptyState}>
-                <p>Aucune inscription</p>
+                <p>Aucune participation</p>
               </div>
             </div>
           )}
 
-        </div>
+          </div>
+        </ContentWithTabs>
 
       </div>
     </ClientPageWrapper>

@@ -6,16 +6,28 @@
   color: vars.$lt-text-primary;
 }
 
+
 /* Profile Header */
 .profileHeader {
   position: relative;
   background: vars.$lt-dark-secondary;
-  border-bottom: 1px solid vars.$lt-border;
   padding: vars.$spacing-8 vars.$spacing-4;
   min-height: 300px;
   display: flex;
   align-items: center;
   overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10rem;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 40%, vars.$bg-page 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 .headerContent {
@@ -184,32 +196,17 @@
     color: var(--text-secondary, #{vars.$gray-700});
   }
 
-  .tabNavigation {
-    background: var(--bg-secondary, #{vars.$gray-50});
-    border-bottom-color: var(--border, #{vars.$gray-300});
-  }
-
-  .tab {
-    color: var(--text-secondary, #{vars.$gray-700});
-    
-    &:hover {
-      color: var(--text-primary, #{vars.$black});
-    }
-  }
-
-  .activeTab {
-    color: var(--text-primary, #{vars.$black});
-  }
+  /* Les styles des onglets sont maintenant dans le composant Tabs */
 
   .settingsButton {
-    background: var(--bg-tertiary, #{vars.$gray-100});
-    border-color: var(--border, #{vars.$gray-300});
-    color: var(--text-secondary, #{vars.$gray-700});
-    
+    background: vars.$primary-600;
+    border-color: vars.$primary-600;
+    color: vars.$lt-text-primary;
+
     &:hover {
-      background: var(--bg-tertiary, #{vars.$gray-100});
-      color: var(--text-primary, #{vars.$black});
-      border-color: vars.$lt-accent-blue;
+      background: vars.$primary-hover;
+      border-color: vars.$primary-hover;
+      color: vars.$lt-text-primary;
     }
   }
 
@@ -254,72 +251,17 @@
 }
 
 
-/* Navigation Tabs */
-.tabNavigation {
-  background: vars.$lt-dark-secondary;
-  border-bottom: 1px solid vars.$lt-border;
-  width: 100%;
-}
-
-.tabContainer {
-  max-width: vars.$container-xl;
-  margin: 0 auto;
-  padding: 0 vars.$spacing-4;
-  display: flex;
-  align-items: center;
-  gap: vars.$spacing-1;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-.tab {
-  background: none;
-  border: none;
-  color: vars.$lt-text-secondary;
-  padding: vars.$spacing-4 vars.$spacing-5;
-  font-size: vars.$font-size-base;
-  font-weight: vars.$font-weight-medium;
-  cursor: pointer;
-  transition: all vars.$transition-fast;
-  border-bottom: 2px solid transparent;
-  white-space: nowrap;
-  position: relative;
-
-  &:hover {
-    color: vars.$lt-text-primary;
-    background: rgba(255, 255, 255, 0.03);
-  }
-}
-
-.activeTab {
-  color: vars.$lt-text-primary;
-  border-bottom-color: vars.$lt-accent-blue;
-  
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: vars.$lt-accent-blue;
-  }
-}
+/* Navigation Tabs - Les styles sont maintenant dans le composant Tabs */
 
 .settingsButton {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: vars.$spacing-2;
-  background: vars.$lt-dark-tertiary;
-  border: 1px solid vars.$lt-border;
-  color: vars.$lt-text-secondary;
-  padding: vars.$spacing-3 vars.$spacing-4;
+  background: vars.$primary-600;
+  border: 1px solid vars.$primary-600;
+  color: vars.$lt-text-primary;
+  padding: vars.$spacing-1 vars.$spacing-2;
   border-radius: vars.$radius-md;
   font-size: vars.$font-size-base;
   font-weight: vars.$font-weight-medium;
@@ -340,9 +282,9 @@
   }
 
   &:hover {
-    background: vars.$lt-dark-tertiary;
+    background: vars.$primary-hover;
+    border-color: vars.$primary-hover;
     color: vars.$lt-text-primary;
-    border-color: vars.$lt-accent-blue;
   }
 
   &:focus {
@@ -357,9 +299,7 @@
 
 /* Tab Content */
 .tabContent {
-  max-width: vars.$container-xl;
-  margin: 0 auto;
-  padding: vars.$spacing-8 vars.$spacing-4;
+  padding-top: vars.$spacing-4;
 }
 
 /* Overview Tab */
@@ -449,10 +389,10 @@
 }
 
 .activityCard {
-  background: vars.$lt-dark-secondary;
-  border: 1px solid vars.$lt-border;
-  border-radius: vars.$radius-card;
-  padding: vars.$spacing-6;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
 }
 
 .activityTitle {

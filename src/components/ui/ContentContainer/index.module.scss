@@ -1,0 +1,32 @@
+@use '../../../styles/variables.module' as vars;
+
+// Contenu centré avec marges symétriques
+// Utilise le même calcul que content-centered pour centrer le contenu avec un décalage augmenté
+.contentContainer {
+  // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
+  // Pour centrer : (zone_disponible - container_width) / 2
+  // Décalage augmenté avec des valeurs minimales plus importantes
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
+  }
+}
+

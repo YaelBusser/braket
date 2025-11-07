@@ -27,7 +27,11 @@ export default function Navigation() {
           </Link>
           
           <div className={styles.navLinks}>
+            {session && (
+              <Link href="/profile/tournaments" className={styles.navLink}>Mes tournois</Link>
+            )}
             <Link href="/tournaments" className={styles.navLink}>Tournois</Link>
+            <Link href="/games" className={styles.navLink}>Jeux</Link>
           </div>
         </div>
         <div className={styles.menu}>

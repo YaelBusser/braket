@@ -72,10 +72,10 @@ npm install
 npm run db:generate
 
 # Créer/appliquer les migrations (crée les tables dont `games`)
-npm run db:migrate
+npm run db:push
 
 # Peupler la table `games` avec les 10 jeux par défaut
-npx prisma db seed
+npm run db:seed
 ```
 Après ces commandes, la table `games` contient: CS 2, Valorant, Rocket League, League of Legends, Dota 2, Street Fighter 6, Fortnite, PUBG, Apex Legends, Call of Duty 7.
 

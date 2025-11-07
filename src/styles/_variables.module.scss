@@ -179,21 +179,29 @@ $line-height-tight: 1.25;
 $line-height-normal: 1.5;
 $line-height-relaxed: 1.75;
 
-// Spacing
+// Spacing (0 à 32, toutes les 2 valeurs)
 $spacing-0: 0;
-$spacing-1: 0.25rem;   // 4px
 $spacing-2: 0.5rem;    // 8px
-$spacing-3: 0.75rem;   // 12px
 $spacing-4: 1rem;      // 16px
-$spacing-5: 1.25rem;   // 20px
 $spacing-6: 1.5rem;    // 24px
 $spacing-8: 2rem;      // 32px
 $spacing-10: 2.5rem;   // 40px
 $spacing-12: 3rem;     // 48px
+$spacing-14: 3.5rem;   // 56px
 $spacing-16: 4rem;     // 64px
+$spacing-18: 4.5rem;   // 72px
 $spacing-20: 5rem;     // 80px
+$spacing-22: 5.5rem;   // 88px
 $spacing-24: 6rem;     // 96px
+$spacing-26: 6.5rem;   // 104px
+$spacing-28: 7rem;     // 112px
+$spacing-30: 7.5rem;   // 120px
 $spacing-32: 8rem;     // 128px
+
+// Spacing legacy (conservées pour compatibilité)
+$spacing-1: 0.25rem;   // 4px
+$spacing-3: 0.75rem;   // 12px
+$spacing-5: 1.25rem;   // 20px
 
 // Border radius
 $radius-none: 0;

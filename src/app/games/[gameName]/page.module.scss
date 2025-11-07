@@ -48,24 +48,7 @@
   }
 }
 
-// Utilise la classe globale content-centered
-
-// Contenu avec onglets - décalé par rapport à la sidebar
-// Remplace le padding de content-centered pour ajouter un décalage supplémentaire
-.contentWithTabs {
-  padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-8) !important;
-  padding-right: vars.$spacing-8 !important;
-  
-  @media (max-width: 1024px) {
-    padding-left: vars.$spacing-6 !important;
-    padding-right: vars.$spacing-6 !important;
-  }
-  
-  @media (min-width: vars.$breakpoint-lg) {
-    padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-10) !important;
-    padding-right: vars.$spacing-10 !important;
-  }
-}
+// Les styles de décalage sont maintenant dans le composant ContentContainer
 
 // Onglets avec espacement
 .tabsContainer {
@@ -79,7 +62,7 @@
 
 // En-tête du jeu - dans le flux normal, chevauchant la bannière
 .gameHeader {
-  margin-top: -8rem;
+  margin-top: -5rem;
   padding-top: 0;
   padding-bottom: vars.$spacing-6;
   position: relative;

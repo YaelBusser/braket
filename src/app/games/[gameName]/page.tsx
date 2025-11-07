@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { findGameByName, GameInfo } from '@/data/games'
+import { ContentContainer, Tabs } from '@/components/ui'
 import styles from './page.module.scss'
 
 interface Tournament {
@@ -199,7 +200,7 @@ export default function GamePage() {
       </div>
 
       {/* Logo et nom du jeu - dans le flux normal du contenu */}
-      <div className={`content-centered ${styles.contentWithTabs} ${styles.gameHeader}`}>
+      <ContentContainer className={styles.gameHeader}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
@@ -293,54 +294,19 @@ export default function GamePage() {
             </div>
           </div>
         </div>
-      </div>
+      </ContentContainer>
 
-      <div className={`content-centered ${styles.contentWithTabs}`} style={{ padding: '2rem 0' }}>
+      <ContentContainer style={{ padding: '2rem 0' }}>
         {/* Onglets principaux */}
-        <div className={styles.tabsContainer}>
-          <div style={{
-            display: 'flex',
-            gap: '0.5rem',
-            borderBottom: '1px solid #374151',
-            marginBottom: '2rem',
-            flexWrap: 'wrap'
-          }}>
-            {[
-              { id: 'tournaments', label: 'Tournois' },
-              { id: 'about', label: 'À propos' },
-              { id: 'stats', label: 'Statistiques' }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: activeTab === tab.id ? '#ff008c' : '#9ca3af',
-                  padding: '0.75rem 1.5rem',
-                  fontSize: '0.9375rem',
-                  fontWeight: activeTab === tab.id ? '600' : '500',
-                  cursor: 'pointer',
-                  borderBottom: activeTab === tab.id ? '2px solid #ff008c' : '2px solid transparent',
-                  transition: 'all 0.2s ease',
-                  letterSpacing: '0.01em'
-                }}
-                onMouseEnter={(e) => {
-                  if (activeTab !== tab.id) {
-                    e.currentTarget.style.color = '#ffffff'
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (activeTab !== tab.id) {
-                    e.currentTarget.style.color = '#9ca3af'
-                  }
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Tabs
+          tabs={[
+            { key: 'tournaments', label: 'Tournois' },
+            { key: 'about', label: 'À propos' },
+            { key: 'stats', label: 'Statistiques' }
+          ]}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
         {/* Contenu des onglets */}
         <div className={styles.tabContent}>
@@ -884,7 +850,7 @@ export default function GamePage() {
           </div>
         )}
         </div>
-      </div>
+      </ContentContainer>
     </main>
   )
 }

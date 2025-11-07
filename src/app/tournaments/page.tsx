@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { TournamentCard, SearchBar } from '@/components/ui'
+import ContentContainer from '../../components/ui/ContentContainer'
 import Link from 'next/link'
 
 export default function TournamentsIndex() {
@@ -32,7 +33,7 @@ function TournamentsList() {
   }, [q])
 
   return (
-    <div className="container" style={{ padding: '3rem 0 3rem 0' }}>
+    <ContentContainer style={{ padding: '3rem 0 3rem 0' }}>
       <h1 style={{ color: '#fff', fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>Tournois</h1>
       <div style={{ maxWidth: '560px', marginBottom: '2rem' }}>
         <SearchBar
@@ -61,7 +62,7 @@ function TournamentsList() {
           ))}
         </div>
       )}
-    </div>
+    </ContentContainer>
   )
 }
 

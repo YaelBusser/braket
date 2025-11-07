@@ -32,7 +32,7 @@ export async function GET() {
     // Utiliser la bannière par défaut si aucune bannière n'est définie
     const userWithDefaultBanner = {
       ...user,
-      bannerUrl: (user as any).bannerUrl || '/images/games/games.jpg'
+      bannerUrl: (user as any).bannerUrl || '/images/games.jpg'
     }
 
     return NextResponse.json({ user: userWithDefaultBanner })
@@ -219,7 +219,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    const updatedUserBannerUrl = (updatedUser as any).bannerUrl || '/images/games/games.jpg'
+    const updatedUserBannerUrl = (updatedUser as any).bannerUrl || '/images/games.jpg'
 
     return NextResponse.json({
       message: 'Profil mis à jour avec succès',

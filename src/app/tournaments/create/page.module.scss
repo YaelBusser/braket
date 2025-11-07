@@ -57,15 +57,15 @@
 }
 
 .formContainer {
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: vars.$radius-card;
-  padding: vars.$spacing-8;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: vars.$spacing-8 0;
+  box-shadow: none;
+  backdrop-filter: none;
 
   @media (max-width: vars.$breakpoint-md) {
-    padding: vars.$spacing-6;
+    padding: vars.$spacing-6 0;
   }
 }
 
@@ -73,13 +73,13 @@
   position: sticky;
   top: calc(vars.$header-height + vars.$spacing-2);
   z-index: 10;
-  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
-  backdrop-filter: blur(10px);
-  margin-bottom: vars.$spacing-6;
-  padding: vars.$spacing-3 vars.$spacing-4;
+  background: transparent;
+  backdrop-filter: none;
+  margin-bottom: vars.$spacing-8;
+  padding: vars.$spacing-4 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: vars.$radius-md;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .stepSteps {
@@ -119,12 +119,24 @@
   cursor: default;
   position: relative;
   z-index: 2;
+  overflow: hidden; // Pour que le gradient remplisse le rond
 
   &.stepStepCircleActive {
     background: vars.$gradient-primary;
     border-color: transparent;
     color: vars.$lt-text-primary;
     box-shadow: 0 0 0 4px rgba(255, 0, 140, 0.2);
+  }
+  
+  .checkmark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-size: vars.$font-size-lg;
+    font-weight: vars.$font-weight-bold;
+    line-height: 1;
   }
 
   &.stepStepCircleCurrent {
@@ -712,23 +724,26 @@
 .cancelBtn {
   padding: vars.$spacing-3 vars.$spacing-6;
   background: transparent;
-  border: 1px solid vars.$lt-border;
+  border: none;
   border-radius: vars.$radius-button;
   color: vars.$lt-text-secondary;
   font-size: vars.$font-size-base;
   font-weight: vars.$font-weight-medium;
   cursor: pointer;
   transition: all vars.$transition-fast;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: transparent;
 
   &:hover {
-    background: vars.$lt-dark-secondary;
     color: vars.$lt-text-primary;
+    text-decoration-color: vars.$lt-text-primary;
   }
 }
 
 .submitBtn {
   padding: vars.$spacing-3 vars.$spacing-6;
-  background: vars.$lt-accent-blue;
+  background: vars.$gradient-primary;
   border: none;
   border-radius: vars.$radius-button;
   color: vars.$lt-text-primary;
@@ -738,8 +753,9 @@
   transition: all vars.$transition-fast;
 
   &:hover:not(:disabled) {
-    background: color.adjust(vars.$lt-accent-blue, $lightness: -10%);
+    opacity: 0.9;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
   }
 
   &:disabled {

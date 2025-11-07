@@ -44,6 +44,7 @@
     
     &:hover {
       background: var(--bg-tertiary, #{vars.$gray-100});
+      width: 100%;
     }
   }
 
@@ -193,11 +194,12 @@
 .divider {
   height: 1px;
   background: vars.$lt-border;
-  margin: vars.$spacing-2 0;
+  margin: 0;
+  width: 100%;
 }
 
 .menuItems {
-  padding: vars.$spacing-2 0;
+  padding: 0;
 }
 
 .menuItem {
@@ -205,21 +207,22 @@
   align-items: center;
   gap: vars.$spacing-3;
   width: 100%;
-  padding: vars.$spacing-3 vars.$spacing-4;
+  padding: vars.$spacing-4 vars.$spacing-4;
+  margin: 0;
   background: none;
   border: none;
   color: vars.$lt-text-primary;
   font-size: vars.$font-size-base;
   font-weight: vars.$font-weight-normal;
   cursor: pointer;
-  transition: all vars.$transition-fast;
+  transition: background-color vars.$transition-fast;
   text-align: left;
   position: relative;
+  box-sizing: border-box;
 
   &:hover {
     background: vars.$lt-dark-tertiary;
     color: vars.$lt-text-primary;
-    transform: translateX(4px);
     
     .menuIcon {
       color: vars.$lt-accent-blue;
@@ -227,7 +230,7 @@
   }
 
   &:active {
-    transform: translateX(2px);
+    background: vars.$lt-dark-tertiary;
   }
 
   &:focus {

@@ -1,11 +1,33 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import { useNotification } from '../../../components/providers/notification-provider'
 import styles from './page.module.scss'
 import { GameInfo } from '@/data/games'
+
+const STORAGE_KEY = 'lt_tournament_draft'
+
+interface TournamentDraft {
+  step: number
+  form: {
+    name: string
+    description: string
+    game: string
+    format: string
+    visibility: string
+    isTeamBased: string
+    maxParticipants: string
+    teamMinSize: string
+    teamMaxSize: string
+    startDate: string
+    endDate: string
+  }
+  selectedGameId: string | null
+  selectedGameName: string
+  // Note: posterPreview et logoPreview ne sont pas sauvegardés car ce sont des URLs blob temporaires
+}
 
 export default function CreateTournamentPage() {
   return (
@@ -17,10 +39,21 @@ export default function CreateTournamentPage() {
 
 function CreateForm() {
   const router = useRouter()
+  const pathname = usePathname()
   const { notify } = useNotification()
   const formContainerRef = useRef<HTMLDivElement>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const [step, setStep] = useState(0) // 0: game, 1: format, 2: identity, 3: dates, 4: summary
+  
+  // Déterminer l'étape depuis l'URL
+  const getStepFromPath = (): number => {
+    if (pathname === '/tournaments/create/format') return 1
+    if (pathname === '/tournaments/create/identity') return 2
+    if (pathname === '/tournaments/create/dates') return 3
+    if (pathname === '/tournaments/create/summary') return 4
+    return 0 // Par défaut, étape 0 (jeu)
+  }
+  
+  const [step, setStep] = useState(getStepFromPath())
   const [form, setForm] = useState({
     name: '',
     description: '',
@@ -46,9 +79,102 @@ function CreateForm() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [showAllGames, setShowAllGames] = useState(false)
 
+  // Sauvegarder dans localStorage - version avec paramètres pour éviter les problèmes de closure
+  const saveToLocalStorage = (currentStep: number, currentForm: typeof form, currentGameId: string | null, currentGameName: string) => {
+    try {
+      const draft: TournamentDraft = {
+        step: currentStep,
+        form: currentForm,
+        selectedGameId: currentGameId,
+        selectedGameName: currentGameName
+        // posterPreview et logoPreview ne sont pas sauvegardés (URLs blob temporaires)
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error)
+    }
+  }
+  
+  // Charger depuis localStorage
+  const loadFromLocalStorage = (): TournamentDraft | null => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return JSON.parse(saved) as TournamentDraft
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement:', error)
+    }
+    return null
+  }
+  
+  // Supprimer les données sauvegardées
+  const clearLocalStorage = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error)
+    }
+  }
+  
+  // Restaurer les données au chargement
+  useEffect(() => {
+    const saved = loadFromLocalStorage()
+    if (saved) {
+      setForm(saved.form)
+      setSelectedGameId(saved.selectedGameId)
+      setSelectedGameName(saved.selectedGameName)
+      // posterPreview et logoPreview ne sont pas restaurés (URLs blob temporaires)
+      // L'utilisateur devra re-sélectionner les fichiers si nécessaire
+      // Ne pas restaurer l'étape si on est sur une route spécifique
+      if (pathname === '/tournaments/create') {
+        setStep(saved.step)
+        // Rediriger vers l'étape sauvegardée
+        const stepRoutes = ['', '/format', '/identity', '/dates', '/summary']
+        if (saved.step > 0) {
+          router.replace(`/tournaments/create${stepRoutes[saved.step]}`)
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  
+  // Synchroniser l'étape avec l'URL uniquement au chargement initial
+  const [isInitialized, setIsInitialized] = useState(false)
+  
+  useEffect(() => {
+    // Ne synchroniser qu'une seule fois au montage du composant
+    if (!isInitialized) {
+      const stepFromPath = getStepFromPath()
+      setStep(stepFromPath)
+      setIsInitialized(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Dépendances vides = uniquement au montage
+  
+  // Sauvegarder à chaque changement (mais pas lors du changement d'étape via handleStepChange qui sauvegarde déjà)
+  useEffect(() => {
+    // Ne sauvegarder que si on a déjà initialisé (pour éviter de sauvegarder les valeurs par défaut au chargement)
+    if (isInitialized) {
+      saveToLocalStorage(step, form, selectedGameId, selectedGameName)
+    }
+  }, [form, selectedGameId, selectedGameName, isInitialized])
+  
+  // Rediriger /tournaments/create vers l'étape 0 ou l'étape sauvegardée
+  useEffect(() => {
+    if (pathname === '/tournaments/create') {
+      const saved = loadFromLocalStorage()
+      if (saved && saved.step > 0) {
+        const stepRoutes = ['', '/format', '/identity', '/dates', '/summary']
+        router.replace(`/tournaments/create${stepRoutes[saved.step]}`)
+      }
+    }
+  }, [pathname, router])
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
+    // La sauvegarde se fera automatiquement via le useEffect
   }
 
   // Charger les jeux depuis la DB
@@ -103,7 +229,7 @@ function CreateForm() {
     setSelectedGameId(id)
     setSelectedGameName(name)
     setGameResults([])
-    // Ne pas réinitialiser showAllGames pour garder l'état d'affichage
+    // La sauvegarde se fera automatiquement via le useEffect
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,6 +268,8 @@ function CreateForm() {
         throw new Error(data.message || 'Erreur à la création')
       }
       const data = await res.json()
+      // Supprimer les données sauvegardées après création réussie
+      clearLocalStorage()
       notify({ type: 'success', message: '🎉 Tournoi créé avec succès ! Redirection vers votre tournoi...' })
       setTimeout(() => {
         router.push(`/tournaments/${data.tournament.id}`)
@@ -170,18 +298,48 @@ function CreateForm() {
   }
 
   const handleStepChange = (newStep: number) => {
+    // Sauvegarder AVANT de changer d'étape (de manière synchrone)
+    const currentDraft: TournamentDraft = {
+      step: newStep, // Sauvegarder la nouvelle étape directement
+      form,
+      selectedGameId,
+      selectedGameName
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentDraft))
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error)
+    }
+    
+    // Changer l'étape immédiatement (sans attendre le changement d'URL)
     setStep(newStep)
+    
+    // Mettre à jour l'URL de manière asynchrone pour éviter le flash
+    const stepRoutes = ['', '/format', '/identity', '/dates', '/summary']
+    const newUrl = `/tournaments/create${stepRoutes[newStep]}`
+    
+    // Utiliser requestAnimationFrame pour mettre à jour l'URL après le render
+    requestAnimationFrame(() => {
+      window.history.replaceState(
+        { ...window.history.state, as: newUrl, url: newUrl },
+        '',
+        newUrl
+      )
+    })
+    
     // Scroll vers le haut du container du formulaire avec offset
-    setTimeout(() => {
-      if (formContainerRef.current) {
-        const elementPosition = formContainerRef.current.getBoundingClientRect().top
-        const offsetPosition = elementPosition + window.pageYOffset - 100 // 100px d'offset vers le haut
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: 'smooth'
-        })
-      }
-    }, 100)
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (formContainerRef.current) {
+          const elementPosition = formContainerRef.current.getBoundingClientRect().top
+          const offsetPosition = elementPosition + window.pageYOffset - 100
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          })
+        }
+      }, 50)
+    })
   }
 
   return (
@@ -209,7 +367,7 @@ function CreateForm() {
                     onClick={() => step > s.step && handleStepChange(s.step)}
                     style={{ cursor: step > s.step ? 'pointer' : 'default' }}
                   >
-                    {step > s.step ? '✓' : s.num}
+                    {step > s.step ? <span className={styles.checkmark}>✓</span> : s.num}
                   </div>
                   <span className={styles.stepStepLabel}>{s.label}</span>
                   {idx < arr.length - 1 && (
@@ -292,50 +450,48 @@ function CreateForm() {
           {/* Étape 1: Format et participants */}
           {step === 1 && (
             <div className={styles.form}>
-              <h2 className={styles.stepTitle}>Format et participants</h2>
+              <h2 className={styles.stepTitle}>Format du tournoi</h2>
               
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label}>Mode</label>
-                  <div className={styles.radioGroup}>
-                    <label>
-                      <input type="radio" name="isTeamBased" value="solo" checked={form.isTeamBased === 'solo'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
-                      Solo
-                    </label>
-                    <label>
-                      <input type="radio" name="isTeamBased" value="team" checked={form.isTeamBased === 'team'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
-                      Équipe
-                    </label>
-                  </div>
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="maxParticipants">Nombre de participants</label>
-                  <input id="maxParticipants" name="maxParticipants" className={styles.input} type="number" min="2" placeholder="ex: 16" value={form.maxParticipants} onChange={(e) => setForm(p => ({ ...p, maxParticipants: e.target.value }))} />
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Type de compétition</label>
+                <div className={styles.radioGroup}>
+                  <label>
+                    <input type="radio" name="isTeamBased" value="solo" checked={form.isTeamBased === 'solo'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
+                    Solo
+                  </label>
+                  <label>
+                    <input type="radio" name="isTeamBased" value="team" checked={form.isTeamBased === 'team'} onChange={(e) => setForm(p => ({ ...p, isTeamBased: e.target.value }))} />
+                    Équipe
+                  </label>
                 </div>
               </div>
 
-              {/* Taille des équipes - Seulement si mode équipe */}
-              {form.isTeamBased === 'team' && (
-                <div className={styles.formRow}>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="teamMinSize">Taille min. par équipe</label>
-                    <input id="teamMinSize" className={styles.input} type="number" min="1" value={form.teamMinSize} onChange={(e) => setForm(p => ({ ...p, teamMinSize: e.target.value }))} />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.label} htmlFor="teamMaxSize">Taille max. par équipe</label>
-                    <input id="teamMaxSize" className={styles.input} type="number" min="1" value={form.teamMaxSize} onChange={(e) => setForm(p => ({ ...p, teamMaxSize: e.target.value }))} />
-                  </div>
-                </div>
-              )}
-
               <div className={styles.formGroup}>
-                <label className={styles.label} htmlFor="format">Format du tournoi</label>
+                <label className={styles.label} htmlFor="format">Format</label>
                 <select className={styles.select} id="format" name="format" value={form.format} onChange={handleChange}>
                   <option value="SINGLE_ELIMINATION">Elimination directe</option>
                   <option value="DOUBLE_ELIMINATION" disabled>Double élimination (bientôt)</option>
                   <option value="ROUND_ROBIN" disabled>Round robin (bientôt)</option>
                 </select>
               </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="maxParticipants">Nombre de participants</label>
+                <input id="maxParticipants" name="maxParticipants" className={styles.input} type="number" min="2" placeholder="ex: 16" value={form.maxParticipants} onChange={(e) => setForm(p => ({ ...p, maxParticipants: e.target.value }))} />
+              </div>
+
+              {form.isTeamBased === 'team' && (
+                <div className={styles.formRow}>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label} htmlFor="teamMinSize">Joueurs min. par équipe</label>
+                    <input id="teamMinSize" className={styles.input} type="number" min="1" value={form.teamMinSize} onChange={(e) => setForm(p => ({ ...p, teamMinSize: e.target.value }))} />
+                  </div>
+                  <div className={styles.formGroup}>
+                    <label className={styles.label} htmlFor="teamMaxSize">Joueurs max. par équipe</label>
+                    <input id="teamMaxSize" className={styles.input} type="number" min="1" value={form.teamMaxSize} onChange={(e) => setForm(p => ({ ...p, teamMaxSize: e.target.value }))} />
+                  </div>
+                </div>
+              )}
 
               <div className={styles.formGroup}>
                 <label className={styles.label} htmlFor="visibility">Visibilité</label>
@@ -355,7 +511,7 @@ function CreateForm() {
           {/* Étape 2: Identité */}
           {step === 2 && (
             <div className={styles.form}>
-              <h2 className={styles.stepTitle}>Identité</h2>
+              <h2 className={styles.stepTitle}>Informations du tournoi</h2>
               
               <div className={styles.formGroup}>
                 <label className={`${styles.label} ${styles.required}`} htmlFor="name">Nom du tournoi</label>
@@ -367,25 +523,24 @@ function CreateForm() {
                 <textarea className={styles.textarea} id="description" name="description" value={form.description} onChange={handleChange} placeholder="Décrivez votre tournoi..." rows={4} />
               </div>
               
-              <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="logo">Logo du tournoi</label>
-                  <input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogoChange} className={styles.input} />
-                  {logoPreview && (
-                    <div className={styles.logoPreview}>
-                      <img src={logoPreview} alt="Aperçu logo" />
-                    </div>
-                  )}
-                </div>
-                <div className={styles.formGroup}>
-                  <label className={styles.label} htmlFor="poster">Affiche du tournoi</label>
-                  <input id="poster" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePosterChange} className={styles.input} />
-                  {posterPreview && (
-                    <div className={styles.posterPreview}>
-                      <img src={posterPreview} alt="Aperçu affiche" />
-                    </div>
-                  )}
-                </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="logo">Logo (optionnel)</label>
+                <input id="logo" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" onChange={handleLogoChange} className={styles.input} />
+                {logoPreview && (
+                  <div className={styles.logoPreview}>
+                    <img src={logoPreview} alt="Aperçu logo" />
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label} htmlFor="poster">Affiche (optionnel)</label>
+                <input id="poster" type="file" accept="image/png,image/jpeg,image/webp" onChange={handlePosterChange} className={styles.input} />
+                {posterPreview && (
+                  <div className={styles.posterPreview}>
+                    <img src={posterPreview} alt="Aperçu affiche" />
+                  </div>
+                )}
               </div>
 
               {/* Prévisualisation de la card */}
@@ -453,7 +608,7 @@ function CreateForm() {
           {/* Étape 3: Dates */}
           {step === 3 && (
             <div className={styles.form}>
-              <h2 className={styles.stepTitle}>Dates</h2>
+              <h2 className={styles.stepTitle}>Dates (optionnel)</h2>
               
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>

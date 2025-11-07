@@ -8,6 +8,7 @@ import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
+import VisualsIcon from '../../components/icons/VisualsIcon'
 import styles from './page.module.scss'
 import { getCroppedImg } from '../../lib/image'
 
@@ -446,9 +447,7 @@ export default function SettingsPage() {
                   className={`${styles.navItem} ${activeSection === 'visuals' ? styles.navItemActive : ''}`}
                   onClick={() => setActiveSection('visuals')}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z"></path>
-                  </svg>
+                  <VisualsIcon width={20} height={20} />
                   <span>Visuels</span>
                 </button>
               </div>
@@ -557,9 +556,6 @@ export default function SettingsPage() {
             {activeSection === 'visuals' && (
               <div className={styles.contentSection}>
                 <div className={styles.profileHeaderSection}>
-                  <div className={styles.profileIcon}>
-                    <SettingsIcon width={24} height={24} />
-                  </div>
                   <h1 className={styles.contentTitle}>Visuels</h1>
                 </div>
                 
@@ -569,7 +565,7 @@ export default function SettingsPage() {
                     <div 
                       className={styles.visualsBanner}
                       style={{
-                        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerPreviewUrl || bannerUrl || '/images/games/games.jpg'})`,
+                        backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerPreviewUrl || bannerUrl || '/images/games.jpg'})`,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
                         backgroundRepeat: 'no-repeat'
