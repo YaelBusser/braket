@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import styles from './index.module.scss'
+import { formatRelativeTimeWithTZ } from '@/utils/dateUtils'
 
 interface TournamentCardProps {
   tournament: {
@@ -18,48 +19,28 @@ interface TournamentCardProps {
     logoUrl?: string | null
     startDate?: string | null
     endDate?: string | null
+    createdAt?: string | null
     status: string
     format?: string
     maxParticipants?: number | null
     isTeamBased?: boolean
     teamMinSize?: number | null
     teamMaxSize?: number | null
+    region?: string | null
+    host?: {
+      id: string
+      pseudo: string
+      avatarUrl?: string | null
+    } | null
     _count?: {
       registrations: number
     }
   }
   className?: string
+  variant?: 'default' | 'compact'
 }
 
-export default function TournamentCard({ tournament, className = '' }: TournamentCardProps) {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('fr-FR', { 
-      weekday: 'short',
-      day: 'numeric', 
-      month: 'long',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).replace(',', '').toUpperCase()
-  }
-
-  const getStatusInfo = (status: string) => {
-    switch (status) {
-      case 'REG_OPEN':
-        return { text: 'Inscriptions ouvertes', color: '#10b981' }
-      case 'IN_PROGRESS':
-        return { text: 'En cours', color: '#E54B6A' }
-      case 'COMPLETED':
-        return { text: 'Terminé', color: '#6b7280' }
-      case 'DRAFT':
-        return { text: 'Brouillon', color: '#f59e0b' }
-      default:
-        return { text: 'Inconnu', color: '#6b7280' }
-    }
-  }
-
-  const statusInfo = getStatusInfo(tournament.status)
+export default function TournamentCard({ tournament, className = '', variant = 'default' }: TournamentCardProps) {
   const participantsCount = tournament._count?.registrations || 0
   const maxParticipants = tournament.maxParticipants || 0
   
@@ -70,9 +51,106 @@ export default function TournamentCard({ tournament, className = '' }: Tournamen
   // Image de fond : poster ou image du jeu
   const backgroundImage = tournament.posterUrl || gameImage
 
+  // Format du mode de jeu
+  const formatMode = () => {
+    if (tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize) {
+      return `${tournament.teamMinSize}v${tournament.teamMaxSize}`
+    }
+    return '1v1'
+  }
+
+  // Format des emplacements
+  const formatSlots = () => {
+    if (maxParticipants > 0) {
+      return `${maxParticipants} emplacement${maxParticipants > 1 ? 's' : ''}`
+    }
+    return ''
+  }
+
+  // Région par défaut
+  const region = tournament.region || 'Europe'
+
+  // Date relative
+  const relativeDate = formatRelativeTimeWithTZ(tournament.createdAt || tournament.startDate)
+
+  // Icône de jeu par défaut selon le nom du jeu
+  const getGameIcon = () => {
+    const gameLower = gameName.toLowerCase()
+    if (gameLower.includes('counter') || gameLower.includes('cs')) {
+      return '🔫'
+    }
+    if (gameLower.includes('league') || gameLower.includes('lol')) {
+      return '⚔️'
+    }
+    if (gameLower.includes('cricket') || gameLower.includes('rc24')) {
+      return '🏏'
+    }
+    return '🎮'
+  }
+
+  if (variant === 'compact') {
+    return (
+      <Link href={`/tournaments/${tournament.id}`} className={`${styles.tournamentCard} ${styles.compact} ${className}`}>
+        <div className={styles.cardImage}>
+          {backgroundImage ? (
+            <img 
+              src={backgroundImage} 
+              alt={tournament.name}
+              className={styles.posterImage}
+            />
+          ) : (
+            <div className={styles.placeholderImage}>
+              <div className={styles.gameIcon}>{getGameIcon()}</div>
+            </div>
+          )}
+          
+          {/* Icône de jeu en overlay */}
+          <div className={styles.gameIconOverlay}>
+            {gameImage ? (
+              <img src={gameImage} alt={gameName} />
+            ) : (
+              <div className={styles.gameIconPlaceholder}>
+                {getGameIcon()}
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className={styles.cardContent}>
+          {/* Informations hôte et date */}
+          <div className={styles.hostInfo}>
+            {tournament.host?.avatarUrl ? (
+              <img src={tournament.host.avatarUrl} alt={tournament.host.pseudo} className={styles.hostAvatar} />
+            ) : (
+              <div className={styles.hostAvatarPlaceholder}>
+                {tournament.host?.pseudo?.charAt(0).toUpperCase() || '?'}
+              </div>
+            )}
+            <span className={styles.relativeDate}>{relativeDate}</span>
+          </div>
+          
+          {/* Titre */}
+          <h3 className={styles.tournamentTitle}>
+            {tournament.name}
+          </h3>
+          
+          {/* Détails */}
+          <div className={styles.tournamentDetails}>
+            {region} • {formatMode()} • {formatSlots()}
+          </div>
+          
+          {/* Tag hôte */}
+          <div className={styles.hostTag}>
+            Hébergé par un utilisateur
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
+  // Version par défaut (ancienne version conservée pour compatibilité)
   return (
     <Link href={`/tournaments/${tournament.id}`} className={`${styles.tournamentCard} ${className}`}>
-      {/* Section supérieure avec image de fond (2/3) */}
       <div className={styles.cardImage}>
         {backgroundImage ? (
           <img 
@@ -82,33 +160,30 @@ export default function TournamentCard({ tournament, className = '' }: Tournamen
           />
         ) : (
           <div className={styles.placeholderImage}>
-            <div className={styles.gameIcon}>🎮</div>
+            <div className={styles.gameIcon}>{getGameIcon()}</div>
           </div>
         )}
         
-        {/* Logo du jeu en haut à gauche */}
         {gameImage && !tournament.posterUrl && (
           <div className={styles.gameLogo}>
             <img src={gameImage} alt={gameName} />
           </div>
         )}
-        
-        {/* Banner de statut en haut */}
-        <div className={styles.statusBanner} style={{ backgroundColor: statusInfo.color }}>
-          {statusInfo.text}
-        </div>
       </div>
       
-      {/* Section inférieure avec informations (1/3) */}
       <div className={styles.cardContent}>
-        {/* Date en haut */}
         {tournament.startDate && (
           <div className={styles.tournamentDate}>
-            {formatDate(tournament.startDate)}
+            {new Date(tournament.startDate).toLocaleDateString('fr-FR', { 
+              weekday: 'short',
+              day: 'numeric', 
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit'
+            }).replace(',', '').toUpperCase()}
           </div>
         )}
         
-        {/* Logo du tournoi et titre */}
         <div className={styles.tournamentInfo}>
           {tournament.logoUrl && (
             <div className={styles.tournamentLogo}>
@@ -124,10 +199,8 @@ export default function TournamentCard({ tournament, className = '' }: Tournamen
               {tournament.name}
             </h3>
             <div className={styles.tournamentDetails}>
-              {tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize && (
-                <span>{tournament.teamMinSize}v{tournament.teamMaxSize}</span>
-              )}
-              {tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize && tournament.format && ' • '}
+              {formatMode()}
+              {tournament.format && ' • '}
               {tournament.format === 'SINGLE_ELIMINATION' && 'Elimination directe'}
               {tournament.format === 'DOUBLE_ELIMINATION' && 'Double élimination'}
               {tournament.format === 'ROUND_ROBIN' && 'Round robin'}

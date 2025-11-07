@@ -16,6 +16,7 @@ model User {
   passwordHash  String?
   pseudo        String
   avatarUrl     String?
+  bannerUrl     String?
   isEnterprise  Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

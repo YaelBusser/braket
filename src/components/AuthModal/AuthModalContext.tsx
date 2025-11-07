@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode } from 'react'
-import AuthModal from './AuthModal'
+import AuthModal from './index'
 
 interface AuthModalContextType {
   openAuthModal: (mode?: 'login' | 'register') => void

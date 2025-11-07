@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { TournamentCard } from '@/components/ui'
+import { TournamentCard, CircularCard } from '@/components/ui'
+import { formatRelativeTime } from '@/utils/dateUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
 
-type FilterType = 'Tout' | 'Tournois' | 'Jeux' | 'Utilisateurs' | 'Equipes'
+type FilterType = 'Tout' | 'Tournois' | 'Jeux' | 'Utilisateurs' | 'Équipes'
 
 interface GameResult {
   id: string
@@ -21,6 +22,7 @@ interface UserResult {
   email: string
   avatarUrl: string | null
   isEnterprise: boolean
+  createdAt?: string
 }
 
 interface TeamResult {
@@ -42,10 +44,18 @@ interface TeamResult {
   } | null
 }
 
+type TournamentStatusFilter = 'all' | 'upcoming' | 'in_progress' | 'completed'
+type TournamentFormatFilter = 'all' | string
+
 export default function SearchPage() {
   const router = useRouter()
   const [q, setQ] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('Tout')
+  
+  // Filtres supplémentaires pour les tournois
+  const [tournamentStatusFilter, setTournamentStatusFilter] = useState<TournamentStatusFilter>('all')
+  const [tournamentFormatFilter, setTournamentFormatFilter] = useState<TournamentFormatFilter>('all')
+  const [tournamentCategoryFilter, setTournamentCategoryFilter] = useState<string>('all')
   
   // Results
   const [tournaments, setTournaments] = useState<any[]>([])
@@ -147,7 +157,7 @@ export default function SearchPage() {
 
   // Load teams
   useEffect(() => {
-    if (activeFilter !== 'Tout' && activeFilter !== 'Equipes') return
+    if (activeFilter !== 'Tout' && activeFilter !== 'Équipes') return
     
     const load = async () => {
       if (!q.trim() || q.trim().length < 2) {
@@ -170,26 +180,137 @@ export default function SearchPage() {
     load()
   }, [q, activeFilter])
 
-  const filters: FilterType[] = ['Tout', 'Tournois', 'Jeux', 'Utilisateurs', 'Equipes']
+  const filters: FilterType[] = ['Tout', 'Tournois', 'Jeux', 'Utilisateurs', 'Équipes']
+
+  // Filtrer les tournois selon les filtres supplémentaires
+  const getFilteredTournaments = () => {
+    let filtered = tournaments
+
+    // Filtre par statut
+    if (tournamentStatusFilter !== 'all') {
+      const now = new Date()
+      filtered = filtered.filter(t => {
+        const startDate = t.startDate ? new Date(t.startDate) : null
+        switch (tournamentStatusFilter) {
+          case 'upcoming':
+            return !startDate || startDate > now
+          case 'in_progress':
+            return startDate && startDate <= now && t.status === 'IN_PROGRESS'
+          case 'completed':
+            return t.status === 'COMPLETED'
+          default:
+            return true
+        }
+      })
+    }
+
+    // Filtre par format
+    if (tournamentFormatFilter !== 'all') {
+      filtered = filtered.filter(t => t.format === tournamentFormatFilter)
+    }
+
+    // Filtre par catégorie
+    if (tournamentCategoryFilter !== 'all') {
+      filtered = filtered.filter(t => t.category === tournamentCategoryFilter)
+    }
+
+    return filtered
+  }
+
+  // Obtenir les formats et catégories uniques des tournois
+  const availableFormats = Array.from(new Set(tournaments.map(t => t.format).filter(Boolean)))
+  const availableCategories = Array.from(new Set(tournaments.map(t => t.category).filter(Boolean)))
+
+  const filteredTournaments = getFilteredTournaments()
 
   return (
     <main className={styles.main}>
       <div className={styles.container}>
         <div className={styles.header}>
           <h1 className={styles.title}>
-            {q ? `Résultats pour "${q}"` : 'Recherche'}
+            {q ? `Résultats de la recherche ${q}` : 'Résultats de la recherche'}
           </h1>
           
-          <div className={styles.filters}>
-            {filters.map((filter) => (
-              <button
-                key={filter}
-                className={`${styles.filterBtn} ${activeFilter === filter ? styles.filterBtnActive : ''}`}
-                onClick={() => setActiveFilter(filter)}
-              >
-                {filter}
-              </button>
-            ))}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+            <div className={styles.filters}>
+              {filters.map((filter) => (
+                <button
+                  key={filter}
+                  className={`${styles.filterBtn} ${activeFilter === filter ? styles.filterBtnActive : ''}`}
+                  onClick={() => setActiveFilter(filter)}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+
+            {/* Filtres supplémentaires pour les tournois */}
+            {(activeFilter === 'Tout' || activeFilter === 'Tournois') && tournaments.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                {/* Filtres de statut à gauche */}
+                <div className={styles.filters} style={{ marginBottom: 0 }}>
+                  {[
+                    { id: 'all', label: 'Tous' },
+                    { id: 'upcoming', label: 'À venir' },
+                    { id: 'in_progress', label: 'En cours' },
+                    { id: 'completed', label: 'Terminés' }
+                  ].map((filter) => (
+                    <button
+                      key={filter.id}
+                      className={`${styles.filterBtn} ${tournamentStatusFilter === filter.id ? styles.filterBtnActive : ''}`}
+                      onClick={() => setTournamentStatusFilter(filter.id as TournamentStatusFilter)}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Filtres supplémentaires à droite */}
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                  {/* Filtre par format */}
+                  {availableFormats.length > 0 && (
+                    <div className={styles.filters} style={{ marginBottom: 0 }}>
+                      <button
+                        className={`${styles.filterBtn} ${tournamentFormatFilter === 'all' ? styles.filterBtnActive : ''}`}
+                        onClick={() => setTournamentFormatFilter('all')}
+                      >
+                        Tous les formats
+                      </button>
+                      {availableFormats.map((format) => (
+                        <button
+                          key={format}
+                          className={`${styles.filterBtn} ${tournamentFormatFilter === format ? styles.filterBtnActive : ''}`}
+                          onClick={() => setTournamentFormatFilter(format)}
+                        >
+                          {format}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Filtre par catégorie */}
+                  {availableCategories.length > 0 && (
+                    <div className={styles.filters} style={{ marginBottom: 0 }}>
+                      <button
+                        className={`${styles.filterBtn} ${tournamentCategoryFilter === 'all' ? styles.filterBtnActive : ''}`}
+                        onClick={() => setTournamentCategoryFilter('all')}
+                      >
+                        Toutes les catégories
+                      </button>
+                      {availableCategories.map((category) => (
+                        <button
+                          key={category}
+                          className={`${styles.filterBtn} ${tournamentCategoryFilter === category ? styles.filterBtnActive : ''}`}
+                          onClick={() => setTournamentCategoryFilter(category)}
+                        >
+                          {category}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -199,15 +320,19 @@ export default function SearchPage() {
             <h2 className={styles.sectionTitle}>Tournois</h2>
             
             {loadingTournaments ? (
-              <div className={styles.emptyState}>Chargement des tournois...</div>
-            ) : tournaments.length === 0 ? (
               <div className={styles.emptyState}>
-                {q ? `Aucun tournoi trouvé pour "${q}".` : 'Commencez une recherche pour trouver des tournois.'}
+                <p>Chargement des tournois...</p>
+              </div>
+            ) : filteredTournaments.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyMessage}>
+                  {q ? `Aucun tournoi trouvé pour "${q}"` : 'Aucun tournoi trouvé'}
+                </p>
               </div>
             ) : (
-              <div className={styles.tournamentsGrid}>
-                {tournaments.map(t => (
-                  <TournamentCard key={t.id} tournament={t} />
+              <div className={styles.tournamentsList}>
+                {filteredTournaments.map(t => (
+                  <TournamentCard key={t.id} tournament={t} variant="compact" />
                 ))}
               </div>
             )}
@@ -220,10 +345,14 @@ export default function SearchPage() {
             <h2 className={styles.sectionTitle}>Jeux</h2>
             
             {loadingGames ? (
-              <div className={styles.emptyState}>Chargement des jeux...</div>
+              <div className={styles.emptyState}>
+                <p>Chargement des jeux...</p>
+              </div>
             ) : games.length === 0 ? (
               <div className={styles.emptyState}>
-                {q ? `Aucun jeu trouvé pour "${q}".` : 'Commencez une recherche pour trouver des jeux.'}
+                <p className={styles.emptyMessage}>
+                  {q ? `Aucun jeu trouvé pour "${q}"` : 'Aucun jeu trouvé'}
+                </p>
               </div>
             ) : (
               <div className={styles.gamesGrid}>
@@ -254,78 +383,63 @@ export default function SearchPage() {
             <h2 className={styles.sectionTitle}>Utilisateurs</h2>
             
             {loadingUsers ? (
-              <div className={styles.emptyState}>Chargement des utilisateurs...</div>
+              <div className={styles.emptyState}>
+                <p>Chargement des utilisateurs...</p>
+              </div>
             ) : users.length === 0 ? (
               <div className={styles.emptyState}>
-                {q ? `Aucun utilisateur trouvé pour "${q}".` : 'Commencez une recherche pour trouver des utilisateurs.'}
+                <p className={styles.emptyMessage}>
+                  {q ? `Aucun utilisateur trouvé pour "${q}"` : 'Aucun utilisateur trouvé'}
+                </p>
               </div>
             ) : (
-              <div className={styles.usersGrid}>
+              <div className={styles.circularList}>
                 {users.map(user => (
-                  <Link key={user.id} href={`/profile/${user.id}`} className={styles.userCard}>
-                    {user.avatarUrl ? (
-                      <img src={user.avatarUrl} alt={user.pseudo} className={styles.userAvatar} />
-                    ) : (
-                      <div className={styles.userAvatarPlaceholder}>
-                        {user.pseudo.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className={styles.userInfo}>
-                      <h3 className={styles.userName}>{user.pseudo}</h3>
-                      {user.isEnterprise && (
-                        <span className={styles.userBadge}>Entreprise</span>
-                      )}
-                    </div>
-                  </Link>
+                  <CircularCard
+                    key={user.id}
+                    id={user.id}
+                    name={user.pseudo}
+                    imageUrl={user.avatarUrl}
+                    subtitle={user.createdAt ? `Inscrit(e) ${formatRelativeTime(user.createdAt).toLowerCase()}` : undefined}
+                    href={`/profile/${user.id}`}
+                  />
                 ))}
               </div>
             )}
           </div>
         )}
 
-        {/* Section Equipes */}
-        {(activeFilter === 'Tout' || activeFilter === 'Equipes') && (
+        {/* Section Équipes */}
+        {(activeFilter === 'Tout' || activeFilter === 'Équipes') && (
           <div className={styles.section}>
-            <h2 className={styles.sectionTitle}>Equipes</h2>
+            <h2 className={styles.sectionTitle}>Équipes</h2>
             
             {loadingTeams ? (
-              <div className={styles.emptyState}>Chargement des équipes...</div>
+              <div className={styles.emptyState}>
+                <p>Chargement des équipes...</p>
+              </div>
             ) : teams.length === 0 ? (
               <div className={styles.emptyState}>
-                {q ? `Aucune équipe trouvée pour "${q}".` : 'Commencez une recherche pour trouver des équipes.'}
+                <p className={styles.emptyMessage}>
+                  {q ? `Aucune équipe trouvée pour "${q}"` : 'Aucune équipe trouvée'}
+                </p>
               </div>
             ) : (
-              <div className={styles.teamsGrid}>
-                {teams.map(team => (
-                  <Link key={team.id} href={`/teams/${team.id}`} className={styles.teamCard}>
-                    <div className={styles.teamInfo}>
-                      <h3 className={styles.teamName}>{team.name}</h3>
-                      {team.game && (
-                        <p className={styles.teamGame}>{team.game}</p>
-                      )}
-                      {team.description && (
-                        <p className={styles.teamDescription}>{team.description}</p>
-                      )}
-                      {team.tournament && (
-                        <p className={styles.teamTournament}>Tournoi: {team.tournament.name}</p>
-                      )}
-                      <div className={styles.teamMembers}>
-                        {team.members.slice(0, 5).map((member, idx) => (
-                          <div key={member.user.id} className={styles.teamMemberAvatar}>
-                            {member.user.avatarUrl ? (
-                              <img src={member.user.avatarUrl} alt={member.user.pseudo} />
-                            ) : (
-                              <span>{member.user.pseudo.charAt(0).toUpperCase()}</span>
-                            )}
-                          </div>
-                        ))}
-                        {team.members.length > 5 && (
-                          <span className={styles.teamMembersMore}>+{team.members.length - 5}</span>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                ))}
+              <div className={styles.circularList}>
+                {teams.map(team => {
+                  // Utiliser l'avatar du premier membre ou un placeholder
+                  const teamImage = team.members[0]?.user?.avatarUrl || null
+                  return (
+                    <CircularCard
+                      key={team.id}
+                      id={team.id}
+                      name={team.name}
+                      imageUrl={teamImage}
+                      subtitle={`${team.members.length} member${team.members.length > 1 ? 's' : ''}`}
+                      href={`/teams/${team.id}`}
+                    />
+                  )
+                })}
               </div>
             )}
           </div>

@@ -4,9 +4,10 @@ import { useSession, signOut } from 'next-auth/react'
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { SearchBar } from './ui'
-import { useAuthModal } from './AuthModalContext'
-import styles from './Navigation.module.scss'
+import { SearchBar } from '../ui'
+import { useAuthModal } from '../AuthModal/AuthModalContext'
+import UserMenu from '../UserMenu'
+import styles from './index.module.scss'
 
 export default function Navigation() {
   const { data: session, status } = useSession()
@@ -44,24 +45,7 @@ export default function Navigation() {
             <div className={styles.loading}>Chargement...</div>
           ) : session ? (
             <div className={styles.userMenu}>
-              <Link href="/profile" className={styles.profileLink}>
-                {session.user?.image ? (
-                  <span className={styles.profileAvatar}>
-                    <img src={session.user.image} alt="Avatar" className={styles.profileAvatarImg} />
-                  </span>
-                ) : (
-                  <span className={styles.profileAvatarPlaceholder}>
-                    {(session.user?.name || 'P')?.charAt(0).toUpperCase()}
-                  </span>
-                )}
-                {
-                  session.user?.name && (
-                    <span className={styles.profileName}>
-                      {session.user.name}
-                    </span>
-                  )
-                }
-              </Link>
+              <UserMenu />
             </div>
           ) : (
             <div className={styles.authMenu}>
@@ -84,3 +68,4 @@ export default function Navigation() {
     </nav>
   )
 }
+

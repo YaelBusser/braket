@@ -15,6 +15,26 @@
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
+
+  /* Variant compact (nouveau design) */
+  &.compact {
+    width: 100%;
+    max-width: 320px;
+    
+    .cardImage {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-bottom: 60%;
+      overflow: hidden;
+      background: linear-gradient(135deg, #ff008c, #6748ff);
+    }
+
+    .cardContent {
+      padding: vars.$spacing-4;
+      background: #0a0a0a;
+    }
+  }
 }
 
 /* Section image (2/3 de la hauteur) */
@@ -155,6 +175,97 @@
   color: #9ca3af;
   font-size: 0.875rem;
   line-height: 1.4;
+}
+
+/* --- COMPACT VARIANT STYLES --- */
+.gameIconOverlay {
+  position: absolute;
+  top: vars.$spacing-3;
+  left: vars.$spacing-3;
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 8px;
+  padding: vars.$spacing-1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.gameIconPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #ffd700, #ff8c00);
+  border-radius: 6px;
+}
+
+.hostInfo {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  margin-bottom: vars.$spacing-3;
+}
+
+.hostAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.hostAvatarPlaceholder {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.relativeDate {
+  color: #9ca3af;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.compact .tournamentTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 vars.$spacing-2 0;
+  line-height: 1.3;
+}
+
+.compact .tournamentDetails {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: vars.$spacing-3;
+}
+
+.hostTag {
+  display: inline-block;
+  padding: vars.$spacing-1 vars.$spacing-2;
+  background: #1f2937;
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
 }
 
 /* --- RESPONSIVE --- */

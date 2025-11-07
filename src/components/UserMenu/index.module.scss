@@ -1,0 +1,333 @@
+@use '../../styles/variables.module' as vars;
+
+.userMenuContainer {
+  position: relative;
+  display: inline-block;
+}
+
+// Support du thème light/dark via variables CSS
+:global(html.light) {
+  .dropdown {
+    background: var(--bg-secondary, #{vars.$gray-50});
+    border-color: var(--border, #{vars.$gray-300});
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .dropdownHeader {
+    background: var(--bg-tertiary, #{vars.$gray-100});
+  }
+
+  .profileButton {
+    color: var(--text-primary, #{vars.$black});
+    
+    &:hover {
+      background: var(--bg-secondary, #{vars.$gray-50});
+    }
+  }
+
+  .profileName {
+    color: var(--text-primary, #{vars.$black});
+  }
+
+  .profileAvatar,
+  .profileAvatarPlaceholder {
+    background: var(--bg-tertiary, #{vars.$gray-100});
+    color: var(--text-primary, #{vars.$black});
+  }
+
+  .userName {
+    color: var(--text-primary, #{vars.$black});
+  }
+
+  .menuItem {
+    color: var(--text-primary, #{vars.$black});
+    
+    &:hover {
+      background: var(--bg-tertiary, #{vars.$gray-100});
+    }
+  }
+
+  .divider {
+    background: var(--border, #{vars.$gray-300});
+  }
+
+  .chevron {
+    color: var(--text-secondary, #{vars.$gray-700});
+  }
+}
+
+.profileButton {
+  display: inline-flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: vars.$spacing-2 vars.$spacing-3;
+  border-radius: vars.$radius-md;
+  transition: all vars.$transition-fast;
+  color: vars.$lt-text-primary;
+
+  &:hover {
+    background: vars.$lt-dark-secondary;
+    
+    .chevron {
+      color: vars.$lt-text-primary;
+    }
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid vars.$lt-accent-blue;
+    outline-offset: 2px;
+  }
+}
+
+.profileAvatar,
+.profileAvatarPlaceholder {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: vars.$lt-dark-secondary;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-sm;
+}
+
+.profileAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileName {
+  margin-left: vars.$spacing-1;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+}
+
+.chevron {
+  margin-left: vars.$spacing-1;
+  color: vars.$lt-text-secondary;
+  transition: transform vars.$transition-fast, color vars.$transition-fast;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + vars.$spacing-2);
+  right: 0;
+  min-width: 240px;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: vars.$z-dropdown;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  padding: vars.$spacing-4;
+  background: vars.$lt-dark-tertiary;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+}
+
+.headerAvatar,
+.headerAvatarPlaceholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: vars.$lt-dark-tertiary;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-lg;
+  flex-shrink: 0;
+}
+
+.headerAvatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userName {
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+}
+
+
+.divider {
+  height: 1px;
+  background: vars.$lt-border;
+  margin: vars.$spacing-2 0;
+}
+
+.menuItems {
+  padding: vars.$spacing-2 0;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  width: 100%;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: none;
+  border: none;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-normal;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  text-align: left;
+  position: relative;
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+    transform: translateX(4px);
+    
+    .menuIcon {
+      color: vars.$lt-accent-blue;
+    }
+  }
+
+  &:active {
+    transform: translateX(2px);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid vars.$lt-accent-blue;
+    outline-offset: -2px;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+.menuItemDanger {
+  color: vars.$lt-error;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: vars.$lt-error;
+    
+    .menuIcon {
+      color: vars.$lt-error;
+    }
+  }
+}
+
+.menuIcon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: vars.$lt-border;
+  transition: background-color vars.$transition-base;
+  border-radius: 24px;
+
+  &::before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: vars.$lt-text-primary;
+    transition: transform vars.$transition-base;
+    border-radius: 50%;
+  }
+}
+
+.toggle input:checked + .toggleSlider {
+  background-color: vars.$lt-accent-purple;
+}
+
+.toggle input:checked + .toggleSlider::before {
+  transform: translateX(20px);
+}
+
+.toggle input:focus + .toggleSlider {
+  outline: 2px solid vars.$lt-accent-blue;
+  outline-offset: 2px;
+}
+
+@media (max-width: vars.$breakpoint-md) {
+  .profileName {
+    display: none;
+  }
+
+  .dropdown {
+    right: 0;
+    min-width: 220px;
+  }
+}
+

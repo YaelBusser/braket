@@ -4,7 +4,8 @@ import AuthProvider from "../components/providers/auth-provider";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { NotificationProvider } from "../components/providers/notification-provider";
-import { AuthModalProvider } from "../components/AuthModalContext";
+import { AuthModalProvider } from "../components/AuthModal/AuthModalContext";
+import { ThemeProvider } from "../components/providers/theme-provider";
 import Sidebar from "../components/Sidebar";
 
 export const metadata: Metadata = {
@@ -30,22 +31,24 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body>
-        <AuthProvider>
-          <NotificationProvider>
-            <AuthModalProvider>
-              <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Sidebar />
-                <Navigation />
-                <div className="mainContentWrapper">
-                  <main style={{ flex: 1 }}>
-                    {children}
-                  </main>
-                  <Footer />
+        <ThemeProvider>
+          <AuthProvider>
+            <NotificationProvider>
+              <AuthModalProvider>
+                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                  <Sidebar />
+                  <Navigation />
+                  <div className="mainContentWrapper">
+                    <main style={{ flex: 1 }}>
+                      {children}
+                    </main>
+                    <Footer />
+                  </div>
                 </div>
-              </div>
-            </AuthModalProvider>
-          </NotificationProvider>
-        </AuthProvider>
+              </AuthModalProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

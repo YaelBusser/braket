@@ -6,22 +6,28 @@
   padding: vars.$spacing-8 0;
 }
 
+// Utilise la classe globale content-centered pour le contenu
+// Le container reste pour la compatibilité mais devrait utiliser content-centered
 .container {
   max-width: vars.$container-2xl;
   margin: 0 auto;
-  padding: 0 vars.$spacing-6;
-  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
+  
+  // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
 
   @media (min-width: vars.$breakpoint-lg) {
-    padding: 0 vars.$spacing-10;
-    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
   }
 
   @media (max-width: 1024px) {
     padding-left: vars.$spacing-6;
+    padding-right: vars.$spacing-6;
 
     @media (min-width: vars.$breakpoint-lg) {
       padding-left: vars.$spacing-10;
+      padding-right: vars.$spacing-10;
     }
   }
 }
@@ -35,6 +41,7 @@
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: vars.$spacing-6;
+  text-transform: none;
 }
 
 .filters {
@@ -44,9 +51,9 @@
 }
 
 .filterBtn {
-  background: transparent;
-  color: #9ca3af;
-  border: 1px solid #374151;
+  background: #1f2937;
+  color: #ffffff;
+  border: none;
   border-radius: 8px;
   padding: vars.$spacing-2 vars.$spacing-4;
   font-size: 0.875rem;
@@ -61,12 +68,13 @@
 }
 
 .filterBtnActive {
-  background: #ff008c;
-  color: #fff;
-  border-color: #ff008c;
+  background: vars.$primary-600;
+  color: #ffffff;
+  border: none;
 
   &:hover {
-    background: #ff008c;
+    background: vars.$primary-600;
+    color: #ffffff;
   }
 }
 
@@ -82,12 +90,67 @@
 }
 
 .emptyState {
-  background: #1f2937;
-  border-radius: 12px;
-  padding: vars.$spacing-8;
-  border: 1px solid #374151;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-8 0;
   text-align: center;
-  color: #9ca3af;
+  color: #6b7280;
+  min-height: auto;
+
+  p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-weight: 400;
+  }
+}
+
+.emptyIcon {
+  display: none;
+}
+
+.emptyTitle {
+  display: none;
+}
+
+.emptyMessage {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+// Main Layout (Meilleur résultat + Compétitions)
+.mainLayout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: vars.$spacing-8;
+  margin-bottom: vars.$spacing-10;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: vars.$spacing-6;
+  }
+}
+
+.leftColumn,
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+
+  .emptyState {
+    min-height: auto;
+    padding: vars.$spacing-4 0;
+  }
+}
+
+.competitionsList {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
 }
 
 // Tournaments
@@ -95,6 +158,32 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: vars.$spacing-6;
+}
+
+.tournamentsList {
+  display: flex;
+  gap: vars.$spacing-4;
+  overflow-x: auto;
+  padding-bottom: vars.$spacing-2;
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
 }
 
 // Games
@@ -308,5 +397,32 @@
   color: #9ca3af;
   font-size: 0.875rem;
   margin-left: vars.$spacing-1;
+}
+
+// Circular list (pour utilisateurs et équipes)
+.circularList {
+  display: flex;
+  gap: vars.$spacing-4;
+  overflow-x: auto;
+  padding-bottom: vars.$spacing-2;
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+
+  &::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
 }
 

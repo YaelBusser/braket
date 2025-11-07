@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useNotification } from '../../../components/providers/notification-provider'
-import { useAuthModal } from '../../../components/AuthModalContext'
+import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
 import styles from './page.module.scss'
 import { GAMES, filterGames, GameInfo } from '@/data/games'
 

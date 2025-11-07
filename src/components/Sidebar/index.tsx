@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import styles from './Sidebar.module.scss'
+import styles from './index.module.scss'
 
 type MiniTournament = {
   id: string
@@ -45,5 +45,4 @@ export default function Sidebar() {
     </aside>
   )
 }
-
 

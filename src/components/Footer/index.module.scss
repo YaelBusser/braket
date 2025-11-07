@@ -1,4 +1,4 @@
-@use '../styles/variables.module' as vars;
+@use '../../styles/variables.module' as vars;
 
 .footer {
   background: vars.$gradient-dark;
@@ -16,7 +16,7 @@
 
 .content {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
+  grid-template-columns: 2fr 1fr 1fr;
   gap: vars.$spacing-12;
   margin-bottom: vars.$spacing-8;
 }
@@ -59,7 +59,8 @@
 
     &:hover {
       background: rgba(255, 0, 140, 0.2);
-      border-color: rgba(255, 0, 140, 0.4);
+      border-color: vars.$primary;
+      color: vars.$primary;
       transform: translateY(-2px);
     }
   }
@@ -88,7 +89,7 @@
     font-size: vars.$font-size-sm;
 
     &:hover {
-      color: vars.$lt-accent-blue;
+      color: vars.$primary;
     }
   }
 }
@@ -125,7 +126,7 @@
   transition: color vars.$transition-fast;
 
   &:hover {
-    color: vars.$lt-accent-blue;
+    color: vars.$primary;
   }
 }
 
@@ -204,3 +205,4 @@
     gap: vars.$spacing-2;
   }
 }
+

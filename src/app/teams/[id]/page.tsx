@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../../components/providers/notification-provider'
-import { useAuthModal } from '../../../components/AuthModalContext'
+import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
 import styles from './page.module.scss'
 
 interface Team {

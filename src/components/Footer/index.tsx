@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import styles from './Footer.module.scss'
+import styles from './index.module.scss'
 
 export default function Footer() {
   return (
@@ -42,14 +42,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Catégories */}
-          <div className={styles.links}>
-            <h4 className={styles.title}>Catégories</h4>
-            <ul className={styles.linkList}>
-              <li><Link href="/?category=VIDEO_GAMES" className={styles.link}>Jeux Vidéo</Link></li>
-            </ul>
-          </div>
-
           {/* Support */}
           <div className={styles.links}>
             <h4 className={styles.title}>Support</h4>
@@ -79,3 +71,4 @@ export default function Footer() {
     </footer>
   )
 }
+

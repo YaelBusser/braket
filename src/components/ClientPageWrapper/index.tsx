@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { LoadingSpinner } from './ui'
+import { LoadingSpinner } from '../ui'
 
 interface ClientPageWrapperProps {
   children: React.ReactNode
@@ -24,3 +24,4 @@ export default function ClientPageWrapper({
 
   return <>{children}</>
 }
+

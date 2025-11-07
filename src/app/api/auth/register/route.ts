@@ -4,7 +4,7 @@ import { prisma } from '../../../../../lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, pseudo } = await request.json()
+    const { email, password, pseudo, isEnterprise } = await request.json()
 
     // Validation
     if (!email || !password || !pseudo) {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         email,
         passwordHash,
         pseudo,
-        // stocker la préférence dans image (temp) ? mieux: une table/colonne dédiée; pour MVP, localStorage côté client
+        isEnterprise: isEnterprise === true,
       }
     })
 

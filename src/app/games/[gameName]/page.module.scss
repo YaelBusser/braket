@@ -1,0 +1,88 @@
+@use '@/styles/variables.module' as vars;
+
+.filters {
+  display: flex;
+  gap: vars.$spacing-2;
+  flex-wrap: wrap;
+  margin-bottom: vars.$spacing-6;
+}
+
+.filterBtn {
+  background: #1f2937;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: vars.$spacing-2 vars.$spacing-4;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #374151;
+    color: #fff;
+  }
+}
+
+.filterBtnActive {
+  background: vars.$primary-600;
+  color: #ffffff;
+  border: none;
+
+  &:hover {
+    background: vars.$primary-600;
+    color: #ffffff;
+  }
+}
+
+// Bannière pleine largeur (sort du mainContentWrapper)
+.banner {
+  margin-left: calc(-1 * #{vars.$sidebar-width});
+  padding-left: #{vars.$sidebar-width};
+  width: calc(100% + #{vars.$sidebar-width});
+  
+  @media (max-width: 1024px) {
+    margin-left: 0;
+    padding-left: 0;
+    width: 100%;
+  }
+}
+
+// Utilise la classe globale content-centered
+
+// Contenu avec onglets - décalé par rapport à la sidebar
+// Remplace le padding de content-centered pour ajouter un décalage supplémentaire
+.contentWithTabs {
+  padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-8) !important;
+  padding-right: vars.$spacing-8 !important;
+  
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6 !important;
+    padding-right: vars.$spacing-6 !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-10) !important;
+    padding-right: vars.$spacing-10 !important;
+  }
+}
+
+// Onglets avec espacement
+.tabsContainer {
+  margin-bottom: vars.$spacing-8;
+}
+
+// Contenu des onglets avec espacement
+.tabContent {
+  padding-top: vars.$spacing-4;
+}
+
+// En-tête du jeu - dans le flux normal, chevauchant la bannière
+.gameHeader {
+  margin-top: -8rem;
+  padding-top: 0;
+  padding-bottom: vars.$spacing-6;
+  position: relative;
+  z-index: 2;
+}
+

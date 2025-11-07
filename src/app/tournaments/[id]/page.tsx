@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useNotification } from '../../../components/providers/notification-provider'
 import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
-import { useAuthModal } from '../../../components/AuthModalContext'
+import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
 import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import Bracket from '../../../components/Bracket'
 

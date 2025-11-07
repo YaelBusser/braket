@@ -78,8 +78,14 @@ export const authOptions: NextAuthOptions = {
         try {
           // Vérifier si l'utilisateur existe déjà
           const existingUser = await prisma.user.findUnique({
-            where: { email: user.email }
+            where: { email: user.email },
+            select: { id: true, isEnterprise: true }
           })
+
+          // Empêcher les entreprises de se connecter avec OAuth
+          if (existingUser?.isEnterprise) {
+            return false
+          }
 
           if (!existingUser) {
             // Générer un pseudo à partir du nom ou de l'email
@@ -103,7 +109,7 @@ export const authOptions: NextAuthOptions = {
               counter++
             }
 
-            // Créer l'utilisateur en base de données
+            // Créer l'utilisateur en base de données (toujours particulier pour OAuth)
             await prisma.user.create({
               data: {
                 email: user.email,
@@ -112,6 +118,7 @@ export const authOptions: NextAuthOptions = {
                 image: user.image || null,
                 avatarUrl: user.image || null,
                 passwordHash: null, // Pas de mot de passe pour les utilisateurs OAuth
+                isEnterprise: false, // Les utilisateurs OAuth sont toujours des particuliers
               }
             })
           }
@@ -130,28 +137,52 @@ export const authOptions: NextAuthOptions = {
         if (account && (account.provider === 'discord' || account.provider === 'google')) {
           try {
             const dbUser = await prisma.user.findUnique({
-              where: { email: user.email! }
+              where: { email: user.email! },
+              select: { id: true, pseudo: true, avatarUrl: true, image: true, isEnterprise: true }
             })
             if (dbUser) {
               token.id = dbUser.id
               token.name = dbUser.pseudo
               token.picture = dbUser.avatarUrl || dbUser.image || null
+              token.isEnterprise = dbUser.isEnterprise || false
             } else {
               token.id = (user as any).id
               token.name = user.name
               token.picture = (user as any).image
+              token.isEnterprise = false
             }
           } catch (error) {
             console.error('Error fetching user in jwt callback:', error)
             token.id = (user as any).id
             token.name = user.name
             token.picture = (user as any).image
+            token.isEnterprise = false
           }
         } else {
-          // Pour les connexions credentials, utiliser les données du user
-          token.id = (user as any).id
-          token.name = user.name
-          token.picture = (user as any).image
+          // Pour les connexions credentials, récupérer l'utilisateur depuis la base de données
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { email: (user as any).email || '' },
+              select: { id: true, pseudo: true, avatarUrl: true, image: true, isEnterprise: true }
+            })
+            if (dbUser) {
+              token.id = dbUser.id
+              token.name = dbUser.pseudo
+              token.picture = dbUser.avatarUrl || dbUser.image || null
+              token.isEnterprise = dbUser.isEnterprise || false
+            } else {
+              token.id = (user as any).id
+              token.name = user.name
+              token.picture = (user as any).image
+              token.isEnterprise = false
+            }
+          } catch (error) {
+            console.error('Error fetching user in jwt callback:', error)
+            token.id = (user as any).id
+            token.name = user.name
+            token.picture = (user as any).image
+            token.isEnterprise = false
+          }
         }
       }
 
@@ -159,6 +190,7 @@ export const authOptions: NextAuthOptions = {
       if (trigger === 'update' && session) {
         if (session.name) token.name = session.name
         if ((session as any).image) token.picture = (session as any).image
+        if ((session as any).isEnterprise !== undefined) token.isEnterprise = (session as any).isEnterprise
       }
 
       return token
@@ -172,6 +204,7 @@ export const authOptions: NextAuthOptions = {
         if ((token as any).picture) {
           session.user.image = (token as any).picture as string
         }
+        (session.user as any).isEnterprise = (token as any).isEnterprise || false
       }
       return session
     },

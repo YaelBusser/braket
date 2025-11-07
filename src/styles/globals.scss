@@ -23,6 +23,36 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --bg-page: #{vars.$bg-page};
+  --sidebar-width: #{vars.$sidebar-width};
+  --content-offset: calc((100vw - #{vars.$sidebar-width} - #{vars.$container-xl}) / 2 - #{vars.$sidebar-width});
+  
+  // Par défaut, thème dark
+  &.dark {
+    --bg-page: #{vars.$bg-page};
+    --text-primary: #{vars.$lt-text-primary};
+    --text-secondary: #{vars.$lt-text-secondary};
+    --bg-secondary: #{vars.$lt-dark-secondary};
+    --bg-tertiary: #{vars.$lt-dark-tertiary};
+    --border: #{vars.$lt-border};
+  }
+  
+  // Thème light
+  &.light {
+    --bg-page: #{vars.$white};
+    --text-primary: #{vars.$black};
+    --text-secondary: #{vars.$gray-700};
+    --bg-secondary: #{vars.$gray-50};
+    --bg-tertiary: #{vars.$gray-100};
+    --border: #{vars.$gray-300};
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    --content-offset: calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2 - #{vars.$sidebar-width});
+  }
+  
+  @media (max-width: 1024px) {
+    --content-offset: 0;
+  }
 }
 
 body {
@@ -34,6 +64,13 @@ body {
   background-color: vars.$bg-page;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color vars.$transition-base, color vars.$transition-base;
+}
+
+// Support du thème light pour le body
+html.light body {
+  background-color: var(--bg-page, #{vars.$white});
+  color: var(--text-primary, #{vars.$black});
 }
 
 // Typography
@@ -43,6 +80,17 @@ h1, h2, h3, h4, h5, h6 {
   line-height: vars.$line-height-tight;
   color: vars.$lt-text-primary;
   margin: 0;
+  transition: color vars.$transition-base;
+}
+
+// Support du thème light pour les titres
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: var(--text-primary, #{vars.$black});
 }
 
 // H1 : Funnel Display Bold, 48pt
@@ -159,6 +207,15 @@ a {
   }
 }
 
+// Support du thème light pour les liens
+html.light a {
+  color: vars.$lt-accent-blue;
+  
+  &:hover {
+    color: vars.$lt-accent-purple;
+  }
+}
+
 // Lists
 ul, ol {
   margin: 0;
@@ -251,6 +308,40 @@ button {
     
     @media (min-width: vars.$breakpoint-sm) {
       padding-left: vars.$spacing-8;
+    }
+  }
+}
+
+// Container centré avec décalage automatique (pour le contenu, pas les bannières)
+// Le mainContentWrapper a déjà un margin-left de sidebar-width
+// On calcule le padding pour centrer le contenu dans la zone disponible
+.content-centered {
+  width: 100%;
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  
+  // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
+  // Pour centrer : (zone_disponible - container_width) / 2
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-8);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-8);
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+    padding-right: vars.$spacing-6;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-8;
+      padding-right: vars.$spacing-8;
     }
   }
 }
@@ -374,10 +465,16 @@ button {
   min-height: calc(100vh - #{vars.$header-height});
   flex: 1;
   background-color: vars.$bg-page;
+  transition: background-color vars.$transition-base;
 
   @media (max-width: 1024px) {
     margin-left: 0;
   }
+}
+
+// Support du thème light pour le contenu principal
+html.light .mainContentWrapper {
+  background-color: var(--bg-page, #{vars.$white});
 }
 
 .text-sm {

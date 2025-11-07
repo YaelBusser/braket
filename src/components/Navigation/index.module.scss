@@ -1,4 +1,4 @@
-@use '../styles/variables.module' as vars;
+@use '../../styles/variables.module' as vars;
 
 .nav {
   background: vars.$lt-dark-bg;
@@ -10,6 +10,15 @@
   width: 100vw;
   height: vars.$header-height;
   z-index: vars.$z-fixed; /* Au-dessus de la sidebar */
+  transition: background-color vars.$transition-base, box-shadow vars.$transition-base;
+}
+
+// Support du thème light
+:global(html.light) {
+  .nav {
+    background: var(--bg-secondary, #{vars.$white});
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
 }
 
 .container {
@@ -19,12 +28,13 @@
   padding: vars.$spacing-4 vars.$spacing-6 vars.$spacing-4 0;
   width: 100%;
   height: 100%;
+  position: relative;
 }
 
 .leftSection {
   display: flex;
   align-items: center;
-  gap: vars.$spacing-4;
+  gap: vars.$spacing-8;
   margin-left: 1rem;
 }
 
@@ -61,10 +71,12 @@
 }
 
 .searchWrapper {
-  flex: 0 0 auto;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   width: 300px;
   max-width: 300px;
-  margin: 0 vars.$spacing-3 0 0;
+  z-index: 1;
 }
 
 .navLink {
@@ -78,6 +90,17 @@
   
   &:hover {
     color: vars.$lt-accent-purple;
+  }
+}
+
+// Support du thème light pour les liens de navigation
+:global(html.light) {
+  .navLink {
+    color: var(--text-secondary, #{vars.$gray-700});
+    
+    &:hover {
+      color: vars.$lt-accent-purple;
+    }
   }
 }
 
@@ -157,20 +180,25 @@
 .authButtonRegister {
   padding: vars.$spacing-2 vars.$spacing-5;
   border: none;
-  border-radius: vars.$radius-full;
-  font-size: vars.$font-size-base;
+  border-radius: 10px;
+  font-size: 0.875rem; // 14px - même taille que la barre de recherche
   font-weight: vars.$font-weight-semibold;
   cursor: pointer;
   transition: all vars.$transition-fast;
   font-family: vars.$font-family-secondary;
   white-space: nowrap;
+  height: 32px; // Hauteur fixe pour correspondre à la barre de recherche
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .authButtonLogin {
-  background: #3d3550; // Bleu-gris foncé
+  background: vars.$lt-dark-tertiary; // #2d004d - Violet foncé cohérent avec la DA
   color: vars.$lt-text-primary; // Blanc
+  border: 1px solid vars.$lt-border; // Bordure violette
   &:hover {
-    background: #4a4159;
+    background: vars.$lt-border; // #3d0066 - Hover plus clair
     transform: translateY(-1px);
   }
   &:active {
@@ -179,10 +207,10 @@
 }
 
 .authButtonRegister {
-  background: vars.$white; // Blanc
-  color: vars.$black; // Noir
+  background: vars.$lt-accent-purple; // #ff008c - Magenta primaire
+  color: vars.$lt-text-primary; // Blanc
   &:hover {
-    background: vars.$gray-50;
+    background: #e6007d; // Magenta plus foncé au hover
     transform: translateY(-1px);
   }
   &:active {
@@ -201,7 +229,6 @@
   }
   
   .searchWrapper {
-    margin: 0 vars.$spacing-3;
     width: 260px;
     max-width: 260px;
   }
@@ -255,3 +282,4 @@
     font-size: vars.$font-size-xs;
   }
 }
+
