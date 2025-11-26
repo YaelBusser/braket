@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { TournamentCard, CircularCard } from '@/components/ui'
+import { TournamentCard, CircularCard, GameCardSkeleton, PageContent } from '@/components/ui'
 import { formatRelativeTime } from '@/utils/dateUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
@@ -49,6 +49,7 @@ type TournamentFormatFilter = 'all' | string
 
 export default function SearchPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [q, setQ] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('Tout')
   
@@ -56,6 +57,7 @@ export default function SearchPage() {
   const [tournamentStatusFilter, setTournamentStatusFilter] = useState<TournamentStatusFilter>('all')
   const [tournamentFormatFilter, setTournamentFormatFilter] = useState<TournamentFormatFilter>('all')
   const [tournamentCategoryFilter, setTournamentCategoryFilter] = useState<string>('all')
+  const userId = (session?.user as any)?.id || null
   
   // Results
   const [tournaments, setTournaments] = useState<any[]>([])
@@ -224,8 +226,7 @@ export default function SearchPage() {
   const filteredTournaments = getFilteredTournaments()
 
   return (
-    <main className={styles.main}>
-      <div className={styles.container}>
+    <PageContent style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div className={styles.header}>
           <h1 className={styles.title}>
             {q ? `Résultats de la recherche ${q}` : 'Résultats de la recherche'}
@@ -320,8 +321,10 @@ export default function SearchPage() {
             <h2 className={styles.sectionTitle}>Tournois</h2>
             
             {loadingTournaments ? (
-              <div className={styles.emptyState}>
-                <p>Chargement des tournois...</p>
+              <div className={styles.tournamentsList}>
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <TournamentCard key={index} loading={true} variant="compact" />
+                ))}
               </div>
             ) : filteredTournaments.length === 0 ? (
               <div className={styles.emptyState}>
@@ -332,7 +335,7 @@ export default function SearchPage() {
             ) : (
               <div className={styles.tournamentsList}>
                 {filteredTournaments.map(t => (
-                  <TournamentCard key={t.id} tournament={t} variant="compact" />
+                  <TournamentCard key={t.id} tournament={t} variant="compact" userId={userId} />
                 ))}
               </div>
             )}
@@ -345,8 +348,8 @@ export default function SearchPage() {
             <h2 className={styles.sectionTitle}>Jeux</h2>
             
             {loadingGames ? (
-              <div className={styles.emptyState}>
-                <p>Chargement des jeux...</p>
+              <div className={styles.gamesGrid}>
+                <GameCardSkeleton count={6} />
               </div>
             ) : games.length === 0 ? (
               <div className={styles.emptyState}>
@@ -444,7 +447,6 @@ export default function SearchPage() {
             )}
           </div>
         )}
-      </div>
-    </main>
+    </PageContent>
   )
 }

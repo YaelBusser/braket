@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { findGameByName, GameInfo } from '@/data/games'
-import { ContentContainer, Tabs } from '@/components/ui'
+import { ContentContainer, Tabs, TournamentCard } from '@/components/ui'
 import styles from './page.module.scss'
 
 interface Tournament {
@@ -35,6 +36,7 @@ type GameDetails = GameInfo
 export default function GamePage() {
   const params = useParams()
   const router = useRouter()
+  const { data: session } = useSession()
   const [gameName, setGameName] = useState('')
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
@@ -44,6 +46,7 @@ export default function GamePage() {
   const [tournamentFilter, setTournamentFilter] = useState('all')
   const [formatFilter, setFormatFilter] = useState<string>('all')
   const [categoryFilter, setCategoryFilter] = useState<string>('all')
+  const userId = (session?.user as any)?.id || null
 
   useEffect(() => {
     if (params.gameName) {
@@ -381,13 +384,14 @@ export default function GamePage() {
             {/* Liste des tournois */}
         {loading ? (
           <div style={{
-            background: '#1f2937',
-            borderRadius: '12px',
-            padding: '2rem',
-            border: '1px solid #374151',
-            textAlign: 'center'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '1.5rem',
+            width: '100%'
           }}>
-            <div style={{ color: '#9ca3af' }}>Chargement des tournois...</div>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <TournamentCard key={index} loading={true} />
+            ))}
           </div>
         ) : filteredTournaments.length === 0 ? (
           <div style={{
@@ -403,168 +407,17 @@ export default function GamePage() {
           </div>
         ) : (
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+            gap: '1.5rem',
+            width: '100%'
           }}>
             {filteredTournaments.map((tournament) => (
-              <div
+              <TournamentCard
                 key={tournament.id}
-                style={{
-                  background: 'transparent',
-                  borderRadius: '0',
-                  padding: '1.5rem',
-                  border: 'none',
-                  borderBottom: '1px solid #374151',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '1rem',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#1f2937'
-                  e.currentTarget.style.borderBottomColor = '#4b5563'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.borderBottomColor = '#374151'
-                }}
-                onClick={() => router.push(`/tournaments/${tournament.id}`)}
-              >
-                {/* Indicateur visuel */}
-                <div style={{
-                  width: '4px',
-                  height: '100%',
-                  background: getStatusColor(tournament.status),
-                  borderRadius: '2px',
-                  flexShrink: 0,
-                  minHeight: '60px'
-                }} />
-                
-                {/* Contenu principal */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{
-                    margin: 0,
-                    color: '#ffffff',
-                    fontSize: '1.125rem',
-                    fontWeight: '600',
-                    marginBottom: '0.5rem',
-                    lineHeight: '1.4'
-                  }}>
-                    {tournament.name}
-                  </h3>
-                  
-                  <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.75rem',
-                    alignItems: 'center',
-                    marginBottom: '0.75rem'
-                  }}>
-                    <span style={{
-                      background: getStatusColor(tournament.status),
-                      color: '#ffffff',
-                      padding: '0.25rem 0.625rem',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em'
-                    }}>
-                      {getStatusText(tournament.status)}
-                    </span>
-                    
-                    <span style={{ 
-                      color: '#9ca3af', 
-                      fontSize: '0.8125rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem'
-                    }}>
-                      <span style={{ 
-                        width: '4px', 
-                        height: '4px', 
-                        borderRadius: '50%', 
-                        background: '#6b7280',
-                        display: 'inline-block'
-                      }} />
-                      {tournament._count.registrations} {tournament.isTeamBased ? 'équipes' : 'joueurs'}
-                    </span>
-                    
-                    <span style={{ 
-                      color: '#9ca3af', 
-                      fontSize: '0.8125rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.375rem'
-                    }}>
-                      <span style={{ 
-                        width: '4px', 
-                        height: '4px', 
-                        borderRadius: '50%', 
-                        background: '#6b7280',
-                        display: 'inline-block'
-                      }} />
-                      {tournament.startDate 
-                        ? new Date(tournament.startDate).toLocaleDateString('fr-FR', { 
-                            day: 'numeric', 
-                            month: 'short', 
-                            year: 'numeric' 
-                          })
-                        : new Date(tournament.createdAt).toLocaleDateString('fr-FR', { 
-                            day: 'numeric', 
-                            month: 'short', 
-                            year: 'numeric' 
-                          })
-                      }
-                    </span>
-                  </div>
-                  
-                  {tournament.description && (
-                    <p style={{
-                      color: '#d1d5db',
-                      fontSize: '0.875rem',
-                      margin: 0,
-                      lineHeight: '1.5',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden'
-                    }}>
-                      {tournament.description}
-                    </p>
-                  )}
-                </div>
-                
-                {/* Bouton d'action */}
-                <Link
-                  href={`/tournaments/${tournament.id}`}
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    background: 'transparent',
-                    color: '#ff008c',
-                    textDecoration: 'none',
-                    padding: '0.5rem 0',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    flexShrink: 0,
-                    borderBottom: '1px solid transparent',
-                    alignSelf: 'flex-start'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderBottomColor = '#ff008c'
-                    e.currentTarget.style.color = '#ff3399'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderBottomColor = 'transparent'
-                    e.currentTarget.style.color = '#ff008c'
-                  }}
-                >
-                  Voir →
-                </Link>
-              </div>
+                tournament={tournament}
+                userId={userId}
+              />
             ))}
           </div>
         )}

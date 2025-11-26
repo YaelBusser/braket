@@ -164,7 +164,8 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const mine = searchParams.get('mine') === '1'
+    const mineParam = searchParams.get('mine')
+    const mine = mineParam === '1' || mineParam === 'true'
     const q = searchParams.get('q') || undefined
     const game = searchParams.get('game') || undefined
     const sort = searchParams.get('sort') || 'created_desc'

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SearchIcon from '@/components/ui/SearchIcon'
+import { GameCardSkeleton, PageContent } from '@/components/ui'
 import styles from './page.module.scss'
 
 interface Game {
@@ -60,8 +61,7 @@ export default function GamesPage() {
   }
 
   return (
-    <main className={styles.main}>
-      <div className={styles.container}>
+    <PageContent style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div className={styles.header}>
           <h1 className={styles.title}>Tous les jeux</h1>
           <p className={styles.subtitle}>
@@ -85,15 +85,8 @@ export default function GamesPage() {
         </div>
 
         {loading ? (
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingGrid}>
-              {Array.from({ length: 12 }).map((_, index) => (
-                <div key={index} className={styles.loadingCard}>
-                  <div className={styles.loadingImage}></div>
-                  <div className={styles.loadingText}></div>
-                </div>
-              ))}
-            </div>
+          <div className={styles.gamesGrid}>
+            <GameCardSkeleton count={12} />
           </div>
         ) : filteredGames.length === 0 ? (
           <div className={styles.emptyState}>
@@ -138,8 +131,7 @@ export default function GamesPage() {
             {searchQuery && `trouvé${filteredGames.length > 1 ? 's' : ''}`}
           </div>
         )}
-      </div>
-    </main>
+    </PageContent>
   )
 }
 

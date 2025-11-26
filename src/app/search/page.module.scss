@@ -1,36 +1,7 @@
 @use '@/styles/variables.module' as vars;
 
-.main {
-  background: vars.$bg-page;
-  min-height: 100vh;
-  padding: vars.$spacing-8 0;
-}
-
-// Utilise la classe globale content-centered pour le contenu
-// Le container reste pour la compatibilité mais devrait utiliser content-centered
-.container {
-  max-width: vars.$container-2xl;
-  margin: 0 auto;
-  
-  // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
-  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
-  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
-
-  @media (min-width: vars.$breakpoint-lg) {
-    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
-    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
-  }
-
-  @media (max-width: 1024px) {
-    padding-left: vars.$spacing-6;
-    padding-right: vars.$spacing-6;
-
-    @media (min-width: vars.$breakpoint-lg) {
-      padding-left: vars.$spacing-10;
-      padding-right: vars.$spacing-10;
-    }
-  }
-}
+// Les espacements sont maintenant gérés par PageContent
+// Ce fichier contient uniquement les styles spécifiques à la page de recherche
 
 .header {
   margin-bottom: vars.$spacing-8;

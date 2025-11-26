@@ -1,0 +1,121 @@
+@use '../../styles/variables.module' as vars;
+
+.myTournamentsPage {
+  // Les espacements sont maintenant gérés par PageContent
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-8;
+
+  .title {
+    font-size: vars.$font-size-4xl;
+    font-weight: vars.$font-weight-bold;
+    color: vars.$lt-text-primary;
+    margin: 0;
+  }
+
+  .createBtn {
+    padding: vars.$spacing-3 vars.$spacing-6;
+    background: vars.$lt-accent-blue;
+    color: white;
+    border: none;
+    border-radius: vars.$radius-md;
+    font-size: vars.$font-size-base;
+    font-weight: vars.$font-weight-medium;
+    cursor: pointer;
+    transition: all vars.$transition-fast;
+
+    &:hover {
+      background: vars.$secondary-hover;
+      transform: translateY(-2px);
+      box-shadow: vars.$shadow-hover;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+.tournamentList {
+  width: 100%;
+}
+
+.tournamentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-6;
+  width: 100%;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-12;
+  color: vars.$lt-text-secondary;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid vars.$lt-border;
+    border-top-color: vars.$lt-accent-blue;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: vars.$spacing-4;
+  }
+
+  p {
+    margin: 0;
+    font-size: vars.$font-size-base;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-16;
+  text-align: center;
+
+  p {
+    font-size: vars.$font-size-lg;
+    color: vars.$lt-text-secondary;
+    margin: 0 0 vars.$spacing-6 0;
+  }
+
+  .createBtn {
+    padding: vars.$spacing-3 vars.$spacing-6;
+    background: vars.$lt-accent-blue;
+    color: white;
+    border: none;
+    border-radius: vars.$radius-md;
+    font-size: vars.$font-size-base;
+    font-weight: vars.$font-weight-medium;
+    cursor: pointer;
+    transition: all vars.$transition-fast;
+
+    &:hover {
+      background: vars.$secondary-hover;
+      transform: translateY(-2px);
+      box-shadow: vars.$shadow-hover;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+

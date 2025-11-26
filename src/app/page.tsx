@@ -1,13 +1,14 @@
 "use client"
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import styles from './page.module.scss'
-import { TournamentCard } from '@/components/ui'
+import { TournamentCard, GameCardSkeleton } from '@/components/ui'
 
 export default function Home() {
-  const { status } = useSession()
+  const { status, data: session } = useSession()
   const [tournaments, setTournaments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
@@ -15,6 +16,7 @@ export default function Home() {
   const [popularGames, setPopularGames] = useState<any[]>([])
   const [loadingGames, setLoadingGames] = useState(false)
   const router = useRouter()
+  const userId = (session?.user as any)?.id || null
 
   // Charger les jeux populaires depuis la DB
   useEffect(() => {
@@ -164,8 +166,10 @@ export default function Home() {
           </div>
           
           {loading ? (
-            <div className={styles.loadingTournamentsContainer}>
-              <div>Chargement des tournois...</div>
+            <div className={styles.tournamentsGrid}>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <TournamentCard key={index} loading={true} />
+              ))}
             </div>
           ) : tournaments.length === 0 ? (
             <div className={styles.emptyTournamentsContainer}>
@@ -184,6 +188,7 @@ export default function Home() {
                   <TournamentCard
                     key={t.id}
                     tournament={t}
+                    userId={userId}
                   />
                 ))}
             </div>
@@ -203,15 +208,8 @@ export default function Home() {
           </div>
           
           {loadingGames ? (
-            <div className={styles.loadingGamesContainer}>
-              {Array.from({ length: 7 }).map((_, index) => (
-                <div
-                  key={index}
-                  className={styles.loadingGameCard}
-                >
-                  Chargement...
-                </div>
-              ))}
+            <div className={styles.popularGamesGrid}>
+              <GameCardSkeleton count={6} />
             </div>
           ) : (
             <div className={styles.popularGamesGrid}>
@@ -225,10 +223,13 @@ export default function Home() {
                 >
                   <div className={styles.popularGameImageContainer}>
                     {game.image ? (
-                      <img 
+                      <Image 
                         src={game.image} 
                         alt={game.name}
+                        width={200}
+                        height={200}
                         className={styles.popularGameImage}
+                        loading="lazy"
                       />
                     ) : (
                       <div className={styles.popularGameImage} style={{

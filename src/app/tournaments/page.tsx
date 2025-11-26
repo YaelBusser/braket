@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
-import { TournamentCard, SearchBar } from '@/components/ui'
-import ContentContainer from '../../components/ui/ContentContainer'
+import { TournamentCard, SearchBar, PageContent } from '@/components/ui'
 import Link from 'next/link'
 
 export default function TournamentsIndex() {
@@ -15,9 +15,11 @@ export default function TournamentsIndex() {
 }
 
 function TournamentsList() {
+  const { data: session } = useSession()
   const [items, setItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [q, setQ] = useState('')
+  const userId = (session?.user as any)?.id || null
 
   useEffect(() => {
     const load = async () => {
@@ -33,7 +35,7 @@ function TournamentsList() {
   }, [q])
 
   return (
-    <ContentContainer style={{ padding: '3rem 0 3rem 0' }}>
+    <PageContent style={{ paddingTop: '3rem', paddingBottom: '3rem' }}>
       <h1 style={{ color: '#fff', fontSize: '2.5rem', fontWeight: 800, marginBottom: '1.5rem' }}>Tournois</h1>
       <div style={{ maxWidth: '560px', marginBottom: '2rem' }}>
         <SearchBar
@@ -44,7 +46,16 @@ function TournamentsList() {
         />
       </div>
       {loading ? (
-        <div>Chargement...</div>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+          gap: '1.5rem',
+          width: '100%'
+        }}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <TournamentCard key={index} loading={true} />
+          ))}
+        </div>
       ) : items.length === 0 ? (
         <div className="text-muted">Aucun tournoi public</div>
       ) : (
@@ -58,11 +69,12 @@ function TournamentsList() {
             <TournamentCard
               key={t.id}
               tournament={t}
+              userId={userId}
             />
           ))}
         </div>
       )}
-    </ContentContainer>
+    </PageContent>
   )
 }
 

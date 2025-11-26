@@ -42,8 +42,8 @@ export default function SettingsPage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
   
-  // États pour la bannière
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  // États pour la bannière - initialiser avec la valeur par défaut
+  const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
   const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null)
   const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
 
@@ -59,7 +59,7 @@ export default function SettingsPage() {
     }
   }, [session])
 
-  // Charger les données du profil (bannière)
+  // Charger les données du profil (bannière) - en priorité pour un affichage immédiat
   useEffect(() => {
     const loadProfile = async () => {
       try {

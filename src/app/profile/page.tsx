@@ -7,7 +7,7 @@ import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs, type Tab } from '../../components/ui'
+import { Tabs, ContentWithTabs, TournamentCard, type Tab } from '../../components/ui'
 import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
@@ -25,7 +25,8 @@ function ProfilePage() {
   const [userTeams, setUserTeams] = useState<any[]>([])
   const [userRegistrations, setUserRegistrations] = useState<any[]>([])
   const [loadingData, setLoadingData] = useState(false)
-  const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  // Initialiser avec la valeur par défaut pour afficher immédiatement
+  const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
   
   // Navigation par onglets - déterminer l'onglet actif depuis l'URL
   const getActiveTabFromPath = (): TabKey => {
@@ -90,29 +91,29 @@ function ProfilePage() {
   const loadUserData = async () => {
     setLoadingData(true)
     try {
-      // Charger les tournois de l'utilisateur
-      const tournamentsRes = await fetch('/api/tournaments?mine=true')
-      if (tournamentsRes.ok) {
-        const tournaments = await tournamentsRes.json()
-        setUserTournaments(tournaments)
-      }
-
-      // Charger les statistiques
-      const statsRes = await fetch('/api/profile/stats')
-      if (statsRes.ok) {
-        const stats = await statsRes.json()
-        setUserStats(stats)
-      }
-
-      // Charger le profil (pour la bannière)
+      // Charger la bannière en priorité pour un affichage immédiat
       const profileRes = await fetch('/api/profile')
       if (profileRes.ok) {
         const profile = await profileRes.json()
         if (profile.user?.bannerUrl) {
           setBannerUrl(profile.user.bannerUrl)
-        } else {
-          setBannerUrl('/images/games.jpg')
         }
+      }
+
+      // Charger les autres données en parallèle pour améliorer les performances
+      const [tournamentsRes, statsRes] = await Promise.all([
+        fetch('/api/tournaments?mine=true'),
+        fetch('/api/profile/stats')
+      ])
+
+      if (tournamentsRes.ok) {
+        const data = await tournamentsRes.json()
+        setUserTournaments(data.tournaments || [])
+      }
+
+      if (statsRes.ok) {
+        const stats = await statsRes.json()
+        setUserStats(stats)
       }
 
       // TODO: Charger les équipes et inscriptions
@@ -153,7 +154,7 @@ function ProfilePage() {
         <div 
           className={styles.profileHeader}
           style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl || '/images/games.jpg'})`,
+            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -190,7 +191,7 @@ function ProfilePage() {
           </div>
         </div>
 
-        <ContentWithTabs style={{ padding: '2rem 0' }}>
+        <ContentWithTabs style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
           {/* Navigation par onglets */}
           <Tabs
             tabs={[
@@ -270,31 +271,19 @@ function ProfilePage() {
                     </button>
                   </div>
                 ) : (
-                  userTournaments.map((tournament) => (
-                    <div 
-                      key={tournament.id} 
-                      className={styles.tournamentCard}
-                      onClick={() => router.push(`/tournaments/${tournament.id}`)}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <div className={styles.tournamentIcon}>🏆</div>
-                      <div className={styles.tournamentInfo}>
-                        <h4>{tournament.name}</h4>
-                        <p>{tournament.game || 'Jeu non spécifié'}</p>
-                        <p className={styles.tournamentDate}>
-                          {new Date(tournament.createdAt).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                      <div className={styles.tournamentStatus}>
-                        <span className={`${styles.status} ${styles[tournament.status?.toLowerCase()]}`}>
-                          {tournament.status === 'REG_OPEN' ? 'Inscriptions ouvertes' :
-                           tournament.status === 'IN_PROGRESS' ? 'En cours' :
-                           tournament.status === 'COMPLETED' ? 'Terminé' : 'Brouillon'}
-                        </span>
-                        <p>{tournament._count?.registrations || 0} participants</p>
-                      </div>
-                    </div>
-                  ))
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+                    gap: '1.5rem',
+                    width: '100%'
+                  }}>
+                    {userTournaments.map((tournament) => (
+                      <TournamentCard
+                        key={tournament.id}
+                        tournament={tournament}
+                      />
+                    ))}
+                  </div>
                 )}
               </div>
             </div>

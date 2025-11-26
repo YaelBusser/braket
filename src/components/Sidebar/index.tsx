@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, memo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import styles from './index.module.scss'
 
 type MiniTournament = {
@@ -11,7 +12,7 @@ type MiniTournament = {
   game?: string | null
 }
 
-export default function Sidebar() {
+function Sidebar() {
   const [participating, setParticipating] = useState<MiniTournament[]>([])
 
   useEffect(() => {
@@ -36,7 +37,14 @@ export default function Sidebar() {
       {participating.map(t => (
         <Link key={t.id} href={`/tournaments/${t.id}`} className={styles.avatarButton} title={t.name}>
           {t.posterUrl ? (
-            <img src={t.posterUrl} alt={t.name} className={styles.avatarImage} />
+            <Image 
+              src={t.posterUrl} 
+              alt={t.name} 
+              width={40}
+              height={40}
+              className={styles.avatarImage}
+              loading="lazy"
+            />
           ) : (
             <span className={styles.plus}>🎮</span>
           )}
@@ -45,4 +53,6 @@ export default function Sidebar() {
     </aside>
   )
 }
+
+export default memo(Sidebar)
 

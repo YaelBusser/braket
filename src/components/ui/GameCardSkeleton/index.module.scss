@@ -1,0 +1,67 @@
+@use '../../../styles/variables.module' as vars;
+
+.skeletonCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.skeletonImage {
+  width: 100%;
+  aspect-ratio: 7/10;
+  border-radius: vars.$radius-lg;
+  background: vars.$bg-dark-secondary;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: vars.$spacing-2;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonText {
+  height: 16px;
+  width: 80%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-secondary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+

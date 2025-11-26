@@ -1,0 +1,303 @@
+@use '@/styles/variables.module' as vars;
+
+.tournamentPage {
+  background: vars.$bg-page;
+  min-height: 100vh;
+  color: #fff;
+  position: relative;
+}
+
+// Bannière hero
+.banner {
+  position: relative;
+  height: 400px;
+  overflow: visible; // Permet au logo de dépasser
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%);
+    z-index: 1;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10rem;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 40%, vars.$bg-page 100%);
+    pointer-events: none;
+    z-index: 1; // En dessous du logo qui est à z-index 10
+  }
+  
+  .bannerImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 0;
+    overflow: hidden; // Le crop se fait sur l'image elle-même
+  }
+}
+
+.bannerContent {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 0;
+}
+
+.bannerInner {
+  width: 100%;
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18);
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18);
+  padding-bottom: 2rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  position: relative;
+  z-index: 2; // Assure que le contenu est au-dessus des overlays
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20);
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22);
+  }
+  
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18;
+    padding-right: vars.$spacing-18;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20;
+      padding-right: vars.$spacing-20;
+    }
+  }
+}
+
+// Photo de profil circulaire qui chevauche
+.profilePicture {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  position: relative;
+  border: 2px solid vars.$bg-page;
+  z-index: 10; // Au-dessus de tout pour ne pas être coupé
+  background: #1a1f2e;
+  flex-shrink: 0;
+  margin-bottom: -70px; // Chevauchement avec le contenu en dessous
+}
+
+// Contenu principal de la bannière
+.bannerInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 0;
+  margin-bottom: -70px; // Aligné avec profilePicture qui a aussi -70px
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+}
+
+.eventDetails {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0.75rem;
+}
+
+.statusTag {
+  display: inline-block;
+  background: vars.$lt-success;
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  width: fit-content; // Ne prend que la largeur nécessaire
+  align-self: flex-start; // S'aligne à gauche dans le flex column
+}
+
+// Section droite avec compte à rebours et bouton
+.bannerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  padding-bottom: 1rem;
+}
+
+.countdown {
+  font-size: 1.125rem;
+  color: #fff;
+  font-weight: 500;
+}
+
+.joinButton {
+  background: vars.$primary-600;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  
+  &:hover:not(:disabled) {
+    background: vars.$primary-700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+  }
+  
+  &:disabled {
+    background: #6b7280;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}
+
+// Contenu principal avec padding pour la photo de profil
+.mainContent {
+  background: vars.$bg-page;
+  padding-top: 80px; // Espace pour la photo qui chevauche
+}
+
+// Navigation tabs
+.tabs {
+  background: #0f1419;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tabsContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  align-items: stretch;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tab {
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  position: relative;
+  
+  &:hover {
+    color: #fff;
+  }
+  
+  &.active {
+    color: #fff;
+    border-bottom-color: #26c6da;
+  }
+}
+
+
+
+// Help icon
+.helpIcon {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 48px;
+  height: 48px;
+  background: #26c6da;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(38, 198, 218, 0.3);
+  transition: all 0.2s ease;
+  z-index: 100;
+  
+  &:hover {
+    background: #00bcd4;
+    transform: scale(1.1);
+  }
+}
+
+// Responsive
+@media (max-width: 1024px) {
+  .bannerInner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .bannerRight {
+    align-items: flex-start;
+    width: 100%;
+  }
+  
+  .profilePicture {
+    margin-bottom: 1rem;
+  }
+  
+  .mainContent {
+    padding-top: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .banner {
+    height: 300px;
+  }
+  
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  .profilePicture {
+    width: 100px;
+    height: 100px;
+  }
+}
+

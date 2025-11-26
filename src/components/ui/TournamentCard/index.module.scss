@@ -1,50 +1,35 @@
 @use '../../../styles/variables.module' as vars;
 
-/* --- TOURNAMENT CARD --- */
+/* --- TOURNAMENT CARD (Design unifié basé sur le visuel) --- */
 .tournamentCard {
   display: block;
-  background: #0a0a0a;
-  border-radius: 12px;
+  background: transparent;
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  //box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  position: relative;
   
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+  &.unified {
+    width: 100%;
+    max-width: 350px;
   }
 
-  /* Variant compact (nouveau design) */
   &.compact {
-    width: 100%;
-    max-width: 320px;
-    
-    .cardImage {
-      position: relative;
-      width: 100%;
-      height: 0;
-      padding-bottom: 60%;
-      overflow: hidden;
-      background: linear-gradient(135deg, #ff008c, #6748ff);
-    }
-
-    .cardContent {
-      padding: vars.$spacing-4;
-      background: #0a0a0a;
-    }
+    max-width: 250px;
   }
 }
 
-/* Section image (2/3 de la hauteur) */
+/* Section image (ratio 368x207) */
 .cardImage {
   position: relative;
   width: 100%;
   height: 0;
-  padding-bottom: 66.67%; /* 2/3 ratio */
+  padding-bottom: 56.25%; /* 207/368 = 56.25% */
   overflow: hidden;
-  background: linear-gradient(135deg, #ff008c, #6748ff);
+  background: transparent;
+  border-radius: 10px;
 }
 
 .posterImage {
@@ -54,11 +39,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-  
-  .tournamentCard:hover & {
-    transform: scale(1.05);
-  }
 }
 
 .placeholderImage {
@@ -70,132 +50,65 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
 }
 
 .gameIcon {
   font-size: 4rem;
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
+
 /* Logo du jeu en haut à gauche */
-.gameLogo {
+.gameLogoOverlay {
   position: absolute;
   top: vars.$spacing-3;
   left: vars.$spacing-3;
-  width: 48px;
-  height: 48px;
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 8px;
-  padding: vars.$spacing-1;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
 
-  img {
+  img,
+  :global(img) {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
+    border-radius: 10px;
   }
 }
 
-/* Banner de statut en haut */
-.statusBanner {
+/* Icône de gestion pour le propriétaire */
+.adminIcon {
   position: absolute;
   top: vars.$spacing-3;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: vars.$spacing-1 vars.$spacing-4;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  right: vars.$spacing-3;
+  width: 36px;
+  height: 36px;
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(10px);
-}
-
-/* Section contenu (1/3 de la hauteur) */
-.cardContent {
-  padding: vars.$spacing-4;
-  background: #0a0a0a;
-  min-height: 120px;
-}
-
-.tournamentDate {
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  margin-bottom: vars.$spacing-3;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.tournamentInfo {
-  display: flex;
-  align-items: flex-start;
-  gap: vars.$spacing-3;
-}
-
-.tournamentLogo {
-  width: 64px;
-  height: 64px;
   border-radius: 50%;
-  border: 2px solid #fff;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: #1f2937;
-}
-
-.logoImage {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.tournamentText {
-  flex: 1;
-  min-width: 0;
-}
-
-.tournamentTitle {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 vars.$spacing-2 0;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.tournamentDetails {
-  color: #9ca3af;
-  font-size: 0.875rem;
-  line-height: 1.4;
-}
-
-/* --- COMPACT VARIANT STYLES --- */
-.gameIconOverlay {
-  position: absolute;
-  top: vars.$spacing-3;
-  left: vars.$spacing-3;
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 8px;
-  padding: vars.$spacing-1;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+  z-index: 3;
+  text-decoration: none;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.8);
+    transform: scale(1.1);
+    border-color: rgba(255, 255, 255, 0.4);
   }
 }
 
@@ -205,118 +118,381 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, #ffd700, #ff8c00);
-  border-radius: 6px;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, #ff6b35, #f7931e);
+  border-radius: 8px;
 }
 
-.hostInfo {
+/* Section contenu - en dessous de l'image */
+.cardContent {
+  position: relative;
+  background: transparent;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: vars.$spacing-2;
-  margin-bottom: vars.$spacing-3;
+  margin-top: 8px;
 }
 
-.hostAvatar {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  object-fit: cover;
+/* Zone de texte alignée */
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0rem; /* Espacement vertical très compact */
 }
 
-.hostAvatarPlaceholder {
-  width: 24px;
-  height: 24px;
+/* Date en haut */
+.dateRow {
+  margin: 0;
+  line-height: 1.2;
+  display: flex;
+}
+
+.dateText {
+  color: vars.$text-secondary;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Logo organisateur à gauche */
+.organizerLogo {
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
-  background: #374151;
+  overflow: hidden;
+  border: 2px solid vars.$border-dark;
+  background: vars.$bg-dark-tertiary;
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.organizerLogoPlaceholder {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.relativeDate {
-  color: #9ca3af;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.compact .tournamentTitle {
+  background: linear-gradient(135deg, vars.$lt-accent-purple, vars.$lt-accent-blue);
+  color: #ffffff;
   font-size: 1rem;
   font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 vars.$spacing-2 0;
-  line-height: 1.3;
+  border: 2px solid vars.$border-dark;
+  flex-shrink: 0;
 }
 
-.compact .tournamentDetails {
-  color: #9ca3af;
-  font-size: 0.875rem;
-  margin-bottom: vars.$spacing-3;
+/* Titre du tournoi */
+.tournamentTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: vars.$text-primary;
+  margin: 0;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.hostTag {
-  display: inline-block;
-  padding: vars.$spacing-1 vars.$spacing-2;
-  background: #1f2937;
-  color: #ffffff;
-  border-radius: 4px;
+/* Détails du tournoi */
+.tournamentDetails {
+  color: vars.$text-secondary;
   font-size: 0.75rem;
-  font-weight: 500;
+  line-height: 1.2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-1;
+  margin: 0;
 }
 
-/* --- RESPONSIVE --- */
-@media (max-width: 768px) {
+/* Skeleton styles */
+.skeleton {
+  pointer-events: none;
+  cursor: default;
+}
+
+.skeletonImagePlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: vars.$bg-dark-secondary;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonGameLogo {
+  width: 100%;
+  height: 100%;
+  background: vars.$bg-dark-tertiary;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonOrganizerLogo {
+  width: 100%;
+  height: 100%;
+  background: vars.$bg-dark-tertiary;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonDate {
+  height: 14px;
+  width: 60%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonTitle {
+  height: 24px;
+  width: 85%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonDetails {
+  height: 16px;
+  width: 70%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Variant compact */
+.compact {
   .cardImage {
-    padding-bottom: 60%;
+    padding-bottom: 50%;
   }
   
   .cardContent {
     padding: vars.$spacing-3;
-    min-height: 100px;
+  }
+  
+  .cardContent {
+    padding: vars.$spacing-3;
+    gap: vars.$spacing-2;
+  }
+  
+  .textContent {
+    gap: 0.2rem;
+  }
+  
+  .dateText {
+    font-size: 0.7rem;
   }
   
   .tournamentTitle {
     font-size: 1.1rem;
   }
   
-  .tournamentLogo {
-    width: 56px;
-    height: 56px;
+  .tournamentDetails {
+    font-size: 0.7rem;
   }
   
-  .gameLogo {
-    width: 40px;
-    height: 40px;
+  .organizerLogo,
+  .organizerLogoPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .gameLogoOverlay {
+    width: 36px;
+    height: 36px;
+    top: vars.$spacing-2;
+    left: vars.$spacing-2;
+  }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .tournamentCard.unified {
+    max-width: 100%;
+  }
+  
+  .cardImage {
+    padding-bottom: 56.25%; /* Même ratio */
+  }
+  
+  .cardContent {
+    padding: vars.$spacing-3;
+    gap: vars.$spacing-2;
+  }
+  
+  .textContent {
+    gap: 0.125rem;
+  }
+  
+  .dateText {
+    font-size: 0.7rem;
+  }
+  
+  .tournamentTitle {
+    font-size: 1.1rem;
+  }
+  
+  .tournamentDetails {
+    font-size: 0.7rem;
+  }
+  
+  .gameLogoOverlay {
+    width: 36px;
+    height: 36px;
     top: vars.$spacing-2;
     left: vars.$spacing-2;
   }
   
-  .statusBanner {
-    top: vars.$spacing-2;
-    font-size: 0.7rem;
-    padding: 4px vars.$spacing-3;
+  .organizerLogo,
+  .organizerLogoPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .tournamentInfo {
+  .cardContent {
+    padding: vars.$spacing-3;
     gap: vars.$spacing-2;
   }
   
-  .tournamentLogo {
-    width: 48px;
-    height: 48px;
+  .tournamentTitle {
+    font-size: 1.1rem;
   }
   
-  .tournamentTitle {
-    font-size: 1rem;
+  .dateText {
+    font-size: 0.75rem;
   }
   
   .tournamentDetails {
     font-size: 0.8rem;
+  }
+  
+  .organizerLogo,
+  .organizerLogoPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
   }
 }

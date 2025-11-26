@@ -1,0 +1,17 @@
+@use '../../../styles/variables.module' as vars;
+
+.pageContent {
+  // Styles de base - les espacements sont gérés par ContentContainer
+  width: 100%;
+}
+
+.compact {
+  // Variante compacte - padding réduit si nécessaire
+  // Les espacements sont gérés via le style prop
+}
+
+.spacious {
+  // Variante spacieuse - padding augmenté si nécessaire
+  // Les espacements sont gérés via le style prop
+}
+

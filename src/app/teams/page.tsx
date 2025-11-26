@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
+import { PageContent } from '../../components/ui'
 import styles from './page.module.scss'
 
 interface Team {
@@ -57,7 +58,7 @@ export default function TeamsPage() {
         const data = await res.json()
         setTeams(data)
       } else {
-        notify('Erreur lors du chargement des équipes', 'error')
+        notify({ message: 'Erreur lors du chargement des équipes', type: 'error' })
       }
     } catch (error) {
       console.error('Erreur:', error)
@@ -107,7 +108,8 @@ export default function TeamsPage() {
       </div>
 
       {/* Content */}
-      <div className={styles.content}>
+      <PageContent withPadding={false}>
+        <div className={styles.content}>
         {activeTab === 'my-teams' && (
           <div className={styles.myTeamsTab}>
             <div className={styles.tabHeader}>
@@ -194,7 +196,8 @@ export default function TeamsPage() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </PageContent>
     </div>
   )
 }

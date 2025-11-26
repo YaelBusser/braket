@@ -1,15 +1,21 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useNotification } from '../../../../components/providers/notification-provider'
+import ClientPageWrapper from '../../../../components/ClientPageWrapper'
 import Link from 'next/link'
+import Cropper from 'react-easy-crop'
+import styles from './page.module.scss'
+import { getGameLogoPath } from '@/utils/gameLogoUtils'
+import { getCroppedImg } from '@/lib/image'
 
 interface Tournament {
   id: string
   name: string
   description: string | null
   game: string | null
+  logoUrl: string | null
   category: string
   format: string
   visibility: string
@@ -53,14 +59,35 @@ interface Tournament {
 }
 
 export default function TournamentAdminPage() {
+  return (
+    <ClientPageWrapper>
+      <TournamentAdminContent />
+    </ClientPageWrapper>
+  )
+}
+
+function TournamentAdminContent() {
   const params = useParams<{ id: string }>()
   const id = params?.id as string
   const router = useRouter()
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
-  const [activeTab, setActiveTab] = useState<'overview' | 'participants' | 'matches' | 'settings'>('overview')
+  const [activeSection, setActiveSection] = useState<'overview' | 'participants' | 'matches' | 'visuals' | 'settings'>('overview')
   const { notify } = useNotification()
+  
+  // États pour les visuels
+  const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
+  const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
+  const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null)
+  const [showCropper, setShowCropper] = useState(false)
+  const [cropType, setCropType] = useState<'logo' | 'banner'>('logo')
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
+  const [isLoadingVisuals, setIsLoadingVisuals] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -88,7 +115,7 @@ export default function TournamentAdminPage() {
       const res = await fetch(`/api/tournaments/${id}`, { method: 'DELETE' })
       if (res.ok) {
         notify({ type: 'success', message: 'Tournoi supprimé avec succès' })
-        router.replace('/profile')
+        router.replace('/my-tournaments')
       } else {
         const d = await res.json().catch(() => ({}))
         notify({ type: 'error', message: d.message || 'Erreur lors de la suppression' })
@@ -112,7 +139,6 @@ export default function TournamentAdminPage() {
           finish: '🏆 Tournoi terminé ! Félicitations à tous les participants.'
         }
         notify({ type: 'success', message: messages[mode] })
-        // Recharger les données pour avoir les matchs générés
         if (mode === 'close_reg') {
           setTimeout(() => window.location.reload(), 1000)
         }
@@ -139,7 +165,6 @@ export default function TournamentAdminPage() {
       const d = await res.json().catch(() => ({}))
       if (res.ok) {
         notify({ type: 'success', message: '✅ Résultat validé ! Le vainqueur avance au tour suivant.' })
-        // Recharger les données pour voir les changements
         setTimeout(() => window.location.reload(), 1000)
       } else {
         notify({ type: 'error', message: d.message || '❌ Erreur lors de la validation du résultat' })
@@ -149,16 +174,145 @@ export default function TournamentAdminPage() {
     }
   }
 
+  // Nettoyage des URLs lors du démontage
+  useEffect(() => {
+    return () => {
+      if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+      if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl)
+      if (originalImageUrl) URL.revokeObjectURL(originalImageUrl)
+    }
+  }, [logoPreviewUrl, bannerPreviewUrl, originalImageUrl])
+
+  const onCropComplete = useCallback((_croppedArea: any, croppedPixels: any) => {
+    setCroppedAreaPixels(croppedPixels)
+  }, [])
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedLogo(file)
+      const url = URL.createObjectURL(file)
+      setOriginalImageUrl(url)
+      setCropType('logo')
+      setCrop({ x: 0, y: 0 })
+      setZoom(1)
+      setShowCropper(true)
+    }
+  }
+
+  const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedBanner(file)
+      const url = URL.createObjectURL(file)
+      setOriginalImageUrl(url)
+      setCropType('banner')
+      setCrop({ x: 0, y: 0 })
+      setZoom(1)
+      setShowCropper(true)
+    }
+  }
+
+  const handleCropComplete = async () => {
+    if (!croppedAreaPixels || !originalImageUrl) return
+
+    try {
+      const croppedImageBlob = await getCroppedImg(originalImageUrl, croppedAreaPixels)
+      const croppedImageUrl = URL.createObjectURL(croppedImageBlob)
+      
+      if (cropType === 'logo') {
+        setLogoPreviewUrl(croppedImageUrl)
+      } else {
+        setBannerPreviewUrl(croppedImageUrl)
+      }
+      
+      setShowCropper(false)
+    } catch (error) {
+      console.error('Erreur lors du crop:', error)
+      notify({ type: 'error', message: 'Erreur lors du traitement de l\'image' })
+    }
+  }
+
+  const handleSaveLogo = async () => {
+    if (!logoPreviewUrl) return
+
+    setIsLoadingVisuals(true)
+    try {
+      const formData = new FormData()
+      const response = await fetch(logoPreviewUrl)
+      const blob = await response.blob()
+      formData.append('logo', blob, 'logo.jpg')
+
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: 'PUT',
+        body: formData
+      })
+
+      if (res.ok) {
+        const result = await res.json()
+        setTournament(result.tournament)
+        notify({ type: 'success', message: 'Logo mis à jour avec succès ! 🎉' })
+        URL.revokeObjectURL(logoPreviewUrl)
+        if (originalImageUrl && cropType === 'logo') {
+          URL.revokeObjectURL(originalImageUrl)
+        }
+        setLogoPreviewUrl(null)
+        setSelectedLogo(null)
+        setOriginalImageUrl(null)
+      } else {
+        const error = await res.json().catch(() => ({}))
+        notify({ type: 'error', message: error.message || 'Erreur lors de la mise à jour du logo' })
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      notify({ type: 'error', message: 'Erreur lors de la mise à jour du logo' })
+    } finally {
+      setIsLoadingVisuals(false)
+    }
+  }
+
+  const handleSaveBanner = async () => {
+    if (!bannerPreviewUrl) return
+
+    setIsLoadingVisuals(true)
+    try {
+      const formData = new FormData()
+      const response = await fetch(bannerPreviewUrl)
+      const blob = await response.blob()
+      formData.append('poster', blob, 'banner.jpg')
+
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: 'PUT',
+        body: formData
+      })
+
+      if (res.ok) {
+        const result = await res.json()
+        setTournament(result.tournament)
+        notify({ type: 'success', message: 'Bannière mise à jour avec succès ! 🎉' })
+        if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl)
+        if (originalImageUrl && cropType === 'banner') {
+          URL.revokeObjectURL(originalImageUrl)
+        }
+        setBannerPreviewUrl(null)
+        setSelectedBanner(null)
+        setOriginalImageUrl(null)
+      } else {
+        const error = await res.json().catch(() => ({}))
+        notify({ type: 'error', message: error.message || 'Erreur lors de la mise à jour de la bannière' })
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      notify({ type: 'error', message: 'Erreur lors de la mise à jour de la bannière' })
+    } finally {
+      setIsLoadingVisuals(false)
+    }
+  }
+
   if (loading) {
     return (
-      <div className="container" style={{ padding: '2rem 0' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '400px',
-          color: '#9ca3af'
-        }}>
+      <div className={styles.adminPage}>
+        <div className={styles.loadingState}>
           Chargement...
         </div>
       </div>
@@ -167,512 +321,389 @@ export default function TournamentAdminPage() {
 
   if (!tournament) {
     return (
-      <div className="container" style={{ padding: '2rem 0' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: '400px',
-          color: '#9ca3af'
-        }}>
+      <div className={styles.adminPage}>
+        <div className={styles.loadingState}>
           Tournoi introuvable
         </div>
       </div>
     )
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'DRAFT': return '#6b7280'
-      case 'REG_OPEN': return '#10b981'
-      case 'IN_PROGRESS': return '#f59e0b'
-      case 'COMPLETED': return '#ff008c'
-      default: return '#6b7280'
-    }
-  }
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'DRAFT': return 'Brouillon'
-      case 'REG_OPEN': return 'Inscriptions ouvertes'
-      case 'IN_PROGRESS': return 'En cours'
-      case 'COMPLETED': return 'Terminé'
-      default: return status
-    }
-  }
+  const gameName = tournament.game || ''
+  const gameLogoPath = getGameLogoPath(gameName)
 
   return (
-    <div className="container" style={{ padding: '2rem 0' }}>
-      {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1f2937 0%, #374151 100%)',
-        borderRadius: '12px',
-        padding: '2rem',
-        marginBottom: '2rem',
-        color: '#ffffff'
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>
-              {tournament.name}
-            </h1>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <span style={{
-                background: getStatusColor(tournament.status),
-                color: '#ffffff',
-                padding: '0.25rem 0.75rem',
-                borderRadius: '999px',
-                fontSize: '0.875rem',
-                fontWeight: '600'
-              }}>
-                {getStatusLabel(tournament.status)}
-              </span>
-              <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                {tournament.game || 'Tournoi'}
-              </span>
-            </div>
-          </div>
-          <Link 
-            href={`/tournaments/${id}`}
-            style={{
-              background: 'rgba(255,255,255,0.1)',
-              color: '#ffffff',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              border: '1px solid rgba(255,255,255,0.2)',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-            }}
-          >
-            Voir le tournoi
-          </Link>
-        </div>
-        
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#ff008c' }}>
-              {tournament._count.registrations}
-            </div>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-              {tournament.isTeamBased ? 'Équipes' : 'Participants'}
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981' }}>
-              {tournament._count.matches}
-            </div>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-              Matchs
-            </div>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#f59e0b' }}>
-              {tournament.maxParticipants || '∞'}
-            </div>
-            <div style={{ fontSize: '0.875rem', color: '#9ca3af' }}>
-              Max participants
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{
-        background: '#1f2937',
-        borderRadius: '12px',
-        padding: '1rem',
-        marginBottom: '2rem'
-      }}>
-        <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid #374151', marginBottom: '1rem' }}>
-          {[
-            { key: 'overview', label: 'Vue d\'ensemble' },
-            { key: 'participants', label: 'Participants' },
-            { key: 'matches', label: 'Matchs' },
-            { key: 'settings', label: 'Paramètres' }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key as any)}
-              style={{
-                background: activeTab === tab.key ? '#ff008c' : 'transparent',
-                color: activeTab === tab.key ? '#ffffff' : '#9ca3af',
-                border: 'none',
-                padding: '0.75rem 1rem',
-                borderRadius: '8px',
-                fontSize: '0.875rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                if (activeTab !== tab.key) {
-                  e.currentTarget.style.background = '#374151'
-                  e.currentTarget.style.color = '#ffffff'
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeTab !== tab.key) {
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = '#9ca3af'
-                }
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div>
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Actions rapides</h3>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
-              <button
-                onClick={() => callAction('open_reg')}
-                disabled={tournament.status === 'REG_OPEN'}
-                style={{
-                  background: tournament.status === 'REG_OPEN' ? '#374151' : '#10b981',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: tournament.status === 'REG_OPEN' ? 'not-allowed' : 'pointer',
-                  opacity: tournament.status === 'REG_OPEN' ? 0.5 : 1
-                }}
-              >
-                Ouvrir inscriptions
-              </button>
-              <button
-                onClick={() => callAction('close_reg')}
-                disabled={tournament.status !== 'REG_OPEN'}
-                style={{
-                  background: tournament.status !== 'REG_OPEN' ? '#374151' : '#f59e0b',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: tournament.status !== 'REG_OPEN' ? 'not-allowed' : 'pointer',
-                  opacity: tournament.status !== 'REG_OPEN' ? 0.5 : 1
-                }}
-              >
-                Démarrer tournoi
-              </button>
-              <button
-                onClick={() => callAction('finish')}
-                disabled={tournament.status === 'COMPLETED'}
-                style={{
-                  background: tournament.status === 'COMPLETED' ? '#374151' : '#ff008c',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: tournament.status === 'COMPLETED' ? 'not-allowed' : 'pointer',
-                  opacity: tournament.status === 'COMPLETED' ? 0.5 : 1
-                }}
-              >
-                Terminer tournoi
-              </button>
-            </div>
-
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Informations du tournoi</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-              <div style={{ background: '#374151', padding: '1rem', borderRadius: '8px' }}>
-                <h4 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600' }}>
-                  Détails
-                </h4>
-                <div style={{ color: '#9ca3af', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                  <div><strong>Catégorie:</strong> {tournament.category}</div>
-                  <div><strong>Format:</strong> {tournament.format}</div>
-                  <div><strong>Visibilité:</strong> {tournament.visibility}</div>
-                  <div><strong>Type:</strong> {tournament.isTeamBased ? 'Équipes' : 'Solo'}</div>
-                </div>
-              </div>
-              <div style={{ background: '#374151', padding: '1rem', borderRadius: '8px' }}>
-                <h4 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', fontSize: '0.875rem', fontWeight: '600' }}>
-                  Dates
-                </h4>
-                <div style={{ color: '#9ca3af', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                  <div><strong>Début:</strong> {tournament.startDate ? new Date(tournament.startDate).toLocaleString('fr-FR') : '—'}</div>
-                  <div><strong>Fin:</strong> {tournament.endDate ? new Date(tournament.endDate).toLocaleString('fr-FR') : '—'}</div>
-                  <div><strong>Clôture:</strong> {tournament.registrationDeadline ? new Date(tournament.registrationDeadline).toLocaleString('fr-FR') : '—'}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'participants' && (
-          <div>
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>
-              {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count.registrations})
-            </h3>
-            {tournament.teams && tournament.teams.length > 0 ? (
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                {tournament.teams.map((team) => (
-                  <div key={team.id} style={{
-                    background: '#374151',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    border: '1px solid #4b5563'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <h4 style={{ color: '#ffffff', margin: 0, fontSize: '1rem', fontWeight: '600' }}>
-                        {team.name}
-                      </h4>
-                      <span style={{
-                        background: '#ff008c',
-                        color: '#ffffff',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        {team.members.length} membre{team.members.length > 1 ? 's' : ''}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                      {team.members.map((member) => (
-                        <div key={member.id} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                          background: '#4b5563',
-                          padding: '0.5rem',
-                          borderRadius: '6px',
-                          fontSize: '0.875rem'
-                        }}>
-                          {member.user.avatarUrl ? (
-                            <img
-                              src={member.user.avatarUrl}
-                              alt={member.user.pseudo}
-                              style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                objectFit: 'cover'
-                              }}
-                            />
-                          ) : (
-                            <div style={{
-                              width: '24px',
-                              height: '24px',
-                              borderRadius: '50%',
-                              background: '#6b7280',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#ffffff',
-                              fontSize: '0.75rem',
-                              fontWeight: '600'
-                            }}>
-                              {member.user.pseudo.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <span style={{ color: '#ffffff' }}>{member.user.pseudo}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+    <div className={styles.adminPage}>
+      <div className={styles.adminLayout}>
+        {/* Sidebar */}
+        <aside className={styles.sidebar}>
+          <div className={styles.sidebarHeader}>
+            {tournament.logoUrl || gameLogoPath ? (
+              <div className={styles.sidebarLogo}>
+                <img src={tournament.logoUrl || gameLogoPath || ''} alt={tournament.name} />
               </div>
             ) : (
-              <div style={{
-                textAlign: 'center',
-                color: '#9ca3af',
-                padding: '2rem',
-                background: '#374151',
-                borderRadius: '8px'
-              }}>
-                Aucun {tournament.isTeamBased ? 'équipe' : 'participant'} inscrit
+              <div className={styles.sidebarLogoPlaceholder}>
+                🎮
               </div>
             )}
+            <div className={styles.sidebarTournamentInfo}>
+              <div className={styles.sidebarTournamentName}>
+                {tournament.name}
+              </div>
+              <button 
+                className={styles.viewTournamentLink}
+                onClick={() => router.push(`/tournaments/${id}`)}
+              >
+                ← Voir le tournoi
+              </button>
+            </div>
           </div>
-        )}
 
-        {activeTab === 'matches' && (
-          <div>
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>
-              Matchs ({tournament._count.matches})
-            </h3>
-            {tournament.matches && tournament.matches.length > 0 ? (
-              <div style={{ display: 'grid', gap: '1rem' }}>
-                {tournament.matches.map((match) => (
-                  <div key={match.id} style={{
-                    background: '#374151',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    border: '1px solid #4b5563'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                      <span style={{
-                        background: match.status === 'COMPLETED' ? '#10b981' : match.status === 'SCHEDULED' ? '#f59e0b' : '#6b7280',
-                        color: '#ffffff',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>
-                        {match.status === 'COMPLETED' ? 'Terminé' : match.status === 'SCHEDULED' ? 'Programmé' : 'En attente'}
-                      </span>
-                      {match.round && (
-                        <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                          Tour {match.round}
+          <nav className={styles.sidebarNav}>
+            <div className={styles.navSection}>
+              <button
+                className={`${styles.navItem} ${activeSection === 'overview' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('overview')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="3" width="7" height="7"></rect>
+                  <rect x="14" y="14" width="7" height="7"></rect>
+                  <rect x="3" y="14" width="7" height="7"></rect>
+                </svg>
+                <span>Vue d'ensemble</span>
+              </button>
+              <button
+                className={`${styles.navItem} ${activeSection === 'participants' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('participants')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>{tournament.isTeamBased ? 'Équipes' : 'Participants'}</span>
+              </button>
+              <button
+                className={`${styles.navItem} ${activeSection === 'matches' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('matches')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <span>Matchs</span>
+              </button>
+            </div>
+
+            <div className={styles.navSection}>
+              <button
+                className={`${styles.navItem} ${activeSection === 'visuals' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('visuals')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>Visuels</span>
+              </button>
+            </div>
+
+            <div className={styles.navSection}>
+              <div className={styles.navSectionTitle}>PARAMÈTRES</div>
+              <button
+                className={`${styles.navItem} ${activeSection === 'settings' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('settings')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
+                </svg>
+                <span>Paramètres</span>
+              </button>
+            </div>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className={styles.mainContent}>
+          {activeSection === 'overview' && (
+            <div className={styles.contentSection}>
+              <h1 className={styles.contentTitle}>Vue d'ensemble</h1>
+              
+              {/* Stats */}
+              <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue}>{tournament._count.registrations}</div>
+                  <div className={styles.statLabel}>
+                    {tournament.isTeamBased ? 'Équipes' : 'Participants'}
+                  </div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue} style={{ color: 'var(--lt-success)' }}>
+                    {tournament._count.matches}
+                  </div>
+                  <div className={styles.statLabel}>Matchs</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statValue} style={{ color: 'var(--lt-warning)' }}>
+                    {tournament.maxParticipants || '∞'}
+                  </div>
+                  <div className={styles.statLabel}>Max participants</div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
+                Actions rapides
+              </h2>
+              <div className={styles.actionsGrid}>
+                <button
+                  onClick={() => callAction('open_reg')}
+                  disabled={tournament.status === 'REG_OPEN'}
+                  className={`${styles.actionButton} ${styles.success}`}
+                >
+                  Ouvrir inscriptions
+                </button>
+                <button
+                  onClick={() => callAction('close_reg')}
+                  disabled={tournament.status !== 'REG_OPEN'}
+                  className={`${styles.actionButton} ${styles.warning}`}
+                >
+                  Démarrer tournoi
+                </button>
+                <button
+                  onClick={() => callAction('finish')}
+                  disabled={tournament.status === 'COMPLETED'}
+                  className={`${styles.actionButton} ${styles.danger}`}
+                >
+                  Terminer tournoi
+                </button>
+              </div>
+
+              {/* Info Cards */}
+              <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
+                Informations du tournoi
+              </h2>
+              <div className={styles.infoGrid}>
+                <div className={styles.infoCard}>
+                  <h3 className={styles.infoCardTitle}>Détails</h3>
+                  <div className={styles.infoCardContent}>
+                    <div><strong>Catégorie:</strong> {tournament.category}</div>
+                    <div><strong>Format:</strong> {tournament.format}</div>
+                    <div><strong>Visibilité:</strong> {tournament.visibility}</div>
+                    <div><strong>Type:</strong> {tournament.isTeamBased ? 'Équipes' : 'Solo'}</div>
+                  </div>
+                </div>
+                <div className={styles.infoCard}>
+                  <h3 className={styles.infoCardTitle}>Dates</h3>
+                  <div className={styles.infoCardContent}>
+                    <div><strong>Début:</strong> {tournament.startDate ? new Date(tournament.startDate).toLocaleString('fr-FR') : '—'}</div>
+                    <div><strong>Fin:</strong> {tournament.endDate ? new Date(tournament.endDate).toLocaleString('fr-FR') : '—'}</div>
+                    <div><strong>Clôture:</strong> {tournament.registrationDeadline ? new Date(tournament.registrationDeadline).toLocaleString('fr-FR') : '—'}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeSection === 'participants' && (
+            <div className={styles.contentSection}>
+              <h1 className={styles.contentTitle}>
+                {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count.registrations})
+              </h1>
+              {tournament.teams && tournament.teams.length > 0 ? (
+                <div className={styles.participantsList}>
+                  {tournament.teams.map((team) => (
+                    <div key={team.id} className={styles.participantCard}>
+                      <div className={styles.participantHeader}>
+                        <h3 className={styles.participantName}>{team.name}</h3>
+                        <span className={styles.participantBadge}>
+                          {team.members.length} membre{team.members.length > 1 ? 's' : ''}
                         </span>
-                      )}
+                      </div>
+                      <div className={styles.membersList}>
+                        {team.members.map((member) => (
+                          <div key={member.id} className={styles.memberItem}>
+                            {member.user.avatarUrl ? (
+                              <img
+                                src={member.user.avatarUrl}
+                                alt={member.user.pseudo}
+                                className={styles.memberAvatar}
+                              />
+                            ) : (
+                              <div className={styles.memberAvatarPlaceholder}>
+                                {member.user.pseudo.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className={styles.memberName}>{member.user.pseudo}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                      <div style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ 
-                          color: match.winnerTeam?.id === match.teamA.id ? '#10b981' : '#ffffff', 
-                          fontWeight: '500',
-                          fontSize: '1rem'
-                        }}>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  Aucun {tournament.isTeamBased ? 'équipe' : 'participant'} inscrit
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeSection === 'matches' && (
+            <div className={styles.contentSection}>
+              <h1 className={styles.contentTitle}>Matchs ({tournament._count.matches})</h1>
+              {tournament.matches && tournament.matches.length > 0 ? (
+                <div className={styles.matchesList}>
+                  {tournament.matches.map((match) => (
+                    <div key={match.id} className={styles.matchCard}>
+                      <div className={styles.matchHeader}>
+                        <span className={`${styles.matchStatus} ${
+                          match.status === 'COMPLETED' ? styles.completed :
+                          match.status === 'SCHEDULED' ? styles.scheduled :
+                          styles.pending
+                        }`}>
+                          {match.status === 'COMPLETED' ? 'Terminé' : match.status === 'SCHEDULED' ? 'Programmé' : 'En attente'}
+                        </span>
+                        {match.round && (
+                          <span className={styles.matchRound}>Tour {match.round}</span>
+                        )}
+                      </div>
+                      <div className={styles.matchTeams}>
+                        <div className={`${styles.matchTeam} ${
+                          match.winnerTeam?.id === match.teamA.id ? styles.winner : styles.default
+                        }`}>
                           {match.teamA.name}
                         </div>
-                      </div>
-                      <div style={{ color: '#9ca3af', margin: '0 1rem', fontSize: '1.2rem' }}>VS</div>
-                      <div style={{ flex: 1, textAlign: 'center' }}>
-                        <div style={{ 
-                          color: match.winnerTeam?.id === match.teamB.id ? '#10b981' : '#ffffff', 
-                          fontWeight: '500',
-                          fontSize: '1rem'
-                        }}>
+                        <div className={styles.matchVS}>VS</div>
+                        <div className={`${styles.matchTeam} ${
+                          match.winnerTeam?.id === match.teamB.id ? styles.winner : styles.default
+                        }`}>
                           {match.teamB.name}
                         </div>
                       </div>
+                      
+                      {match.winnerTeam ? (
+                        <div className={styles.matchWinner}>
+                          🏆 Vainqueur: {match.winnerTeam.name}
+                        </div>
+                      ) : match.status === 'PENDING' && tournament.status === 'IN_PROGRESS' && (
+                        <div className={styles.matchActions}>
+                          <button
+                            onClick={() => validateMatchResult(match.id, match.teamA.id)}
+                            className={styles.matchActionButton}
+                          >
+                            {match.teamA.name} gagne
+                          </button>
+                          <button
+                            onClick={() => validateMatchResult(match.id, match.teamB.id)}
+                            className={styles.matchActionButton}
+                          >
+                            {match.teamB.name} gagne
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    
-                    {match.winnerTeam ? (
-                      <div style={{
-                        textAlign: 'center',
-                        marginTop: '0.5rem',
-                        color: '#10b981',
-                        fontWeight: '600',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        padding: '0.5rem',
-                        borderRadius: '6px',
-                        border: '1px solid rgba(16, 185, 129, 0.3)'
-                      }}>
-                        🏆 Vainqueur: {match.winnerTeam.name}
-                      </div>
-                    ) : match.status === 'PENDING' && tournament.status === 'IN_PROGRESS' && (
-                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                        <button
-                          onClick={() => validateMatchResult(match.id, match.teamA.id)}
-                          style={{
-                            background: '#10b981',
-                            color: '#ffffff',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '6px',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#059669'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#10b981'
-                          }}
-                        >
-                          {match.teamA.name} gagne
-                        </button>
-                        <button
-                          onClick={() => validateMatchResult(match.id, match.teamB.id)}
-                          style={{
-                            background: '#10b981',
-                            color: '#ffffff',
-                            border: 'none',
-                            padding: '0.5rem 1rem',
-                            borderRadius: '6px',
-                            fontSize: '0.875rem',
-                            fontWeight: '500',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#059669'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#10b981'
-                          }}
-                        >
-                          {match.teamB.name} gagne
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{
-                textAlign: 'center',
-                color: '#9ca3af',
-                padding: '2rem',
-                background: '#374151',
-                borderRadius: '8px'
-              }}>
-                Aucun match généré
-              </div>
-            )}
-          </div>
-        )}
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.emptyState}>
+                  Aucun match généré
+                </div>
+              )}
+            </div>
+          )}
 
-        {activeTab === 'settings' && (
-          <div>
-            <h3 style={{ color: '#ffffff', marginBottom: '1rem' }}>Actions dangereuses</h3>
-            <div style={{
-              background: '#374151',
-              padding: '1rem',
-              borderRadius: '8px',
-              border: '1px solid #dc2626'
-            }}>
-              <h4 style={{ color: '#dc2626', margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: '600' }}>
-                Supprimer le tournoi
-              </h4>
-              <p style={{ color: '#9ca3af', margin: '0 0 1rem 0', fontSize: '0.875rem' }}>
-                Cette action est irréversible. Tous les participants, équipes et matchs seront supprimés.
-              </p>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                style={{
-                  background: '#dc2626',
-                  color: '#ffffff',
-                  border: 'none',
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: '8px',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  cursor: deleting ? 'not-allowed' : 'pointer',
-                  opacity: deleting ? 0.5 : 1
-                }}
-              >
-                {deleting ? 'Suppression...' : 'Supprimer définitivement'}
-              </button>
+          {activeSection === 'settings' && (
+            <div className={styles.contentSection}>
+              <h1 className={styles.contentTitle}>Paramètres</h1>
+              
+              <div className={styles.dangerZone}>
+                <h3 className={styles.dangerZoneTitle}>Supprimer le tournoi</h3>
+                <p className={styles.dangerZoneDescription}>
+                  Cette action est irréversible. Tous les participants, équipes et matchs seront supprimés.
+                </p>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className={`${styles.actionButton} ${styles.danger}`}
+                >
+                  {deleting ? 'Suppression...' : 'Supprimer définitivement'}
+                </button>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Modal de crop */}
+      {showCropper && originalImageUrl && (
+        <div className={styles.cropModal}>
+          <div className={styles.cropContainer}>
+            <h2 className={styles.cropTitle}>
+              {cropType === 'logo' ? 'Recadrer le logo' : 'Recadrer la bannière'}
+            </h2>
+            <div 
+              className={styles.cropArea} 
+              data-aspect={cropType === 'banner' ? 'banner' : undefined}
+              data-crop-type={cropType}
+            >
+              <Cropper
+                image={originalImageUrl}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropType === 'logo' ? 1 : 16 / 9}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+                cropShape={cropType === 'logo' ? 'round' : 'rect'}
+              />
+            </div>
+            <div className={styles.cropControls}>
+              <div className={styles.cropZoomControl}>
+                <label>Zoom:</label>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                />
+              </div>
+              <div className={styles.cropButtons}>
+                <button 
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    setShowCropper(false)
+                    if (originalImageUrl) {
+                      URL.revokeObjectURL(originalImageUrl)
+                    }
+                    setOriginalImageUrl(null)
+                    if (cropType === 'logo') {
+                      setSelectedLogo(null)
+                    } else {
+                      setSelectedBanner(null)
+                    }
+                  }}
+                >
+                  Annuler
+                </button>
+                <button 
+                  className={styles.cropBtn}
+                  onClick={handleCropComplete}
+                >
+                  Valider
+                </button>
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
-
-
