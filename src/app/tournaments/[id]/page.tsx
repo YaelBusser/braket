@@ -298,15 +298,18 @@ function TournamentView() {
   return (
     <div className={styles.tournamentPage}>
       {/* Bannière hero */}
-      <div className={styles.banner}>
-        {tournament.posterUrl && (
-          <img 
-            src={tournament.posterUrl} 
-            alt={tournament.name}
-            className={styles.bannerImage}
-          />
-        )}
-        
+      <div 
+        className={styles.banner}
+        style={{
+          backgroundImage: tournament.posterUrl 
+            ? `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%), url(${tournament.posterUrl})`
+            : 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }}
+      >
         <div className={styles.bannerContent}>
           <div className={styles.bannerInner}>
             {/* Photo de profil circulaire - utilise le logo du jeu par défaut */}

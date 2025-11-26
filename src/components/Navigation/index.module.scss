@@ -131,6 +131,13 @@
   gap: vars.$spacing-3;
 }
 
+.userMenuPlaceholder {
+  width: 100px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+}
+
 .profileLink {
   color: vars.$lt-text-primary;
   text-decoration: none;

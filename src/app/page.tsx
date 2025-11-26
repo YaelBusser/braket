@@ -226,9 +226,11 @@ export default function Home() {
                       <Image 
                         src={game.image} 
                         alt={game.name}
-                        width={200}
-                        height={200}
+                        width={400}
+                        height={571}
                         className={styles.popularGameImage}
+                        quality={90}
+                        sizes="(max-width: 768px) 33vw, (max-width: 1200px) 16vw, 12vw"
                         loading="lazy"
                       />
                     ) : (

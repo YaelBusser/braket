@@ -82,7 +82,7 @@ export async function PATCH(
   }
 }
 
-// Endpoints d'état simples via PATCH?mode=action
+// Endpoints d'état simples via PUT?mode=action ou upload d'images
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -93,11 +93,118 @@ export async function PUT(
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const url = new URL(request.url)
-    const mode = url.searchParams.get('mode')
     const t = await prisma.tournament.findUnique({ where: { id } })
     if (!t) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
     if (t.organizerId !== userId) return NextResponse.json({ message: 'Interdit' }, { status: 403 })
+
+    const contentType = request.headers.get('content-type') || ''
+    
+    // Si c'est un upload d'image (FormData)
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      const logoFile = formData.get('logo') as File | null
+      const posterFile = formData.get('poster') as File | null
+      
+      let logoUrlToSet: string | undefined
+      let posterUrlToSet: string | undefined
+
+      if (logoFile && typeof logoFile === 'object') {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+        if (!allowedTypes.includes(logoFile.type)) {
+          return NextResponse.json(
+            { message: 'Type de fichier non pris en charge pour le logo' },
+            { status: 400 }
+          )
+        }
+
+        const maxSize = 5 * 1024 * 1024 // 5MB
+        if ((logoFile as any).size && (logoFile as any).size > maxSize) {
+          return NextResponse.json(
+            { message: 'Fichier trop volumineux (max 5MB)' },
+            { status: 400 }
+          )
+        }
+
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'logos')
+        if (!fs.existsSync(uploadDir)) {
+          await fsp.mkdir(uploadDir, { recursive: true })
+        }
+
+        const originalName = (logoFile as any).name || 'logo'
+        const ext = path.extname(originalName) || (logoFile.type === 'image/png' ? '.png' : logoFile.type === 'image/webp' ? '.webp' : '.jpg')
+        const fileName = `${id}-${Date.now()}${ext}`
+        const filePath = path.join(uploadDir, fileName)
+
+        const arrayBuffer = await logoFile.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        await fsp.writeFile(filePath, buffer)
+
+        logoUrlToSet = `/uploads/logos/${fileName}`
+      }
+
+      if (posterFile && typeof posterFile === 'object') {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+        if (!allowedTypes.includes(posterFile.type)) {
+          return NextResponse.json(
+            { message: 'Type de fichier non pris en charge pour la bannière' },
+            { status: 400 }
+          )
+        }
+
+        const maxSize = 10 * 1024 * 1024 // 10MB
+        if ((posterFile as any).size && (posterFile as any).size > maxSize) {
+          return NextResponse.json(
+            { message: 'Fichier trop volumineux (max 10MB)' },
+            { status: 400 }
+          )
+        }
+
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'posters')
+        if (!fs.existsSync(uploadDir)) {
+          await fsp.mkdir(uploadDir, { recursive: true })
+        }
+
+        const originalName = (posterFile as any).name || 'poster'
+        const ext = path.extname(originalName) || (posterFile.type === 'image/png' ? '.png' : posterFile.type === 'image/webp' ? '.webp' : '.jpg')
+        const fileName = `${id}-${Date.now()}${ext}`
+        const filePath = path.join(uploadDir, fileName)
+
+        const arrayBuffer = await posterFile.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        await fsp.writeFile(filePath, buffer)
+
+        posterUrlToSet = `/uploads/posters/${fileName}`
+      }
+
+      // Supprimer les anciens fichiers si de nouveaux sont uploadés
+      if (logoUrlToSet && t.logoUrl && t.logoUrl.startsWith('/uploads/logos/')) {
+        try {
+          const oldPath = path.join(process.cwd(), 'public', t.logoUrl)
+          if (fs.existsSync(oldPath)) await fsp.unlink(oldPath)
+        } catch {}
+      }
+
+      if (posterUrlToSet && t.posterUrl && t.posterUrl.startsWith('/uploads/posters/')) {
+        try {
+          const oldPath = path.join(process.cwd(), 'public', t.posterUrl)
+          if (fs.existsSync(oldPath)) await fsp.unlink(oldPath)
+        } catch {}
+      }
+
+      const updated = await prisma.tournament.update({
+        where: { id },
+        data: {
+          ...(logoUrlToSet ? { logoUrl: logoUrlToSet } : {}),
+          ...(posterUrlToSet ? { posterUrl: posterUrlToSet } : {}),
+        },
+      })
+
+      return NextResponse.json({ tournament: updated })
+    }
+
+    // Sinon, c'est un changement d'état via ?mode=
+    const url = new URL(request.url)
+    const mode = url.searchParams.get('mode')
 
     if (mode === 'open_reg') {
       const res = await prisma.tournament.update({ where: { id }, data: ({ status: 'REG_OPEN' } as any) })

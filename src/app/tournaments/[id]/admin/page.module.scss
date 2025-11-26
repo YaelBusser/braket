@@ -595,7 +595,7 @@
   }
 }
 
-.visualsLogoWrapper {
+.visualsAvatarWrapper {
   position: absolute;
   bottom: -60px;
   left: 50%;
@@ -603,13 +603,13 @@
   z-index: 2;
 }
 
-.visualsLogoContainer {
+.visualsAvatarContainer {
   position: relative;
   width: 120px;
   height: 120px;
 }
 
-.visualsLogo {
+.visualsAvatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
@@ -621,7 +621,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.visualsLogoPlaceholder {
+.visualsAvatarPlaceholder {
   width: 120px;
   height: 120px;
   border-radius: 50%;
@@ -636,7 +636,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
-.visualsLogoButton {
+.visualsAvatarButton {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -663,6 +663,13 @@
     width: 16px;
     height: 16px;
   }
+}
+
+.profileHeaderSection {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-8;
 }
 
 .visualsActions {
@@ -772,6 +779,20 @@
   }
   
   &[data-crop-type="logo"] {
+    :global(.reactEasyCrop_Container) {
+      border-radius: 0;
+    }
+    
+    :global(.reactEasyCrop_CropArea) {
+      border-radius: 50% !important;
+    }
+    
+    :global(.reactEasyCrop_Image) {
+      border-radius: 0;
+    }
+  }
+  
+  &[data-crop-type="avatar"] {
     :global(.reactEasyCrop_Container) {
       border-radius: 0;
     }

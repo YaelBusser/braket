@@ -9,6 +9,7 @@ import Cropper from 'react-easy-crop'
 import styles from './page.module.scss'
 import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import { getCroppedImg } from '@/lib/image'
+import VisualsIcon from '../../../../components/icons/VisualsIcon'
 
 interface Tournament {
   id: string
@@ -349,7 +350,7 @@ function TournamentAdminContent() {
             )}
             <div className={styles.sidebarTournamentInfo}>
               <div className={styles.sidebarTournamentName}>
-                {tournament.name}
+              {tournament.name}
               </div>
               <button 
                 className={styles.viewTournamentLink}
@@ -396,18 +397,14 @@ function TournamentAdminContent() {
                 </svg>
                 <span>Matchs</span>
               </button>
-            </div>
-
+        </div>
+        
             <div className={styles.navSection}>
               <button
                 className={`${styles.navItem} ${activeSection === 'visuals' ? styles.navItemActive : ''}`}
                 onClick={() => setActiveSection('visuals')}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                  <polyline points="21 15 16 10 5 21"></polyline>
-                </svg>
+                <VisualsIcon width={20} height={20} />
                 <span>Visuels</span>
               </button>
             </div>
@@ -440,49 +437,49 @@ function TournamentAdminContent() {
                   <div className={styles.statValue}>{tournament._count.registrations}</div>
                   <div className={styles.statLabel}>
                     {tournament.isTeamBased ? 'Équipes' : 'Participants'}
-                  </div>
-                </div>
+            </div>
+          </div>
                 <div className={styles.statCard}>
                   <div className={styles.statValue} style={{ color: 'var(--lt-success)' }}>
-                    {tournament._count.matches}
-                  </div>
+              {tournament._count.matches}
+            </div>
                   <div className={styles.statLabel}>Matchs</div>
-                </div>
+            </div>
                 <div className={styles.statCard}>
                   <div className={styles.statValue} style={{ color: 'var(--lt-warning)' }}>
-                    {tournament.maxParticipants || '∞'}
-                  </div>
+              {tournament.maxParticipants || '∞'}
+            </div>
                   <div className={styles.statLabel}>Max participants</div>
-                </div>
-              </div>
+        </div>
+      </div>
 
               {/* Actions */}
               <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
                 Actions rapides
               </h2>
               <div className={styles.actionsGrid}>
-                <button
-                  onClick={() => callAction('open_reg')}
-                  disabled={tournament.status === 'REG_OPEN'}
+              <button
+                onClick={() => callAction('open_reg')}
+                disabled={tournament.status === 'REG_OPEN'}
                   className={`${styles.actionButton} ${styles.success}`}
-                >
-                  Ouvrir inscriptions
-                </button>
-                <button
-                  onClick={() => callAction('close_reg')}
-                  disabled={tournament.status !== 'REG_OPEN'}
+              >
+                Ouvrir inscriptions
+              </button>
+              <button
+                onClick={() => callAction('close_reg')}
+                disabled={tournament.status !== 'REG_OPEN'}
                   className={`${styles.actionButton} ${styles.warning}`}
-                >
-                  Démarrer tournoi
-                </button>
-                <button
-                  onClick={() => callAction('finish')}
-                  disabled={tournament.status === 'COMPLETED'}
+              >
+                Démarrer tournoi
+              </button>
+              <button
+                onClick={() => callAction('finish')}
+                disabled={tournament.status === 'COMPLETED'}
                   className={`${styles.actionButton} ${styles.danger}`}
-                >
-                  Terminer tournoi
-                </button>
-              </div>
+              >
+                Terminer tournoi
+              </button>
+            </div>
 
               {/* Info Cards */}
               <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
@@ -492,74 +489,74 @@ function TournamentAdminContent() {
                 <div className={styles.infoCard}>
                   <h3 className={styles.infoCardTitle}>Détails</h3>
                   <div className={styles.infoCardContent}>
-                    <div><strong>Catégorie:</strong> {tournament.category}</div>
-                    <div><strong>Format:</strong> {tournament.format}</div>
-                    <div><strong>Visibilité:</strong> {tournament.visibility}</div>
-                    <div><strong>Type:</strong> {tournament.isTeamBased ? 'Équipes' : 'Solo'}</div>
-                  </div>
+                  <div><strong>Catégorie:</strong> {tournament.category}</div>
+                  <div><strong>Format:</strong> {tournament.format}</div>
+                  <div><strong>Visibilité:</strong> {tournament.visibility}</div>
+                  <div><strong>Type:</strong> {tournament.isTeamBased ? 'Équipes' : 'Solo'}</div>
                 </div>
+              </div>
                 <div className={styles.infoCard}>
                   <h3 className={styles.infoCardTitle}>Dates</h3>
                   <div className={styles.infoCardContent}>
-                    <div><strong>Début:</strong> {tournament.startDate ? new Date(tournament.startDate).toLocaleString('fr-FR') : '—'}</div>
-                    <div><strong>Fin:</strong> {tournament.endDate ? new Date(tournament.endDate).toLocaleString('fr-FR') : '—'}</div>
-                    <div><strong>Clôture:</strong> {tournament.registrationDeadline ? new Date(tournament.registrationDeadline).toLocaleString('fr-FR') : '—'}</div>
-                  </div>
+                  <div><strong>Début:</strong> {tournament.startDate ? new Date(tournament.startDate).toLocaleString('fr-FR') : '—'}</div>
+                  <div><strong>Fin:</strong> {tournament.endDate ? new Date(tournament.endDate).toLocaleString('fr-FR') : '—'}</div>
+                  <div><strong>Clôture:</strong> {tournament.registrationDeadline ? new Date(tournament.registrationDeadline).toLocaleString('fr-FR') : '—'}</div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           {activeSection === 'participants' && (
             <div className={styles.contentSection}>
               <h1 className={styles.contentTitle}>
-                {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count.registrations})
+              {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count.registrations})
               </h1>
-              {tournament.teams && tournament.teams.length > 0 ? (
+            {tournament.teams && tournament.teams.length > 0 ? (
                 <div className={styles.participantsList}>
-                  {tournament.teams.map((team) => (
+                {tournament.teams.map((team) => (
                     <div key={team.id} className={styles.participantCard}>
                       <div className={styles.participantHeader}>
                         <h3 className={styles.participantName}>{team.name}</h3>
                         <span className={styles.participantBadge}>
-                          {team.members.length} membre{team.members.length > 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className={styles.membersList}>
-                        {team.members.map((member) => (
-                          <div key={member.id} className={styles.memberItem}>
-                            {member.user.avatarUrl ? (
-                              <img
-                                src={member.user.avatarUrl}
-                                alt={member.user.pseudo}
-                                className={styles.memberAvatar}
-                              />
-                            ) : (
-                              <div className={styles.memberAvatarPlaceholder}>
-                                {member.user.pseudo.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className={styles.memberName}>{member.user.pseudo}</span>
-                          </div>
-                        ))}
-                      </div>
+                        {team.members.length} membre{team.members.length > 1 ? 's' : ''}
+                      </span>
                     </div>
-                  ))}
-                </div>
-              ) : (
+                      <div className={styles.membersList}>
+                      {team.members.map((member) => (
+                          <div key={member.id} className={styles.memberItem}>
+                          {member.user.avatarUrl ? (
+                            <img
+                              src={member.user.avatarUrl}
+                              alt={member.user.pseudo}
+                                className={styles.memberAvatar}
+                            />
+                          ) : (
+                              <div className={styles.memberAvatarPlaceholder}>
+                              {member.user.pseudo.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                            <span className={styles.memberName}>{member.user.pseudo}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
                 <div className={styles.emptyState}>
-                  Aucun {tournament.isTeamBased ? 'équipe' : 'participant'} inscrit
-                </div>
-              )}
-            </div>
-          )}
+                Aucun {tournament.isTeamBased ? 'équipe' : 'participant'} inscrit
+              </div>
+            )}
+          </div>
+        )}
 
           {activeSection === 'matches' && (
             <div className={styles.contentSection}>
               <h1 className={styles.contentTitle}>Matchs ({tournament._count.matches})</h1>
-              {tournament.matches && tournament.matches.length > 0 ? (
+            {tournament.matches && tournament.matches.length > 0 ? (
                 <div className={styles.matchesList}>
-                  {tournament.matches.map((match) => (
+                {tournament.matches.map((match) => (
                     <div key={match.id} className={styles.matchCard}>
                       <div className={styles.matchHeader}>
                         <span className={`${styles.matchStatus} ${
@@ -567,12 +564,12 @@ function TournamentAdminContent() {
                           match.status === 'SCHEDULED' ? styles.scheduled :
                           styles.pending
                         }`}>
-                          {match.status === 'COMPLETED' ? 'Terminé' : match.status === 'SCHEDULED' ? 'Programmé' : 'En attente'}
-                        </span>
-                        {match.round && (
+                        {match.status === 'COMPLETED' ? 'Terminé' : match.status === 'SCHEDULED' ? 'Programmé' : 'En attente'}
+                      </span>
+                      {match.round && (
                           <span className={styles.matchRound}>Tour {match.round}</span>
-                        )}
-                      </div>
+                      )}
+                    </div>
                       <div className={styles.matchTeams}>
                         <div className={`${styles.matchTeam} ${
                           match.winnerTeam?.id === match.teamA.id ? styles.winner : styles.default
@@ -584,37 +581,170 @@ function TournamentAdminContent() {
                           match.winnerTeam?.id === match.teamB.id ? styles.winner : styles.default
                         }`}>
                           {match.teamB.name}
-                        </div>
                       </div>
-                      
-                      {match.winnerTeam ? (
+                    </div>
+                    
+                    {match.winnerTeam ? (
                         <div className={styles.matchWinner}>
-                          🏆 Vainqueur: {match.winnerTeam.name}
-                        </div>
-                      ) : match.status === 'PENDING' && tournament.status === 'IN_PROGRESS' && (
+                        🏆 Vainqueur: {match.winnerTeam.name}
+                      </div>
+                    ) : match.status === 'PENDING' && tournament.status === 'IN_PROGRESS' && (
                         <div className={styles.matchActions}>
-                          <button
-                            onClick={() => validateMatchResult(match.id, match.teamA.id)}
+                        <button
+                          onClick={() => validateMatchResult(match.id, match.teamA.id)}
                             className={styles.matchActionButton}
-                          >
-                            {match.teamA.name} gagne
-                          </button>
-                          <button
-                            onClick={() => validateMatchResult(match.id, match.teamB.id)}
+                        >
+                          {match.teamA.name} gagne
+                        </button>
+                        <button
+                          onClick={() => validateMatchResult(match.id, match.teamB.id)}
                             className={styles.matchActionButton}
-                          >
-                            {match.teamB.name} gagne
-                          </button>
+                        >
+                          {match.teamB.name} gagne
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+                <div className={styles.emptyState}>
+                Aucun match généré
+              </div>
+            )}
+          </div>
+        )}
+
+          {activeSection === 'visuals' && (
+            <div className={styles.contentSection}>
+              <div className={styles.profileHeaderSection}>
+                <h1 className={styles.contentTitle}>Visuels</h1>
+              </div>
+              
+              <div className={styles.visualsSection}>
+                {/* Bannière avec logo par-dessus (comme la page de profil) */}
+                <div className={styles.visualsHeader}>
+                  <div 
+                    className={styles.visualsBanner}
+                    style={{
+                      backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerPreviewUrl || tournament.posterUrl || '/images/games.jpg'})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}
+                  >
+                    <div className={styles.visualsBannerOverlay}>
+                      <button 
+                        className={styles.visualsBannerButton}
+                        onClick={() => document.getElementById('banner-input-tournament')?.click()}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                          <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                        Modifier la bannière
+                      </button>
+                    </div>
+                    <input
+                      id="banner-input-tournament"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleBannerChange}
+                      style={{ display: 'none' }}
+                    />
+                  </div>
+                  
+                  <div className={styles.visualsAvatarWrapper}>
+                    <div className={styles.visualsAvatarContainer}>
+                      {logoPreviewUrl ? (
+                        <img src={logoPreviewUrl} alt="Logo preview" className={styles.visualsAvatar} />
+                      ) : tournament.logoUrl ? (
+                        <img src={tournament.logoUrl} alt="Logo actuel" className={styles.visualsAvatar} />
+                      ) : gameLogoPath ? (
+                        <img src={gameLogoPath} alt="Logo du jeu" className={styles.visualsAvatar} />
+                      ) : (
+                        <div className={styles.visualsAvatarPlaceholder}>
+                          🎮
                         </div>
                       )}
+                      <button 
+                        className={styles.visualsAvatarButton}
+                        onClick={() => document.getElementById('logo-input-tournament')?.click()}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                          <circle cx="12" cy="13" r="4"></circle>
+                        </svg>
+                      </button>
+                      <input
+                        id="logo-input-tournament"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoChange}
+                        style={{ display: 'none' }}
+                      />
                     </div>
-                  ))}
+                  </div>
                 </div>
-              ) : (
-                <div className={styles.emptyState}>
-                  Aucun match généré
-                </div>
-              )}
+
+                {/* Actions */}
+                {(bannerPreviewUrl || logoPreviewUrl) && (
+                  <div className={styles.visualsActions}>
+                    {bannerPreviewUrl && (
+                      <div className={styles.visualsActionGroup}>
+                        <span className={styles.visualsActionLabel}>Bannière modifiée</span>
+                        <button 
+                          className={styles.cancelButton}
+                          onClick={() => {
+                            if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl)
+                            if (originalImageUrl && cropType === 'banner') {
+                              URL.revokeObjectURL(originalImageUrl)
+                              setOriginalImageUrl(null)
+                            }
+                            setBannerPreviewUrl(null)
+                            setSelectedBanner(null)
+                          }}
+                        >
+                          Annuler
+                        </button>
+                        <button 
+                          className={styles.saveButton}
+                          onClick={handleSaveBanner}
+                          disabled={isLoadingVisuals}
+                        >
+                          {isLoadingVisuals ? 'Sauvegarde...' : 'Sauvegarder la bannière'}
+                        </button>
+                      </div>
+                    )}
+                    {logoPreviewUrl && (
+                      <div className={styles.visualsActionGroup}>
+                        <span className={styles.visualsActionLabel}>Logo modifié</span>
+                        <button 
+                          className={styles.cancelButton}
+                          onClick={() => {
+                            if (logoPreviewUrl) URL.revokeObjectURL(logoPreviewUrl)
+                            if (originalImageUrl && cropType === 'logo') {
+                              URL.revokeObjectURL(originalImageUrl)
+                              setOriginalImageUrl(null)
+                            }
+                            setLogoPreviewUrl(null)
+                            setSelectedLogo(null)
+                          }}
+                        >
+                          Annuler
+                        </button>
+                        <button 
+                          className={styles.saveButton}
+                          onClick={handleSaveLogo}
+                          disabled={isLoadingVisuals}
+                        >
+                          {isLoadingVisuals ? 'Sauvegarde...' : 'Sauvegarder le logo'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -625,18 +755,18 @@ function TournamentAdminContent() {
               <div className={styles.dangerZone}>
                 <h3 className={styles.dangerZoneTitle}>Supprimer le tournoi</h3>
                 <p className={styles.dangerZoneDescription}>
-                  Cette action est irréversible. Tous les participants, équipes et matchs seront supprimés.
-                </p>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
+                Cette action est irréversible. Tous les participants, équipes et matchs seront supprimés.
+              </p>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
                   className={`${styles.actionButton} ${styles.danger}`}
-                >
-                  {deleting ? 'Suppression...' : 'Supprimer définitivement'}
-                </button>
-              </div>
+              >
+                {deleting ? 'Suppression...' : 'Supprimer définitivement'}
+              </button>
             </div>
-          )}
+          </div>
+        )}
         </main>
       </div>
 
@@ -650,7 +780,7 @@ function TournamentAdminContent() {
             <div 
               className={styles.cropArea} 
               data-aspect={cropType === 'banner' ? 'banner' : undefined}
-              data-crop-type={cropType}
+              data-crop-type={cropType === 'logo' ? 'avatar' : undefined}
             >
               <Cropper
                 image={originalImageUrl}

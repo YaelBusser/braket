@@ -1,7 +1,7 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { SearchBar } from '../ui'
@@ -12,6 +12,12 @@ import styles from './index.module.scss'
 function Navigation() {
   const { data: session, status } = useSession()
   const { openAuthModal } = useAuthModal()
+  const [mounted, setMounted] = useState(false)
+
+  // Éviter les problèmes d'hydratation en s'assurant que le composant est monté côté client
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const authButtons = useMemo(() => (
     <div className={styles.authMenu}>
@@ -31,8 +37,13 @@ function Navigation() {
   ), [openAuthModal])
 
   const renderAuthSection = useMemo(() => {
+    // Pendant l'hydratation, ne rien afficher pour éviter les différences serveur/client
+    if (!mounted) {
+      return <div className={styles.userMenuPlaceholder} />
+    }
     if (status === 'loading') {
-      return authButtons
+      // Afficher un espace réservé pendant le chargement pour éviter le flash des boutons
+      return <div className={styles.userMenuPlaceholder} />
     }
     if (session) {
       return (
@@ -42,7 +53,7 @@ function Navigation() {
       )
     }
     return authButtons
-  }, [status, session, authButtons])
+  }, [mounted, status, session, authButtons])
 
   return (
     <nav className={styles.nav}>
@@ -60,7 +71,7 @@ function Navigation() {
           </Link>
           
           <div className={styles.navLinks}>
-            {session && (
+            {mounted && session && (
               <Link href="/my-tournaments" className={styles.navLink}>Mes tournois</Link>
             )}
             <Link href="/tournaments" className={styles.navLink}>Tournois</Link>

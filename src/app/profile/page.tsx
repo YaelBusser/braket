@@ -157,7 +157,8 @@ function ProfilePage() {
             backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed'
           }}
         >
           <div className={styles.headerContent}>
