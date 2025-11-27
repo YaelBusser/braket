@@ -3,6 +3,10 @@
 // Contenu centré avec marges symétriques
 // Utilise le même calcul que content-centered pour centrer le contenu avec un décalage augmenté
 .contentContainer {
+  width: 100%;
+  max-width: vars.$container-2xl;
+  margin-left: auto;
+  margin-right: auto;
   // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
   // Pour centrer : (zone_disponible - container_width) / 2
   // Décalage augmenté avec des valeurs minimales plus importantes
@@ -28,5 +32,17 @@
       padding-right: vars.$spacing-20 !important;
     }
   }
+  
+  // S'assurer que le contenu à l'intérieur est bien centré et ne dépasse pas
+  > * {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  // S'assurer que le contenu est bien centré visuellement
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 

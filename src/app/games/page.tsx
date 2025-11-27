@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import SearchIcon from '@/components/ui/SearchIcon'
 import { GameCardSkeleton, PageContent } from '@/components/ui'
+import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import styles from './page.module.scss'
 
 interface Game {
@@ -105,17 +106,20 @@ export default function GamesPage() {
                 className={styles.gameCard}
               >
                 <div className={styles.gameImageContainer}>
-                  {game.imageUrl ? (
-                    <img
-                      src={game.imageUrl}
-                      alt={game.name}
-                      className={styles.gameImage}
-                    />
-                  ) : (
-                    <div className={styles.gameImagePlaceholder}>
-                      {game.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
+                  {(() => {
+                    const posterPath = getGamePosterPath(game.name) || game.imageUrl
+                    return posterPath ? (
+                      <img
+                        src={posterPath}
+                        alt={game.name}
+                        className={styles.gameImage}
+                      />
+                    ) : (
+                      <div className={styles.gameImagePlaceholder}>
+                        {game.name.charAt(0).toUpperCase()}
+                      </div>
+                    )
+                  })()}
                 </div>
                 <div className={styles.gameText}>
                   <h3 className={styles.gameTitle}>{game.name}</h3>

@@ -27,15 +27,37 @@
 }
 
 .headerContent {
-  max-width: vars.$container-xl;
+  max-width: vars.$container-2xl;
   margin: 0 auto;
-  padding: 0 vars.$spacing-4;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
   position: relative;
   z-index: 2;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: vars.$spacing-6;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
+  }
 }
 
 .teamInfo {
@@ -90,7 +112,9 @@
 .tabNavigation {
   background: vars.$lt-dark-secondary;
   border-bottom: 1px solid vars.$lt-border;
-  padding: 0 vars.$spacing-4;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
   display: flex;
   gap: vars.$spacing-2;
   overflow-x: auto;
@@ -99,6 +123,26 @@
 
   &::-webkit-scrollbar {
     display: none;
+  }
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
   }
 }
 
@@ -128,9 +172,32 @@
 
 /* Tab Content */
 .tabContent {
-  max-width: vars.$container-xl;
+  max-width: vars.$container-2xl;
   margin: 0 auto;
-  padding: vars.$spacing-8 vars.$spacing-4;
+  padding: vars.$spacing-8 0;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
+  }
 }
 
 /* Overview Tab */
@@ -627,7 +694,7 @@
   }
 
   .tabNavigation {
-    padding: 0 vars.$spacing-2;
+    // Le padding horizontal est déjà géré par les règles principales
   }
 
   .tab {
@@ -636,7 +703,9 @@
   }
 
   .tabContent {
-    padding: vars.$spacing-4 vars.$spacing-2;
+    padding-top: vars.$spacing-4;
+    padding-bottom: vars.$spacing-4;
+    // Le padding horizontal est déjà géré par les règles principales
   }
 
   .overviewTab {

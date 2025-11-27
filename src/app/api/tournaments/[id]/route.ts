@@ -16,7 +16,7 @@ export async function GET(
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
-        organizer: { select: { pseudo: true } },
+        organizer: { select: { id: true, pseudo: true, avatarUrl: true, isEnterprise: true } },
         teams: {
           include: {
             members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
@@ -51,14 +51,81 @@ export async function PATCH(
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const existing = await prisma.tournament.findUnique({ where: { id } })
+    const existing = await prisma.tournament.findUnique({ 
+      where: { id },
+      include: {
+        _count: { select: { registrations: true } }
+      }
+    })
     if (!existing) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
     if (existing.organizerId !== userId) {
       return NextResponse.json({ message: 'Interdit' }, { status: 403 })
     }
 
     const body = await request.json()
-    const { name, description, game, format, visibility, startDate, endDate, status, registrationDeadline } = body || {}
+    const { 
+      name, description, game, format, visibility, startDate, endDate, status, registrationDeadline,
+      bracketMinTeams, bracketMaxTeams, maxParticipants
+    } = body || {}
+
+    // Validation des paramètres du bracket si fournis
+    if (bracketMinTeams !== undefined || bracketMaxTeams !== undefined) {
+      // Vérifier que le tournoi n'a pas encore commencé
+      if (existing.status !== 'REG_OPEN') {
+        return NextResponse.json({ 
+          message: 'Impossible de modifier le bracket : le tournoi a déjà commencé' 
+        }, { status: 400 })
+      }
+
+      // Convertir en nombres pour la validation
+      const min = bracketMinTeams !== undefined ? parseInt(String(bracketMinTeams), 10) : existing.bracketMinTeams || 2
+      const max = bracketMaxTeams !== undefined ? parseInt(String(bracketMaxTeams), 10) : existing.bracketMaxTeams || 8
+      const validMaxValues = [2, 4, 8, 16, 32, 64, 128, 256]
+
+      if (isNaN(min) || min < 2) {
+        return NextResponse.json({ 
+          message: 'Le minimum doit être au moins 2' 
+        }, { status: 400 })
+      }
+
+      if (isNaN(max) || !validMaxValues.includes(max)) {
+        return NextResponse.json({ 
+          message: `Le maximum doit être l'un des suivants: ${validMaxValues.join(', ')}` 
+        }, { status: 400 })
+      }
+
+      if (min > max) {
+        return NextResponse.json({ 
+          message: 'Le minimum ne peut pas être supérieur au maximum' 
+        }, { status: 400 })
+      }
+    }
+
+    // Validation de maxParticipants si fourni
+    if (maxParticipants !== undefined) {
+      // Vérifier que le tournoi n'a pas encore commencé
+      if (existing.status !== 'REG_OPEN') {
+        return NextResponse.json({ 
+          message: 'Impossible de modifier le nombre maximum de participants : le tournoi a déjà commencé' 
+        }, { status: 400 })
+      }
+
+      const maxParticipantsNum = maxParticipants === null || maxParticipants === '' ? null : parseInt(String(maxParticipants), 10)
+      
+      if (maxParticipantsNum !== null && (isNaN(maxParticipantsNum) || maxParticipantsNum < 2)) {
+        return NextResponse.json({ 
+          message: 'Le nombre maximum de participants doit être au moins 2 ou vide pour illimité' 
+        }, { status: 400 })
+      }
+
+      // Vérifier que le nouveau max n'est pas inférieur au nombre actuel d'inscriptions
+      const currentRegistrations = existing._count?.registrations || 0
+      if (maxParticipantsNum !== null && maxParticipantsNum < currentRegistrations) {
+        return NextResponse.json({ 
+          message: `Le nombre maximum de participants ne peut pas être inférieur au nombre actuel d'inscriptions (${currentRegistrations})` 
+        }, { status: 400 })
+      }
+    }
 
     const updated = await prisma.tournament.update({
       where: { id },
@@ -72,6 +139,22 @@ export async function PATCH(
         ...(endDate !== undefined ? { endDate: endDate ? new Date(endDate) : null } : {}),
         ...(status !== undefined ? { status } : {}),
         ...(registrationDeadline !== undefined ? { registrationDeadline: registrationDeadline ? new Date(registrationDeadline) : null } : {}),
+        ...(bracketMinTeams !== undefined ? { bracketMinTeams: bracketMinTeams !== null && bracketMinTeams !== '' ? parseInt(String(bracketMinTeams), 10) : null } : {}),
+        ...(bracketMaxTeams !== undefined ? { bracketMaxTeams: bracketMaxTeams !== null && bracketMaxTeams !== '' ? parseInt(String(bracketMaxTeams), 10) : null } : {}),
+        ...(maxParticipants !== undefined ? { maxParticipants: maxParticipants === null || maxParticipants === '' ? null : parseInt(String(maxParticipants), 10) } : {}),
+      },
+      include: {
+        organizer: { select: { id: true, pseudo: true, avatarUrl: true, isEnterprise: true } },
+        teams: {
+          include: {
+            members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+          },
+        },
+        matches: {
+          include: { teamA: true, teamB: true, winnerTeam: true }
+        },
+        _count: { select: { registrations: true } },
+        registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
       },
     })
 

@@ -226,6 +226,12 @@
     
     .menuIcon {
       color: vars.$lt-accent-blue;
+      
+      // Pour les icônes qui utilisent fill (comme SettingsIcon)
+      path[fill],
+      path {
+        fill: vars.$lt-accent-blue !important;
+      }
     }
   }
 
@@ -269,6 +275,17 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
+  color: inherit; // Permet au SVG d'hériter de la couleur du parent
+  
+  // Pour les icônes qui utilisent fill au lieu de stroke (comme SettingsIcon)
+  // On ne force pas fill: none si le SVG contient des paths avec fill
+  &:has(path[fill]) {
+    fill: unset;
+  }
+  
+  path[fill] {
+    fill: currentColor;
+  }
 }
 
 .toggle {

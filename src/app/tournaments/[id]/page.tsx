@@ -5,14 +5,14 @@ import { useNotification } from '../../../components/providers/notification-prov
 import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
 import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
-import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs, TournamentCard } from '../../../components/ui'
+import { Tabs, ContentWithTabs } from '../../../components/ui'
 import { getGameLogoPath } from '@/utils/gameLogoUtils'
+import { findGameByName } from '@/data/games'
 
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
@@ -30,11 +30,7 @@ type Tournament = {
 }
 
 export default function TournamentPage() {
-  return (
-    <ClientPageWrapper>
-      <TournamentView />
-    </ClientPageWrapper>
-  )
+  return <TournamentView />
 }
 
 function TournamentView() {
@@ -55,7 +51,7 @@ function TournamentView() {
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
   const [isLastMember, setIsLastMember] = useState(false)
   const [tab, setTab] = useState<'overview'|'bracket'|'matches'|'players'|'results'>('overview')
-  const [countdown, setCountdown] = useState<{ hours: number; minutes: number; seconds: number } | null>(null)
+  const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -136,11 +132,12 @@ function TournamentView() {
         return
       }
       
-      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
       const seconds = Math.floor((diff % (1000 * 60)) / 1000)
       
-      setCountdown({ hours, minutes, seconds })
+      setCountdown({ days, hours, minutes, seconds })
     }
     
     updateCountdown()
@@ -206,14 +203,10 @@ function TournamentView() {
           <div className={styles.bannerContent}>
             <div className={styles.bannerInner}>
               <div className={styles.profilePicture} style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center',
-                fontSize: '3rem',
-                background: '#1a1f2e'
-              }}>
-                🎮
-              </div>
+                background: 'linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s infinite'
+              }}></div>
               <div className={styles.bannerInfo}>
                 <h1 className={styles.title} style={{ 
                   background: 'linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%)',
@@ -291,9 +284,13 @@ function TournamentView() {
 
   const formatCountdown = () => {
     if (!countdown) return null
-    const { hours, minutes, seconds } = countdown
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+    return countdown
   }
+
+  // Récupérer la bannière du jeu par défaut
+  const gameName = tournament.gameRef?.name || tournament.game || ''
+  const gameDetails = gameName ? findGameByName(gameName) : null
+  const bannerUrl = tournament.posterUrl || gameDetails?.image || null
 
   return (
     <div className={styles.tournamentPage}>
@@ -301,8 +298,8 @@ function TournamentView() {
       <div 
         className={styles.banner}
         style={{
-          backgroundImage: tournament.posterUrl 
-            ? `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%), url(${tournament.posterUrl})`
+          backgroundImage: bannerUrl
+            ? `linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`
             : 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -352,8 +349,28 @@ function TournamentView() {
             {/* Section droite avec compte à rebours et bouton */}
             <div className={styles.bannerRight}>
               {countdown && (
-                <div className={styles.countdown}>
-                  Commence dans {formatCountdown()}
+                <div className={styles.countdownContainer}>
+                  <div className={styles.countdown}>
+                    <div className={styles.countdownUnit}>
+                      <div className={styles.countdownValue}>{countdown.days.toString().padStart(2, '0')}</div>
+                      <div className={styles.countdownLabelUnit}>j</div>
+                    </div>
+                    <div className={styles.countdownSeparator}>:</div>
+                    <div className={styles.countdownUnit}>
+                      <div className={styles.countdownValue}>{countdown.hours.toString().padStart(2, '0')}</div>
+                      <div className={styles.countdownLabelUnit}>h</div>
+                    </div>
+                    <div className={styles.countdownSeparator}>:</div>
+                    <div className={styles.countdownUnit}>
+                      <div className={styles.countdownValue}>{countdown.minutes.toString().padStart(2, '0')}</div>
+                      <div className={styles.countdownLabelUnit}>m</div>
+                    </div>
+                    <div className={styles.countdownSeparator}>:</div>
+                    <div className={styles.countdownUnit}>
+                      <div className={styles.countdownValue}>{countdown.seconds.toString().padStart(2, '0')}</div>
+                      <div className={styles.countdownLabelUnit}>s</div>
+                    </div>
+                  </div>
                 </div>
               )}
               
@@ -392,12 +409,12 @@ function TournamentView() {
       </div>
 
       {/* Navigation et contenu principal */}
-      <ContentWithTabs style={{ margin: '3rem 0' }}>
+      <ContentWithTabs style={{ marginTop: '3rem' }}>
         {/* Navigation par onglets */}
         <Tabs
           tabs={[
             { key: 'overview', label: 'Aperçu' },
-            { key: 'bracket', label: 'Tableau' },
+            { key: 'bracket', label: 'Bracket' },
             { key: 'matches', label: 'Matchs' },
             { key: 'players', label: 'Joueurs' },
             { key: 'results', label: 'Résultats' }
@@ -420,37 +437,721 @@ function TournamentView() {
         {/* Contenu principal */}
         <div className={profileStyles.tabContent}>
           {tab === 'overview' && (
-            <div>
-              {/* Afficher le tournoi avec TournamentCard */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Section Format et Équipes - Layout en 2 colonnes */}
               <div style={{ 
                 display: 'grid', 
-                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-                gap: '1.5rem',
-                width: '100%',
-                marginBottom: '2rem'
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                gap: '2rem' 
               }}>
-                <TournamentCard tournament={tournament} userId={(session?.user as any)?.id || null} />
-              </div>
-              
-              {/* Description si disponible */}
-              {tournament.description && (
-                <div style={{ 
-                  background: 'transparent',
-                  padding: '1.5rem 0',
-                  marginBottom: '2rem'
-                }}>
+                {/* Format */}
+            <div>
                   <h3 style={{ 
-                    fontSize: '1.25rem', 
+                    fontSize: '1.125rem', 
                     fontWeight: 600, 
                     color: '#fff', 
+                    marginBottom: '1rem',
+                    marginTop: 0
+                  }}>
+                    Format
+                  </h3>
+              <div style={{ 
+                display: 'grid', 
+                    gridTemplateColumns: 'repeat(2, 1fr)', 
+                    gap: '0.75rem' 
+                  }}>
+                    {/* Jeu */}
+                    <div style={{
+                      background: 'transparent',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}>
+                      {(() => {
+                        const gameLogoPath = getGameLogoPath(gameName)
+                        return gameLogoPath ? (
+                          <img 
+                            src={gameLogoPath} 
+                            alt={gameName}
+                            style={{
+                              width: '32px',
+                              height: '32px',
+                              objectFit: 'contain'
+                            }}
+                          />
+                        ) : (
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            background: '#374151',
+                            borderRadius: '6px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '1.25rem'
+                          }}>🎮</div>
+                        )
+                      })()}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '0.75rem',
+                          marginBottom: '0.25rem'
+                        }}>
+                          Jeu
+                        </div>
+                        <div style={{ 
+                          color: '#fff', 
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {gameName || 'Non spécifié'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Fenêtre de préparation */}
+                    {tournament.registrationDeadline && (
+                      <div style={{
+                        background: 'transparent',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          background: '#374151',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.25rem'
+                        }}>📅</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem',
+                            marginBottom: '0.25rem'
+                          }}>
+                            Fenêtre de préparation
+                          </div>
+                          <div style={{ 
+                            color: '#fff', 
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {new Date(tournament.registrationDeadline).toLocaleDateString('fr-FR', {
+                              weekday: 'short',
+                              day: 'numeric',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Taille de l'équipe */}
+                    {tournament.isTeamBased && (
+                      <div style={{
+                        background: 'transparent',
+                        border: '1px solid #374151',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          background: '#374151',
+                          borderRadius: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '1.25rem'
+                        }}>👥</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem',
+                            marginBottom: '0.25rem'
+                          }}>
+                            Taille de l'équipe
+                          </div>
+                          <div style={{ 
+                            color: '#fff', 
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {tournament.teamMinSize && tournament.teamMaxSize 
+                              ? `${tournament.teamMinSize}vs${tournament.teamMaxSize - tournament.teamMinSize}${tournament.teamMaxSize > tournament.teamMinSize ? ` + ${tournament.teamMaxSize - tournament.teamMinSize} remplaçant${tournament.teamMaxSize - tournament.teamMinSize > 1 ? 's' : ''}` : ''}`
+                              : tournament.teamMaxSize 
+                                ? `${tournament.teamMaxSize}vs${tournament.teamMaxSize}`
+                                : 'Variable'}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Format */}
+                    <div style={{
+                      background: 'transparent',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem'
+                    }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        background: '#374151',
+                        borderRadius: '6px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.25rem'
+                      }}>⚔️</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '0.75rem',
+                          marginBottom: '0.25rem'
+                        }}>
+                          Format
+                        </div>
+                        <div style={{ 
+                          color: '#fff', 
+                          fontSize: '0.875rem',
+                          fontWeight: '500'
+                        }}>
+                          {tournament.format === 'SINGLE_ELIMINATION' ? 'Élimination simple' :
+                           tournament.format === 'DOUBLE_ELIMINATION' ? 'Élimination double' :
+                           tournament.format === 'ROUND_ROBIN' ? 'Round-robin' :
+                           tournament.format === 'SWISS' ? 'Suisse' :
+                           tournament.format}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Équipes */}
+                <div>
+                  <h3 style={{ 
+                    fontSize: '1.125rem', 
+                    fontWeight: 600, 
+                    color: '#fff', 
+                    marginBottom: '1rem',
+                    marginTop: 0
+                  }}>
+                    Équipes
+                  </h3>
+                  <div style={{ 
+                    display: 'flex', 
+                gap: '1.5rem',
+                    marginBottom: '1rem'
+                  }}>
+                    <div>
+                      <div style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.75rem',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Inscrit(e)
+                      </div>
+                      <div style={{ 
+                        color: '#fff', 
+                        fontSize: '1.5rem',
+                        fontWeight: '600'
+                      }}>
+                        {registeredCount}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.75rem',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Confirmé
+                      </div>
+                      <div style={{ 
+                        color: '#fff', 
+                        fontSize: '1.5rem',
+                        fontWeight: '600'
+                      }}>
+                        {teams.length}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.75rem',
+                        marginBottom: '0.25rem'
+                      }}>
+                        Emplacements
+                      </div>
+                      <div style={{ 
+                        color: '#fff', 
+                        fontSize: '1.5rem',
+                        fontWeight: '600'
+                      }}>
+                        {tournament.maxParticipants || '∞'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Avatars des équipes */}
+                  {teams.length > 0 && (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      {teams.slice(0, 8).map((team, idx) => (
+                        <div key={team.id} style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: '#374151',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid #1f2937',
+                          marginLeft: idx > 0 ? '-8px' : '0',
+                          overflow: 'hidden'
+                        }}>
+                          {team.members?.[0]?.user?.avatarUrl ? (
+                            <img 
+                              src={team.members[0].user.avatarUrl} 
+                              alt={team.name}
+                              style={{
+                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover'
+                              }}
+                            />
+                          ) : (
+                            <span style={{ 
+                              color: '#fff', 
+                              fontSize: '0.875rem',
+                              fontWeight: '600'
+                            }}>
+                              {(team.name || 'T').charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      {teams.length > 8 && (
+                        <div style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: '#374151',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          border: '2px solid #1f2937',
+                          marginLeft: '-8px',
+                          color: '#9ca3af',
+                          fontSize: '0.75rem',
+                          fontWeight: '500'
+                        }}>
+                          +{teams.length - 8}
+                        </div>
+                      )}
+                      {teams.length > 0 && (
+                        <div style={{ 
+                          color: '#9ca3af', 
+                          fontSize: '0.875rem',
+                          marginLeft: '0.5rem'
+                        }}>
+                          {teams.slice(0, 2).map(t => t.name).join(', ')}
+                          {teams.length > 2 && ` et ${teams.length - 2} autre${teams.length - 2 > 1 ? 's' : ''}`}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Section Hébergé par et Calendrier - Layout en 2 colonnes */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+                gap: '2rem' 
+              }}>
+                {/* Hébergé par */}
+                <div>
+                  <h3 style={{ 
+                    fontSize: '1.125rem', 
+                    fontWeight: 600, 
+                    color: '#fff', 
+                    marginBottom: '1rem',
+                    marginTop: 0
+                  }}>
+                    Hébergé par
+                  </h3>
+                <div style={{ 
+                  background: 'transparent',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem'
+                  }}>
+                    {tournament.organizer?.avatarUrl ? (
+                      <img 
+                        src={tournament.organizer.avatarUrl} 
+                        alt={tournament.organizer.pseudo}
+                        style={{
+                          width: '48px',
+                          height: '48px',
+                          borderRadius: '8px',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    ) : (
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        background: '#374151',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    fontSize: '1.25rem', 
+                        color: '#fff'
+                      }}>
+                        {(tournament.organizer?.pseudo || 'O').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <div style={{ 
+                        color: '#fff', 
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        marginBottom: '0.25rem'
+                      }}>
+                        {tournament.organizer?.pseudo || 'Organisateur'}
+                      </div>
+                      <div style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.75rem'
+                      }}>
+                        Organisateur du tournoi
+                      </div>
+                    </div>
+                    {!isOrganizer && (
+                      <button
+                        style={{
+                          background: 'transparent',
+                          border: '1px solid #374151',
+                          borderRadius: '6px',
+                          padding: '0.5rem 1rem',
+                          color: '#fff',
+                          fontSize: '0.875rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#374151'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                      >
+                        Contacter
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Calendrier */}
+                <div>
+                  <h3 style={{ 
+                    fontSize: '1.125rem', 
+                    fontWeight: 600, 
+                    color: '#fff', 
+                    marginBottom: '1rem',
+                    marginTop: 0
+                  }}>
+                    Calendrier
+                  </h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {tournament.registrationDeadline && (
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          minWidth: '60px'
+                        }}>
+                          <div style={{
+                            width: '2px',
+                            height: '100%',
+                            background: '#374151',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              background: '#ff008c',
+                              border: '2px solid #1f2937'
+                            }}></div>
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, paddingBottom: '1rem' }}>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {new Date(tournament.registrationDeadline).toLocaleDateString('fr-FR', {
+                              month: 'short',
+                              day: 'numeric',
+                              weekday: 'short'
+                            }).toUpperCase()} {new Date(tournament.registrationDeadline).toLocaleTimeString('fr-FR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                          <div style={{ 
+                            color: '#fff', 
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            marginBottom: '0.25rem'
+                          }}>
+                            Inscription ouverte
+                          </div>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem'
+                          }}>
+                            Les inscriptions sont ouvertes. Inscrivez-vous maintenant.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {tournament.startDate && (
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          minWidth: '60px'
+                        }}>
+                          <div style={{
+                            width: '2px',
+                            height: '100%',
+                            background: '#374151',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '0',
+                              left: '50%',
+                              transform: 'translateX(-50%)',
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              background: '#10b981',
+                              border: '2px solid #1f2937'
+                            }}></div>
+                          </div>
+                        </div>
+                        <div style={{ flex: 1, paddingBottom: '1rem' }}>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem',
+                            marginBottom: '0.25rem'
+                          }}>
+                            {new Date(tournament.startDate).toLocaleDateString('fr-FR', {
+                              month: 'short',
+                              day: 'numeric',
+                              weekday: 'short'
+                            }).toUpperCase()} {new Date(tournament.startDate).toLocaleTimeString('fr-FR', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                          <div style={{ 
+                            color: '#fff', 
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            marginBottom: '0.25rem'
+                          }}>
+                            Commencer
+                          </div>
+                          <div style={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.75rem'
+                          }}>
+                            Le tournoi commence et vous recevrez une notification pour votre premier match.
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Classement */}
+              {(tournament.matches && tournament.matches.length > 0) || status === 'COMPLETED' ? (
+                <div>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
                     marginBottom: '1rem' 
+                  }}>
+                    <h3 style={{ 
+                      fontSize: '1.125rem', 
+                      fontWeight: 600, 
+                      color: '#fff',
+                      margin: 0
+                    }}>
+                      Classement
+                    </h3>
+                    {tournament.matches && tournament.matches.length > 0 && (
+                      <Link
+                        href={`#`}
+                        style={{
+                          color: '#3b82f6',
+                          fontSize: '0.875rem',
+                          textDecoration: 'none'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.textDecoration = 'underline'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.textDecoration = 'none'
+                        }}
+                      >
+                        Voir tout
+                      </Link>
+                    )}
+                  </div>
+                  <div style={{
+                    background: 'transparent',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    overflow: 'hidden'
+                  }}>
+                    {[1, 2, 3].map((rank) => {
+                      // Pour l'instant, on affiche "À déterminer" car le classement nécessite une logique plus complexe
+                      // basée sur les résultats des matchs et le format du tournoi
+                      return (
+                        <div key={rank} style={{
+                          padding: '1rem',
+                          borderBottom: rank < 3 ? '1px solid #374151' : 'none',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '1rem'
+                        }}>
+                          <div style={{
+                            width: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            {rank === 1 && <span style={{ fontSize: '1.25rem' }}>🥇</span>}
+                            {rank === 2 && <span style={{ fontSize: '1.25rem' }}>🥈</span>}
+                            {rank === 3 && <span style={{ fontSize: '1.25rem' }}>🥉</span>}
+                          </div>
+                          <div style={{
+                            width: '32px',
+                            color: '#9ca3af',
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {rank}
+                          </div>
+                          <div style={{
+                            flex: 1,
+                            color: '#fff',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            {tournament.isTeamBased ? (
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                background: '#374151',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem'
+                              }}>👥</div>
+                            ) : (
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                background: '#374151',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.75rem'
+                              }}>👤</div>
+                            )}
+                            <span>À déterminer</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Description */}
+              {tournament.description && (
+                <div>
+                  <h3 style={{ 
+                    fontSize: '1.125rem', 
+                    fontWeight: 600, 
+                    color: '#fff', 
+                    marginBottom: '1rem',
+                    marginTop: 0
                   }}>
                     Description
                   </h3>
                   <p style={{ 
                     color: 'rgba(255, 255, 255, 0.8)', 
                     lineHeight: 1.6,
-                    margin: 0
+                    margin: 0,
+                    whiteSpace: 'pre-wrap'
                   }}>
                     {tournament.description}
                   </p>
@@ -762,22 +1463,20 @@ function TournamentView() {
           </div>
         )}
 
-        {tab === 'bracket' && tournament.matches && tournament.matches.length > 0 && (
+        {tab === 'bracket' && (
           <div>
             <div style={{ marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>Arbre de tournoi</h2>
             </div>
-            <div style={{
-              background: '#1f2937',
-              borderRadius: '12px',
-              padding: '1.5rem',
-              border: '1px solid #374151',
-              overflow: 'auto'
-            }}>
-              <Suspense fallback={<div style={{ color: '#9ca3af', textAlign: 'center', padding: '2rem' }}>Chargement du tableau...</div>}>
-                <Bracket matches={tournament.matches} />
-              </Suspense>
-            </div>
+            <Suspense fallback={<div style={{ color: '#9ca3af', textAlign: 'center', padding: '2rem' }}>Chargement du tableau...</div>}>
+              <Bracket 
+                matches={tournament.matches || []} 
+                maxTeams={tournament.bracketMaxTeams || undefined}
+                tournamentStatus={tournament.status}
+                participantCount={tournament.isTeamBased ? teams.length : (tournament._count?.registrations || 0)}
+                isTeamBased={tournament.isTeamBased || false}
+              />
+            </Suspense>
           </div>
         )}
 

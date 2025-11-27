@@ -1,0 +1,1278 @@
+@use '../../styles/variables.module' as vars;
+
+// Enlever le background de sélection de texte partout dans la modale
+.modalContent {
+  * {
+    &::selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-moz-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-webkit-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(12, 0, 22, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: vars.$z-modal;
+  padding: vars.$spacing-8 vars.$spacing-4;
+  animation: fadeIn 0.2s ease-out;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+
+  &.modalOverlayClosing {
+    animation: fadeOut 0.3s ease-in;
+  }
+}
+
+.modalContent {
+  position: relative;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  width: 100%;
+  max-width: 700px;
+  margin: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 140, 0.1);
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+
+  &.modalContentClosing {
+    animation: slideDown 0.3s ease-in;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: vars.$spacing-4;
+  right: vars.$spacing-4;
+  background: transparent;
+  border: none;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-3xl;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: vars.$radius-full;
+  transition: all vars.$transition-fast;
+  z-index: 20;
+  outline: none;
+  box-shadow: none;
+  transform-origin: center center;
+  padding: 0;
+  margin: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    margin: auto;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+    transform: rotate(90deg);
+  }
+}
+
+// Bannière avec fade
+.banner {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  margin-bottom: vars.$spacing-6;
+}
+
+.bannerImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.bannerFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    vars.$lt-dark-secondary 100%
+  );
+  z-index: 1;
+}
+
+.bannerLogo {
+  position: absolute;
+  bottom: vars.$spacing-4;
+  left: vars.$spacing-6;
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  z-index: 2;
+
+  img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+    border-radius: vars.$radius-md;
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.bannerGameName {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 1px;
+}
+
+.modalBody {
+  padding: 0 vars.$spacing-6 vars.$spacing-6;
+}
+
+.modalTitle {
+  font-size: vars.$font-size-3xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin: 0 0 vars.$spacing-6 0;
+  text-align: center;
+}
+
+// Indicateur de progression
+.progressIndicator {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: vars.$spacing-8;
+  padding-bottom: vars.$spacing-4;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  width: 100%;
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: vars.$spacing-2;
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+}
+
+.progressDot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-secondary;
+  transition: all vars.$transition-fast;
+  position: relative;
+  z-index: 3;
+}
+
+.progressDotActive {
+  background: rgba(255, 0, 140, 0.2);
+  border-color: vars.$lt-accent-purple;
+  color: vars.$lt-accent-purple;
+}
+
+.progressDotCompleted {
+  background: vars.$lt-accent-purple;
+  border-color: vars.$lt-accent-purple;
+  color: vars.$lt-text-primary;
+}
+
+.progressLabel {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+  transition: color vars.$transition-fast;
+  white-space: nowrap;
+  margin-top: vars.$spacing-1;
+}
+
+.progressLabelActive {
+  color: vars.$lt-accent-purple;
+}
+
+.progressLine {
+  flex: 1;
+  height: 2px;
+  margin: 0;
+  margin-left: -24px;
+  margin-right: -24px;
+  min-width: 0;
+  background: transparent;
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(255, 0, 140, 0.4) 0px,
+    rgba(255, 0, 140, 0.4) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  z-index: 1;
+  transition: all vars.$transition-fast;
+  align-self: center;
+  position: relative;
+  top: -16px;
+}
+
+.progressLineActive {
+  background: vars.$lt-accent-purple;
+  background-image: none;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-6;
+}
+
+.stepTitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin: 0;
+}
+
+.stepSubtitle {
+  font-size: vars.$font-size-base;
+  color: vars.$lt-text-secondary;
+  margin: 0;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+}
+
+.label {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  transition: all vars.$transition-fast;
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-purple;
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
+  }
+
+  &::placeholder {
+    color: vars.$lt-text-muted;
+  }
+
+  // Styles spécifiques pour les champs de date
+  &[type="date"],
+  &[type="datetime-local"],
+  &[type="time"] {
+    color-scheme: dark;
+  }
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right vars.$spacing-3 center;
+  padding-right: vars.$spacing-8;
+
+  option {
+    background: vars.$lt-dark-secondary;
+    color: vars.$lt-text-primary;
+  }
+}
+
+// Enlever le background de sélection de texte
+::selection {
+  background: transparent;
+}
+
+::-moz-selection {
+  background: transparent;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: vars.$spacing-4;
+
+  @media (max-width: vars.$breakpoint-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.hostedBy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+}
+
+.hostedByUser {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+}
+
+.hostedByIcon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: vars.$font-size-lg;
+}
+
+.createSpaceBtn {
+  padding: vars.$spacing-2 vars.$spacing-4;
+  background: vars.$lt-accent-purple;
+  border: none;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$primary-700;
+    transform: translateY(-1px);
+  }
+}
+
+.infoBox {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-2;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  line-height: 1.5;
+}
+
+.infoIcon {
+  font-size: vars.$font-size-lg;
+  color: vars.$lt-accent-purple;
+  flex-shrink: 0;
+}
+
+.gameResults {
+  margin-top: vars.$spacing-2;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  background: vars.$lt-dark-secondary;
+}
+
+.gameResultItem {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  cursor: pointer;
+  transition: background vars.$transition-fast;
+  color: vars.$lt-text-primary;
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+  }
+}
+
+.gameResultImage {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: vars.$radius-sm;
+}
+
+.selectedGame {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+}
+
+.selectedGameLogo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.changeGameBtn {
+  margin-left: auto;
+  padding: vars.$spacing-1 vars.$spacing-3;
+  background: transparent;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-sm;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    border-color: #10b981;
+    color: #10b981;
+  }
+}
+
+.gamesGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: vars.$spacing-4;
+  margin-top: vars.$spacing-4;
+
+  @media (max-width: vars.$breakpoint-lg) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  @media (max-width: vars.$breakpoint-md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: vars.$breakpoint-sm) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: vars.$spacing-3;
+  }
+}
+
+.gameCard {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  border-radius: vars.$radius-md;
+  overflow: hidden;
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.03);
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: vars.$lt-border;
+  }
+
+  &.gameCardSelected {
+  border-color: vars.$lt-accent-purple;
+  box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.2);
+}
+}
+
+.gameCardImageContainer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2/3;
+  overflow: hidden;
+}
+
+.gameCardImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gameCardImagePlaceholder {
+  width: 100%;
+  height: 100%;
+  background: vars.$gradient-primary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-xl;
+}
+
+.gameCardText {
+  padding: vars.$spacing-2;
+}
+
+.gameCardTitle {
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin: 0;
+  line-height: 1.3;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+
+.logoPreview,
+.posterPreview {
+  margin-top: vars.$spacing-3;
+
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: vars.$radius-md;
+    border: 1px solid vars.$lt-border;
+  }
+}
+
+.logoPreview img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.05);
+  padding: vars.$spacing-2;
+}
+
+.posterPreview img {
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+}
+
+// Card Preview Styles
+.cardPreview {
+  background: vars.$lt-dark-tertiary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  overflow: hidden;
+  max-width: 400px;
+  margin-top: vars.$spacing-2;
+}
+
+.cardPreviewImage {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: vars.$gradient-primary;
+}
+
+.cardPreviewPoster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cardPreviewPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardPreviewGameIcon {
+  font-size: 4rem;
+  opacity: 0.8;
+}
+
+.cardPreviewGameLogo {
+  position: absolute;
+  top: vars.$spacing-3;
+  left: vars.$spacing-3;
+  width: 48px;
+  height: 48px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: vars.$radius-sm;
+  padding: vars.$spacing-1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.cardPreviewContent {
+  padding: vars.$spacing-4;
+  background: vars.$lt-dark-secondary;
+}
+
+.cardPreviewDate {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-bold;
+  margin-bottom: vars.$spacing-3;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cardPreviewInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-3;
+}
+
+.cardPreviewTournamentLogo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid vars.$lt-text-primary;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: vars.$lt-dark-tertiary;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.cardPreviewText {
+  flex: 1;
+}
+
+.cardPreviewTitle {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-bold;
+  margin: 0 0 vars.$spacing-2 0;
+  line-height: 1.3;
+}
+
+.cardPreviewDetails {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+}
+
+// Système visuel (comme dans la page admin)
+.visualsSection {
+  margin-top: vars.$spacing-6;
+}
+
+.visualsHeader {
+  position: relative;
+  margin-bottom: vars.$spacing-8;
+}
+
+.visualsBanner {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  border-radius: vars.$radius-card;
+  overflow: hidden;
+  background: vars.$lt-dark-secondary;
+  border: 2px solid vars.$lt-border;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    border-color: vars.$lt-accent-purple;
+    
+    .visualsBannerOverlay {
+      opacity: 1;
+    }
+  }
+}
+
+.visualsBannerOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity vars.$transition-fast;
+}
+
+.visualsBannerButton {
+  background: vars.$lt-accent-purple;
+  color: vars.$lt-text-primary;
+  border: none;
+  padding: vars.$spacing-3 vars.$spacing-5;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    background: vars.$primary-700;
+    transform: translateY(-2px);
+  }
+}
+
+.visualsAvatarWrapper {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.visualsAvatarContainer {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.visualsAvatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: contain;
+  object-position: center;
+  padding: 8px;
+  border: 4px solid vars.$lt-dark-secondary;
+  background: vars.$lt-dark-tertiary;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.visualsAvatarPlaceholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: vars.$lt-dark-tertiary;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: vars.$font-size-4xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-secondary;
+  border: 4px solid vars.$lt-dark-secondary;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.visualsAvatarButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: vars.$lt-accent-purple;
+  border: 3px solid vars.$lt-dark-secondary;
+  color: vars.$lt-text-primary;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all vars.$transition-fast;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+
+  &:hover {
+    background: vars.$primary-700;
+    transform: scale(1.1);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.visualsActions {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+  margin-top: vars.$spacing-8;
+  padding-top: vars.$spacing-6;
+  border-top: 1px solid vars.$lt-border;
+}
+
+.visualsActionGroup {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  flex-wrap: wrap;
+}
+
+.visualsActionLabel {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$lt-text-secondary;
+  min-width: 150px;
+}
+
+.cancelButton {
+  background: transparent;
+  color: vars.$lt-text-secondary;
+  border: 1px solid vars.$lt-border;
+  padding: vars.$spacing-3 vars.$spacing-6;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.cardPreviewWrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: vars.$spacing-4;
+}
+
+// Styles pour le modal de crop
+.cropModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: vars.$spacing-4;
+}
+
+.cropContainer {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  padding: vars.$spacing-6;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.cropTitle {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin-bottom: vars.$spacing-4;
+  text-align: center;
+}
+
+.cropArea {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  background: vars.$lt-dark-tertiary;
+  border-radius: vars.$radius-md;
+  overflow: hidden;
+  margin-bottom: vars.$spacing-4;
+}
+
+.cropControls {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+}
+
+.cropZoomControl {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+
+  label {
+    font-size: vars.$font-size-sm;
+    color: vars.$lt-text-secondary;
+    min-width: 60px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    height: 4px;
+    background: vars.$lt-border;
+    border-radius: 2px;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: vars.$lt-accent-purple;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    &::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      background: vars.$lt-accent-purple;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+  }
+}
+
+.cropButtons {
+  display: flex;
+  gap: vars.$spacing-3;
+  justify-content: flex-end;
+}
+
+.cancelBtn {
+  background: transparent;
+  color: vars.$lt-text-secondary;
+  border: 1px solid vars.$lt-border;
+  padding: vars.$spacing-3 vars.$spacing-6;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.cropBtn {
+  background: vars.$lt-accent-purple;
+  color: vars.$lt-text-primary;
+  border: none;
+  padding: vars.$spacing-3 vars.$spacing-6;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$primary-700;
+    transform: translateY(-1px);
+  }
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-3;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  color: vars.$lt-text-primary;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+
+  input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: vars.$lt-accent-purple;
+  }
+
+  span {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+
+  &:hover {
+    border-color: rgba(255, 0, 140, 0.5);
+    background: rgba(255, 0, 140, 0.05);
+  }
+
+  input[type="radio"]:checked + span,
+  &:has(input[type="radio"]:checked) {
+    border-color: vars.$lt-accent-purple;
+    background: rgba(255, 0, 140, 0.1);
+  }
+}
+
+.dateTimeInput {
+  display: flex;
+  gap: vars.$spacing-2;
+}
+
+.timezoneSelect {
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-purple;
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
+  }
+}
+
+.dateTimeInputField {
+  flex: 1;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  transition: all vars.$transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-purple;
+    box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
+  }
+}
+
+.advancedOptions {
+  margin-top: vars.$spacing-2;
+}
+
+.advancedOptionsLink {
+  background: none;
+  border: none;
+  color: vars.$lt-accent-purple;
+  font-size: vars.$font-size-sm;
+  cursor: pointer;
+  text-decoration: none;
+  transition: color vars.$transition-fast;
+
+  &:hover {
+    color: vars.$primary-700;
+    text-decoration: underline;
+  }
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: vars.$spacing-3;
+  margin-top: vars.$spacing-6;
+  padding-top: vars.$spacing-6;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.backButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.nextButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$lt-accent-purple;
+  border: none;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: vars.$primary-700;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.createButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$lt-accent-purple;
+  border: none;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-semibold;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: vars.$primary-700;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+}
+
+// Styles pour le calendrier natif (date picker)
+// Note: Les pseudo-éléments webkit doivent être dans un fichier global ou utilisés directement
+
+@media (max-width: vars.$breakpoint-sm) {
+  .modalContent {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modalBody {
+    padding: 0 vars.$spacing-4 vars.$spacing-4;
+  }
+
+  .modalTitle {
+    font-size: vars.$font-size-2xl;
+  }
+
+  .banner {
+    height: 140px;
+  }
+
+  .bannerLogo {
+    left: vars.$spacing-4;
+    bottom: vars.$spacing-3;
+  }
+
+  .bannerGameName {
+    font-size: vars.$font-size-lg;
+  }
+}
+

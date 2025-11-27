@@ -5,6 +5,7 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { NotificationProvider } from "../components/providers/notification-provider";
 import { AuthModalProvider } from "../components/AuthModal/AuthModalContext";
+import { CreateTournamentModalProvider } from "../components/CreateTournamentModal/CreateTournamentModalContext";
 import { ThemeProvider } from "../components/providers/theme-provider";
 import Sidebar from "../components/Sidebar";
 
@@ -35,16 +36,18 @@ export default function RootLayout({
           <AuthProvider>
             <NotificationProvider>
               <AuthModalProvider>
-                <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                  <Sidebar />
-                  <Navigation />
-                  <div className="mainContentWrapper">
-                    <main style={{ flex: 1 }}>
-                      {children}
-                    </main>
-                    <Footer />
+                <CreateTournamentModalProvider>
+                  <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                    <Sidebar />
+                    <Navigation />
+                    <div className="mainContentWrapper">
+                      <main style={{ flex: 1 }}>
+                        {children}
+                      </main>
+                      <Footer />
+                    </div>
                   </div>
-                </div>
+                </CreateTournamentModalProvider>
               </AuthModalProvider>
             </NotificationProvider>
           </AuthProvider>

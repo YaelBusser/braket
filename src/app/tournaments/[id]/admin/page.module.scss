@@ -12,8 +12,7 @@
   display: flex;
   width: 100%;
   min-height: calc(100vh - vars.$header-height);
-  height: calc(100vh - vars.$header-height);
-  align-items: stretch;
+  align-items: flex-start;
 }
 
 /* Sidebar */
@@ -26,7 +25,7 @@
   flex-direction: column;
   gap: vars.$spacing-6;
   flex-shrink: 0;
-  height: 100%;
+  min-height: calc(100vh - vars.$header-height);
 }
 
 .sidebarHeader {
@@ -139,6 +138,13 @@
     stroke-linecap: round;
     stroke-linejoin: round;
     fill: none;
+    color: inherit; // Permet au SVG d'hériter de la couleur du parent
+    
+    // Pour les icônes qui utilisent fill au lieu de stroke (comme SettingsIcon)
+    path[fill="currentColor"],
+    path[fill] {
+      fill: currentColor;
+    }
   }
 
   &:hover {
@@ -163,18 +169,49 @@
   
   svg {
     color: vars.$lt-accent-blue;
+    
+    // Pour les icônes qui utilisent fill
+    path[fill="currentColor"],
+    path[fill] {
+      fill: vars.$lt-accent-blue;
+    }
   }
 }
 
 /* Main Content */
 .mainContent {
   flex: 1;
-  padding: vars.$spacing-8 vars.$spacing-6;
-  overflow-y: auto;
+  padding: vars.$spacing-8 0;
+  min-height: calc(100vh - vars.$header-height);
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
+  }
 }
 
 .contentSection {
-  max-width: 1000px;
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .contentTitle {
@@ -906,6 +943,139 @@
     border-color: vars.$lt-text-secondary;
     transform: translateY(-1px);
   }
+}
+
+/* Bracket Settings */
+.bracketSettings {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  padding: vars.$spacing-6;
+}
+
+.bracketSettingsInfo {
+  margin-bottom: vars.$spacing-6;
+}
+
+.bracketSettingsDescription {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  line-height: 1.6;
+  margin: 0 0 vars.$spacing-4 0;
+}
+
+.bracketSettingsWarning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: vars.$radius-sm;
+  padding: vars.$spacing-3;
+  color: vars.$lt-warning;
+  font-size: vars.$font-size-sm;
+  margin-top: vars.$spacing-4;
+}
+
+.bracketSettingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: vars.$spacing-6;
+  margin-bottom: vars.$spacing-6;
+}
+
+.bracketSettingField {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+}
+
+.bracketSettingLabel {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+}
+
+.bracketSettingInput {
+  background: vars.$lt-dark-tertiary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-sm;
+  padding: vars.$spacing-3;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  transition: all vars.$transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: vars.$lt-accent-blue;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.inputError {
+    border-color: vars.$lt-error;
+  }
+}
+
+.bracketSettingMaxContainer {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-3;
+}
+
+.bracketSettingMaxOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-2;
+}
+
+.bracketSettingMaxOption {
+  background: vars.$lt-dark-tertiary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-sm;
+  padding: vars.$spacing-2 vars.$spacing-4;
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: vars.$lt-dark-secondary;
+    border-color: vars.$lt-accent-blue;
+    color: vars.$lt-text-primary;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.bracketSettingMaxOptionActive {
+    background: vars.$lt-accent-blue;
+    border-color: vars.$lt-accent-blue;
+    color: vars.$lt-text-primary;
+    font-weight: vars.$font-weight-semibold;
+  }
+}
+
+.bracketSettingHelp {
+  font-size: vars.$font-size-xs;
+  color: vars.$lt-text-muted;
+  line-height: 1.5;
+}
+
+.fieldError {
+  color: vars.$lt-error;
+  font-size: vars.$font-size-xs;
+  margin-top: calc(-1 * #{vars.$spacing-1});
+}
+
+.bracketSettingsActions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: vars.$spacing-4;
+  border-top: 1px solid vars.$lt-border;
 }
 
 /* Responsive */

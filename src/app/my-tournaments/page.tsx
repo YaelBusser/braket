@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
+import { useCreateTournamentModal } from '../../components/CreateTournamentModal/CreateTournamentModalContext'
 import { TournamentCard, PageContent } from '../../components/ui'
 import styles from './page.module.scss'
 
@@ -14,6 +15,7 @@ export default function MyTournamentsPage() {
   const router = useRouter()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
+  const { openCreateTournamentModal } = useCreateTournamentModal()
   
   // États pour les données utilisateur
   const [userTournaments, setUserTournaments] = useState<any[]>([])
@@ -55,12 +57,10 @@ export default function MyTournamentsPage() {
 
   if (status === 'loading') {
     return (
-      <ClientPageWrapper>
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
-          <p>Chargement...</p>
-        </div>
-      </ClientPageWrapper>
+      <div className={styles.loading}>
+        <div className={styles.spinner}></div>
+        <p>Chargement...</p>
+      </div>
     )
   }
 
@@ -69,14 +69,13 @@ export default function MyTournamentsPage() {
   }
 
   return (
-    <ClientPageWrapper>
-      <PageContent>
+    <PageContent>
         <div className={styles.myTournamentsPage}>
           <div className={styles.header}>
             <h1 className={styles.title}>Mes tournois</h1>
             <button 
               className={styles.createBtn}
-              onClick={() => router.push('/tournaments/create')}
+              onClick={openCreateTournamentModal}
             >
               Créer un tournoi
             </button>
@@ -90,7 +89,7 @@ export default function MyTournamentsPage() {
                 <p>Aucun tournoi créé</p>
                 <button 
                   className={styles.createBtn}
-                  onClick={() => router.push('/tournaments/create')}
+                  onClick={openCreateTournamentModal}
                 >
                   Créer mon premier tournoi
                 </button>
@@ -109,7 +108,6 @@ export default function MyTournamentsPage() {
           </div>
         </div>
       </PageContent>
-    </ClientPageWrapper>
   )
 }
 

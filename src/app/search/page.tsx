@@ -1,9 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { TournamentCard, CircularCard, GameCardSkeleton, PageContent } from '@/components/ui'
 import { formatRelativeTime } from '@/utils/dateUtils'
+import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
 
@@ -49,6 +51,7 @@ type TournamentFormatFilter = 'all' | string
 
 export default function SearchPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { data: session } = useSession()
   const [q, setQ] = useState('')
   const [activeFilter, setActiveFilter] = useState<FilterType>('Tout')
@@ -71,15 +74,33 @@ export default function SearchPage() {
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [loadingTeams, setLoadingTeams] = useState(false)
 
+  // Références pour le debounce
+  const tournamentsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const gamesTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const usersTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const teamsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const gamesCacheRef = useRef<GameResult[]>([])
+
+  // Mettre à jour q quand les paramètres de recherche changent
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const query = params.get('q') || ''
+    const query = searchParams.get('q') || ''
     setQ(query)
+  }, [searchParams])
+
+  // Fonction de debounce générique
+  const debounce = useCallback((fn: () => void, delay: number, timeoutRef: React.MutableRefObject<NodeJS.Timeout | null>) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+    timeoutRef.current = setTimeout(fn, delay)
   }, [])
 
-  // Load tournaments
+  // Load tournaments avec debounce
   useEffect(() => {
-    if (activeFilter !== 'Tout' && activeFilter !== 'Tournois') return
+    if (activeFilter !== 'Tout' && activeFilter !== 'Tournois') {
+      setTournaments([])
+      return
+    }
     
     const load = async () => {
       if (!q.trim() || q.trim().length < 2) {
@@ -99,12 +120,22 @@ export default function SearchPage() {
         setLoadingTournaments(false)
       }
     }
-    load()
-  }, [q, activeFilter])
 
-  // Load games
+    debounce(load, 300, tournamentsTimeoutRef)
+
+    return () => {
+      if (tournamentsTimeoutRef.current) {
+        clearTimeout(tournamentsTimeoutRef.current)
+      }
+    }
+  }, [q, activeFilter, debounce])
+
+  // Load games avec debounce et cache
   useEffect(() => {
-    if (activeFilter !== 'Tout' && activeFilter !== 'Jeux') return
+    if (activeFilter !== 'Tout' && activeFilter !== 'Jeux') {
+      setGames([])
+      return
+    }
     
     const load = async () => {
       if (!q.trim() || q.trim().length < 2) {
@@ -114,10 +145,14 @@ export default function SearchPage() {
       
       setLoadingGames(true)
       try {
-        const res = await fetch(`/api/games`)
-        const data = await res.json()
-        const allGames = data.games || []
-        const filtered = allGames.filter((g: GameResult) => 
+        // Utiliser le cache si disponible, sinon charger
+        if (gamesCacheRef.current.length === 0) {
+          const res = await fetch(`/api/games`)
+          const data = await res.json()
+          gamesCacheRef.current = data.games || []
+        }
+        
+        const filtered = gamesCacheRef.current.filter((g: GameResult) => 
           g.name.toLowerCase().includes(q.toLowerCase()) || 
           g.slug.toLowerCase().includes(q.toLowerCase())
         )
@@ -129,12 +164,22 @@ export default function SearchPage() {
         setLoadingGames(false)
       }
     }
-    load()
-  }, [q, activeFilter])
 
-  // Load users
+    debounce(load, 300, gamesTimeoutRef)
+
+    return () => {
+      if (gamesTimeoutRef.current) {
+        clearTimeout(gamesTimeoutRef.current)
+      }
+    }
+  }, [q, activeFilter, debounce])
+
+  // Load users avec debounce
   useEffect(() => {
-    if (activeFilter !== 'Tout' && activeFilter !== 'Utilisateurs') return
+    if (activeFilter !== 'Tout' && activeFilter !== 'Utilisateurs') {
+      setUsers([])
+      return
+    }
     
     const load = async () => {
       if (!q.trim() || q.trim().length < 2) {
@@ -154,12 +199,22 @@ export default function SearchPage() {
         setLoadingUsers(false)
       }
     }
-    load()
-  }, [q, activeFilter])
 
-  // Load teams
+    debounce(load, 300, usersTimeoutRef)
+
+    return () => {
+      if (usersTimeoutRef.current) {
+        clearTimeout(usersTimeoutRef.current)
+      }
+    }
+  }, [q, activeFilter, debounce])
+
+  // Load teams avec debounce
   useEffect(() => {
-    if (activeFilter !== 'Tout' && activeFilter !== 'Équipes') return
+    if (activeFilter !== 'Tout' && activeFilter !== 'Équipes') {
+      setTeams([])
+      return
+    }
     
     const load = async () => {
       if (!q.trim() || q.trim().length < 2) {
@@ -179,8 +234,15 @@ export default function SearchPage() {
         setLoadingTeams(false)
       }
     }
-    load()
-  }, [q, activeFilter])
+
+    debounce(load, 300, teamsTimeoutRef)
+
+    return () => {
+      if (teamsTimeoutRef.current) {
+        clearTimeout(teamsTimeoutRef.current)
+      }
+    }
+  }, [q, activeFilter, debounce])
 
   const filters: FilterType[] = ['Tout', 'Tournois', 'Jeux', 'Utilisateurs', 'Équipes']
 
@@ -362,13 +424,16 @@ export default function SearchPage() {
                 {games.map(game => (
                   <Link key={game.id} href={`/games/${encodeURIComponent(game.name)}`} className={styles.gameCard}>
                     <div className={styles.gameImageContainer}>
-                      {game.imageUrl ? (
-                        <img src={game.imageUrl} alt={game.name} className={styles.gameImage} />
-                      ) : (
-                        <div className={styles.gameImagePlaceholder}>
-                          {game.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                      {(() => {
+                        const posterPath = getGamePosterPath(game.name) || game.imageUrl
+                        return posterPath ? (
+                          <img src={posterPath} alt={game.name} className={styles.gameImage} />
+                        ) : (
+                          <div className={styles.gameImagePlaceholder}>
+                            {game.name.charAt(0).toUpperCase()}
+                          </div>
+                        )
+                      })()}
                     </div>
                     <div className={styles.gameText}>
                       <h3 className={styles.gameTitle}>{game.name}</h3>

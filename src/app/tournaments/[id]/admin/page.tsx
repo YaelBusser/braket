@@ -10,6 +10,7 @@ import styles from './page.module.scss'
 import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import { getCroppedImg } from '@/lib/image'
 import VisualsIcon from '../../../../components/icons/VisualsIcon'
+import SettingsIcon from '../../../../components/icons/SettingsIcon'
 
 interface Tournament {
   id: string
@@ -25,6 +26,8 @@ interface Tournament {
   maxParticipants: number | null
   teamMinSize: number | null
   teamMaxSize: number | null
+  bracketMinTeams: number | null
+  bracketMaxTeams: number | null
   startDate: string | null
   endDate: string | null
   registrationDeadline: string | null
@@ -60,10 +63,189 @@ interface Tournament {
 }
 
 export default function TournamentAdminPage() {
+  return <TournamentAdminContent />
+}
+
+function BracketSettingsSection({ 
+  tournament, 
+  onUpdate, 
+  notify 
+}: { 
+  tournament: Tournament | null
+  onUpdate: (tournament: Tournament) => void
+  notify: (notification: { type: string; message: string }) => void
+}) {
+  const params = useParams<{ id: string }>()
+  const id = params?.id as string
+  const [minTeams, setMinTeams] = useState(tournament?.bracketMinTeams || 2)
+  const [maxTeams, setMaxTeams] = useState(tournament?.bracketMaxTeams || 8)
+  const [saving, setSaving] = useState(false)
+  const [errors, setErrors] = useState<{ min?: string; max?: string }>({})
+
+  const validMaxValues = [2, 4, 8, 16, 32, 64, 128, 256]
+
+  useEffect(() => {
+    if (tournament) {
+      setMinTeams(tournament.bracketMinTeams || 2)
+      setMaxTeams(tournament.bracketMaxTeams || 8)
+    }
+  }, [tournament])
+
+  const validate = (min: number, max: number) => {
+    const newErrors: { min?: string; max?: string } = {}
+    
+    if (min < 2) {
+      newErrors.min = 'Le minimum doit être au moins 2'
+    }
+    
+    if (!validMaxValues.includes(max)) {
+      newErrors.max = `Le maximum doit être l'un des suivants: ${validMaxValues.join(', ')}`
+    }
+    
+    if (min > max) {
+      newErrors.min = 'Le minimum ne peut pas être supérieur au maximum'
+      newErrors.max = 'Le maximum ne peut pas être inférieur au minimum'
+    }
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSave = async () => {
+    if (!tournament) return
+    
+    if (!validate(minTeams, maxTeams)) {
+      notify({ type: 'error', message: 'Veuillez corriger les erreurs avant de sauvegarder' })
+      return
+    }
+
+    // Vérifier que le tournoi n'a pas encore commencé
+    if (tournament.status !== 'REG_OPEN') {
+      notify({ type: 'error', message: 'Impossible de modifier le bracket : le tournoi a déjà commencé' })
+      return
+    }
+
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/tournaments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bracketMinTeams: minTeams,
+          bracketMaxTeams: maxTeams
+        })
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        onUpdate(data.tournament)
+        notify({ type: 'success', message: 'Paramètres du bracket mis à jour avec succès !' })
+      } else {
+        notify({ type: 'error', message: data.message || 'Erreur lors de la mise à jour' })
+      }
+    } catch (error) {
+      notify({ type: 'error', message: 'Erreur de connexion' })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!tournament) return null
+
+  const canEdit = tournament.status === 'REG_OPEN'
+
   return (
-    <ClientPageWrapper>
-      <TournamentAdminContent />
-    </ClientPageWrapper>
+    <div className={styles.bracketSettings}>
+      <div className={styles.bracketSettingsInfo}>
+        <p className={styles.bracketSettingsDescription}>
+          Configurez les paramètres du bracket d'élimination simple. Ces paramètres peuvent être modifiés uniquement tant que le tournoi n'a pas commencé.
+        </p>
+        {!canEdit && (
+          <div className={styles.bracketSettingsWarning}>
+            ⚠️ Le tournoi a déjà commencé. Les paramètres du bracket ne peuvent plus être modifiés.
+          </div>
+        )}
+      </div>
+
+      <div className={styles.bracketSettingsGrid}>
+        <div className={styles.bracketSettingField}>
+          <label className={styles.bracketSettingLabel}>
+            Minimum teams
+          </label>
+          <input
+            type="number"
+            min="2"
+            value={minTeams}
+            onChange={(e) => {
+              const val = parseInt(e.target.value) || 2
+              setMinTeams(val)
+              validate(val, maxTeams)
+            }}
+            disabled={!canEdit || saving}
+            className={`${styles.bracketSettingInput} ${errors.min ? styles.inputError : ''}`}
+          />
+          {errors.min && (
+            <div className={styles.fieldError}>{errors.min}</div>
+          )}
+          <div className={styles.bracketSettingHelp}>
+            Minimum number of teams required to start the tournament.
+          </div>
+        </div>
+
+        <div className={styles.bracketSettingField}>
+          <label className={styles.bracketSettingLabel}>
+            Maximum teams
+          </label>
+          <div className={styles.bracketSettingMaxContainer}>
+            <div className={styles.bracketSettingMaxOptions}>
+              {validMaxValues.map(val => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => {
+                    setMaxTeams(val)
+                    validate(minTeams, val)
+                  }}
+                  disabled={!canEdit || saving}
+                  className={`${styles.bracketSettingMaxOption} ${maxTeams === val ? styles.bracketSettingMaxOptionActive : ''}`}
+                >
+                  {val}
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              value={maxTeams}
+              onChange={(e) => {
+                const val = parseInt(e.target.value) || 8
+                setMaxTeams(val)
+                validate(minTeams, val)
+              }}
+              disabled={!canEdit || saving}
+              className={`${styles.bracketSettingInput} ${errors.max ? styles.inputError : ''}`}
+            />
+          </div>
+          {errors.max && (
+            <div className={styles.fieldError}>{errors.max}</div>
+          )}
+          <div className={styles.bracketSettingHelp}>
+            Maximum number of teams of the bracket.
+          </div>
+        </div>
+      </div>
+
+      {canEdit && (
+        <div className={styles.bracketSettingsActions}>
+          <button
+            onClick={handleSave}
+            disabled={saving || Object.keys(errors).length > 0}
+            className={styles.saveButton}
+          >
+            {saving ? 'Sauvegarde...' : 'Sauvegarder'}
+          </button>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -74,7 +256,7 @@ function TournamentAdminContent() {
   const [tournament, setTournament] = useState<Tournament | null>(null)
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
-  const [activeSection, setActiveSection] = useState<'overview' | 'participants' | 'matches' | 'visuals' | 'settings'>('overview')
+  const [activeSection, setActiveSection] = useState<'overview' | 'participants' | 'matches' | 'visuals' | 'bracket' | 'settings'>('overview')
   const { notify } = useNotification()
   
   // États pour les visuels
@@ -412,13 +594,20 @@ function TournamentAdminContent() {
             <div className={styles.navSection}>
               <div className={styles.navSectionTitle}>PARAMÈTRES</div>
               <button
+                className={`${styles.navItem} ${activeSection === 'bracket' ? styles.navItemActive : ''}`}
+                onClick={() => setActiveSection('bracket')}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <span>Bracket</span>
+              </button>
+              <button
                 className={`${styles.navItem} ${activeSection === 'settings' ? styles.navItemActive : ''}`}
                 onClick={() => setActiveSection('settings')}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M12 1v6m0 6v6m9-9h-6m-6 0H3"></path>
-                </svg>
+                <SettingsIcon width={20} height={20} />
                 <span>Paramètres</span>
               </button>
             </div>
@@ -745,6 +934,18 @@ function TournamentAdminContent() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeSection === 'bracket' && (
+            <div className={styles.contentSection}>
+              <h1 className={styles.contentTitle}>Bracket</h1>
+              
+              <BracketSettingsSection 
+                tournament={tournament} 
+                onUpdate={(updated) => setTournament(updated)}
+                notify={notify}
+              />
             </div>
           )}
 

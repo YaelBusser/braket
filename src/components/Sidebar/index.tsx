@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useState, memo } from 'react'
+import { useEffect, useState, memo, useTransition } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useCreateTournamentModal } from '../CreateTournamentModal/CreateTournamentModalContext'
 import styles from './index.module.scss'
 
 type MiniTournament = {
@@ -14,28 +15,56 @@ type MiniTournament = {
 
 function Sidebar() {
   const [participating, setParticipating] = useState<MiniTournament[]>([])
+  const { openCreateTournamentModal } = useCreateTournamentModal()
+  const [isPending, startTransition] = useTransition()
 
+  // Charger les données de manière non-bloquante après le premier rendu
   useEffect(() => {
+    // Utiliser requestIdleCallback si disponible, sinon setTimeout
     const load = async () => {
       try {
-        const res = await fetch('/api/profile/tournaments', { cache: 'no-store' })
+        // Utiliser un cache pour éviter les requêtes répétées
+        const res = await fetch('/api/profile/tournaments', { 
+          cache: 'default',
+          next: { revalidate: 30 } // Revalider toutes les 30 secondes
+        })
         if (!res.ok) return
         const data = await res.json()
-        setParticipating(data.participating || [])
+        // Utiliser startTransition pour ne pas bloquer le rendu
+        startTransition(() => {
+          setParticipating(data.participating || [])
+        })
       } catch {}
     }
-    load()
+    
+    // Charger après un court délai pour ne pas bloquer la navigation
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      requestIdleCallback(load, { timeout: 2000 })
+    } else {
+      setTimeout(load, 100)
+    }
   }, [])
 
   return (
     <aside className={styles.sidebar} aria-label="Mes tournois">
       {/* Bouton créer/ajouter */}
-      <Link href="/tournaments/create" className={styles.avatarButton} title="Créer un tournoi">
+      <button 
+        onClick={openCreateTournamentModal}
+        className={styles.avatarButton} 
+        title="Créer un tournoi"
+        type="button"
+      >
         <span className={styles.plus}>+</span>
-      </Link>
+      </button>
 
       {participating.map(t => (
-        <Link key={t.id} href={`/tournaments/${t.id}`} className={styles.avatarButton} title={t.name}>
+        <Link 
+          key={t.id} 
+          href={`/tournaments/${t.id}`} 
+          className={styles.avatarButton} 
+          title={t.name}
+          prefetch={true}
+        >
           {t.posterUrl ? (
             <Image 
               src={t.posterUrl} 

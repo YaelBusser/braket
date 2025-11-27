@@ -3,9 +3,9 @@
 import { useSession } from 'next-auth/react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
+import { useCreateTournamentModal } from '../../components/CreateTournamentModal/CreateTournamentModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
 import { Tabs, ContentWithTabs, TournamentCard, type Tab } from '../../components/ui'
 import styles from './page.module.scss'
@@ -18,6 +18,7 @@ function ProfilePage() {
   const pathname = usePathname()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
+  const { openCreateTournamentModal } = useCreateTournamentModal()
   
   
   // États pour les données utilisateur
@@ -129,12 +130,10 @@ function ProfilePage() {
 
   if (status === 'loading') {
     return (
-      <ClientPageWrapper>
-        <div className={styles.loading}>
-          <div className={styles.spinner}></div>
-          <p>Chargement...</p>
-        </div>
-      </ClientPageWrapper>
+      <div className={styles.loading}>
+        <div className={styles.spinner}></div>
+        <p>Chargement...</p>
+      </div>
     )
   }
 
@@ -148,8 +147,7 @@ function ProfilePage() {
   const yearsSinceRegistration = Math.floor(daysSinceRegistration / 365)
 
   return (
-    <ClientPageWrapper>
-      <div className={styles.profilePage}>
+    <div className={styles.profilePage}>
         {/* Header avec avatar et infos */}
         <div 
           className={styles.profileHeader}
@@ -252,7 +250,7 @@ function ProfilePage() {
                 <h3>Mes tournois</h3>
                 <button 
                   className={styles.createBtn}
-                  onClick={() => router.push('/tournaments/create')}
+                  onClick={openCreateTournamentModal}
                 >
                   Créer un tournoi
                 </button>
@@ -266,7 +264,7 @@ function ProfilePage() {
                     <p>Aucun tournoi créé</p>
                     <button 
                       className={styles.createBtn}
-                      onClick={() => router.push('/tournaments/create')}
+                      onClick={openCreateTournamentModal}
                     >
                       Créer mon premier tournoi
                     </button>
@@ -321,14 +319,9 @@ function ProfilePage() {
         </ContentWithTabs>
 
       </div>
-    </ClientPageWrapper>
   )
 }
 
 export default function Profile() {
-  return (
-    <ClientPageWrapper>
-      <ProfilePage />
-    </ClientPageWrapper>
-  )
+  return <ProfilePage />
 }

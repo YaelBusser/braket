@@ -300,6 +300,9 @@
 /* Tab Content */
 .tabContent {
   padding-top: vars.$spacing-4;
+  width: 100%;
+  max-width: 100%;
+  // Le contenu est déjà dans un ContentContainer qui gère le centrage et la largeur max
 }
 
 /* Overview Tab */

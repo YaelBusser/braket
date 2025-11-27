@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import styles from './page.module.scss'
 import { TournamentCard, GameCardSkeleton } from '@/components/ui'
+import { getGamePosterPath } from '@/utils/gameLogoUtils'
+import { useCreateTournamentModal } from '@/components/CreateTournamentModal/CreateTournamentModalContext'
 
 export default function Home() {
   const { status, data: session } = useSession()
@@ -17,6 +19,7 @@ export default function Home() {
   const [loadingGames, setLoadingGames] = useState(false)
   const router = useRouter()
   const userId = (session?.user as any)?.id || null
+  const { openCreateTournamentModal } = useCreateTournamentModal()
 
   // Charger les jeux populaires depuis la DB
   useEffect(() => {
@@ -28,7 +31,7 @@ export default function Home() {
         const games = (data.games || []).slice(0, 6).map((g: any) => ({
           id: g.id,
           name: g.name,
-          image: g.imageUrl
+          image: getGamePosterPath(g.name) || g.imageUrl
         }))
         setPopularGames(games)
       } finally {
@@ -89,7 +92,7 @@ export default function Home() {
           </p>
           <button
             className={styles.heroCtaButton}
-            onClick={() => router.push('/tournaments/create')}
+            onClick={openCreateTournamentModal}
             type="button"
           >
             Créer un tournoi
@@ -226,11 +229,10 @@ export default function Home() {
                       <Image 
                         src={game.image} 
                         alt={game.name}
-                        width={400}
-                        height={571}
+                        width={600}
+                        height={857}
                         className={styles.popularGameImage}
-                        quality={90}
-                        sizes="(max-width: 768px) 33vw, (max-width: 1200px) 16vw, 12vw"
+                        quality={100}
                         loading="lazy"
                       />
                     ) : (

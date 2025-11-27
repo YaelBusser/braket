@@ -14,6 +14,7 @@ export async function GET(
         id: true,
         pseudo: true,
         avatarUrl: true,
+        bannerUrl: true,
         isEnterprise: true,
         createdAt: true,
         _count: {
@@ -33,7 +34,13 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ user })
+    // Utiliser la bannière par défaut si aucune bannière n'est définie
+    const userWithDefaultBanner = {
+      ...user,
+      bannerUrl: user.bannerUrl || '/images/games.jpg'
+    }
+
+    return NextResponse.json({ user: userWithDefaultBanner })
   } catch (error) {
     console.error('GET /api/users/[id] error', error)
     return NextResponse.json(

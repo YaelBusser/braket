@@ -175,6 +175,7 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
           className={styles.adminIcon}
           title="Gérer le tournoi"
           onClick={(e) => e.stopPropagation()}
+          prefetch={true}
         >
           <SettingsIcon width={18} height={18} fill="#fff" />
         </Link>

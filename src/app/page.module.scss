@@ -55,17 +55,28 @@
   justify-content: center;
   flex-direction: column;
   padding-top: vars.$spacing-16;
-  padding-left: vars.$spacing-6 !important;
-  padding-right: vars.$spacing-6 !important;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
   
   @media (min-width: vars.$breakpoint-sm) {
-    padding-left: vars.$spacing-8 !important;
-    padding-right: vars.$spacing-8 !important;
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
   }
   
   @media (min-width: vars.$breakpoint-lg) {
-    padding-left: vars.$spacing-10 !important;
-    padding-right: vars.$spacing-10 !important;
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
   }
 }
 
@@ -163,21 +174,30 @@
 
 /* --- MAIN CONTENT --- */
 .mainContent {
-  padding: vars.$spacing-8 vars.$spacing-8;
-  padding-left: calc(vars.$spacing-8 + vars.$spacing-4);
-  max-width: 1800px;
+  padding: vars.$spacing-8 0;
+  max-width: vars.$container-2xl;
   margin: 0 auto;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
   
   @media (min-width: vars.$breakpoint-lg) {
-    padding: vars.$spacing-8 vars.$spacing-10;
-    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
   }
 
   @media (max-width: 1024px) {
-    padding-left: vars.$spacing-8;
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
     
-    @media (min-width: vars.$breakpoint-lg) {
-      padding-left: vars.$spacing-10;
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
     }
   }
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import ClientPageWrapper from '../../../components/ClientPageWrapper'
 import { useNotification } from '../../../components/providers/notification-provider'
+import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import styles from './page.module.scss'
 import { GameInfo } from '@/data/games'
 
@@ -30,11 +30,7 @@ interface TournamentDraft {
 }
 
 export default function CreateTournamentPage() {
-  return (
-    <ClientPageWrapper>
-      <CreateForm />
-    </ClientPageWrapper>
-  )
+  return <CreateForm />
 }
 
 function CreateForm() {
@@ -184,7 +180,7 @@ function CreateForm() {
         const res = await fetch('/api/games')
         const data = await res.json()
         const list: GameInfo[] = (data.games || []).map((g: any) => ({
-          id: g.id, name: g.name, slug: g.slug, image: g.imageUrl
+          id: g.id, name: g.name, slug: g.slug, image: getGamePosterPath(g.name) || g.imageUrl
         }))
         setAllGames(list)
       } catch {}

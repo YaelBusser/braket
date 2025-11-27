@@ -159,6 +159,11 @@
   gap: 0rem; /* Espacement vertical très compact */
 }
 
+/* Espacement pour le skeleton */
+.skeleton .textContent {
+  gap: 6px; /* Espacement vertical entre les éléments du skeleton */
+}
+
 /* Date en haut */
 .dateRow {
   margin: 0;

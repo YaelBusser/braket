@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { findGameByName, GameInfo } from '@/data/games'
 import { ContentContainer, Tabs, TournamentCard } from '@/components/ui'
+import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import styles from './page.module.scss'
 
 interface Tournament {
@@ -232,31 +233,35 @@ export default function GamePage() {
               }}>
                 {gameName.charAt(0).toUpperCase()}
               </div>
-            ) : gameDetails?.image ? (
-              <img 
-                src={gameDetails.image} 
-                alt={gameName}
-                style={{
+            ) : (() => {
+              const gameLogoPath = getGameLogoPath(gameName)
+              return gameLogoPath ? (
+                <img 
+                  src={gameLogoPath} 
+                  alt={gameName}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    background: '#1a1f2e',
+                  }}
+                />
+              ) : (
+                <div style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: 'cover'
-                }}
-              />
-            ) : (
-              <div style={{
-                width: '100%',
-                height: '100%',
-                background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '2rem',
-                fontWeight: 'bold',
-                color: '#ffffff'
-              }}>
-                {gameName.charAt(0).toUpperCase()}
-              </div>
-            )}
+                  background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '2rem',
+                  fontWeight: 'bold',
+                  color: '#ffffff'
+                }}>
+                  {gameName.charAt(0).toUpperCase()}
+                </div>
+              )
+            })()}
           </div>
           
           {/* Informations du jeu */}

@@ -8,9 +8,31 @@
 }
 
 .container {
-  max-width: vars.$container-lg;
+  max-width: vars.$container-2xl;
   margin: 0 auto;
-  padding: 0 vars.$spacing-4;
+  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18 !important;
+    padding-right: vars.$spacing-18 !important;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20 !important;
+      padding-right: vars.$spacing-20 !important;
+    }
+  }
 }
 
 .header {
@@ -258,7 +280,7 @@
   }
 
   .container {
-    padding: 0 vars.$spacing-3;
+    // Le padding horizontal est déjà géré par les règles principales
   }
 
   .formContainer {

@@ -16,7 +16,7 @@ interface ContentContainerProps {
  */
 export default function ContentContainer({ children, className = '', style }: ContentContainerProps) {
   return (
-    <div className={`content-centered ${styles.contentContainer} ${className}`} style={style}>
+    <div className={`${styles.contentContainer} ${className}`} style={style}>
       {children}
     </div>
   )

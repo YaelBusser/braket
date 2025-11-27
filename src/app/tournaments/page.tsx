@@ -2,16 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { TournamentCard, SearchBar, PageContent } from '@/components/ui'
 import Link from 'next/link'
 
 export default function TournamentsIndex() {
-  return (
-    <ClientPageWrapper>
-      <TournamentsList />
-    </ClientPageWrapper>
-  )
+  return <TournamentsList />
 }
 
 function TournamentsList() {

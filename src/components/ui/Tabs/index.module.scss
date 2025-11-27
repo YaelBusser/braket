@@ -2,6 +2,8 @@
 
 .tabsContainer {
   margin-bottom: vars.$spacing-8;
+  width: 100%;
+  max-width: 100%;
 }
 
 .tabContainer {
@@ -13,6 +15,7 @@
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
 
   &::-webkit-scrollbar {
     display: none;

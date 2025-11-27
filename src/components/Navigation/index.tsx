@@ -72,10 +72,10 @@ function Navigation() {
           
           <div className={styles.navLinks}>
             {mounted && session && (
-              <Link href="/my-tournaments" className={styles.navLink}>Mes tournois</Link>
+              <Link href="/my-tournaments" className={styles.navLink} prefetch={true}>Mes tournois</Link>
             )}
-            <Link href="/tournaments" className={styles.navLink}>Tournois</Link>
-            <Link href="/games" className={styles.navLink}>Jeux</Link>
+            <Link href="/tournaments" className={styles.navLink} prefetch={true}>Tournois</Link>
+            <Link href="/games" className={styles.navLink} prefetch={true}>Jeux</Link>
           </div>
         </div>
         <div className={styles.menu}>

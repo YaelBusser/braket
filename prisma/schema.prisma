@@ -85,6 +85,8 @@ model Tournament {
   maxParticipants Int?
   teamMinSize  Int?
   teamMaxSize  Int?
+  bracketMinTeams Int?              @default(2)
+  bracketMaxTeams Int?              @default(8)
   startDate    DateTime?
   endDate      DateTime?
   registrationDeadline DateTime?

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useLayoutEffect } from 'react'
 
 type Theme = 'dark' | 'light'
 
@@ -13,16 +13,34 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark')
-  const [mounted, setMounted] = useState(false)
+  // Initialiser avec le thème depuis localStorage immédiatement (sans attendre le montage)
+  const [theme, setThemeState] = useState<Theme>(() => {
+    // Utiliser une fonction d'initialisation pour éviter les accès localStorage côté serveur
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as Theme | null
+      return savedTheme || 'dark'
+    }
+    return 'dark'
+  })
 
+  // Appliquer le thème immédiatement au chargement (avant même le premier rendu)
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    if (theme === 'light') {
+      root.classList.add('light')
+      root.classList.remove('dark')
+    } else {
+      root.classList.add('dark')
+      root.classList.remove('light')
+    }
+  }, [theme])
+
+  // Synchroniser avec localStorage après le montage
   useEffect(() => {
-    setMounted(true)
-    // Récupérer le thème depuis localStorage ou utiliser 'dark' par défaut
     const savedTheme = localStorage.getItem('theme') as Theme | null
-    const initialTheme = savedTheme || 'dark'
-    setThemeState(initialTheme)
-    applyTheme(initialTheme)
+    if (savedTheme && savedTheme !== theme) {
+      setThemeState(savedTheme)
+    }
   }, [])
 
   const applyTheme = (newTheme: Theme) => {
@@ -38,7 +56,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme)
-    localStorage.setItem('theme', newTheme)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', newTheme)
+    }
     applyTheme(newTheme)
   }
 
@@ -47,11 +67,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setTheme(newTheme)
   }
 
-  // Éviter le flash de contenu non stylé
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Ne plus bloquer le rendu - toujours afficher les enfants
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}

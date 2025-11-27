@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
-import ClientPageWrapper from '../../components/ClientPageWrapper'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
@@ -403,8 +402,7 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<'account' | 'visuals' | 'password'>('account')
 
   return (
-    <ClientPageWrapper>
-      <div className={styles.settingsPage}>
+    <div className={styles.settingsPage}>
         <div className={styles.settingsLayout}>
           {/* Sidebar */}
           <aside className={styles.sidebar}>
@@ -794,7 +792,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-    </ClientPageWrapper>
   )
 }
 
