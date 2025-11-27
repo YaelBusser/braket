@@ -10,7 +10,7 @@ export default function ParticipationsTab() {
   return (
     <div className={styles.registrationsTab}>
       <div className={styles.tabHeader}>
-        <h3>Participations</h3>
+        <h3>Tournois rejoints</h3>
       </div>
       
       <div className={styles.tournamentList}>
@@ -18,7 +18,7 @@ export default function ParticipationsTab() {
           <div className={styles.loading}>Chargement...</div>
         ) : !userRegistrations || !Array.isArray(userRegistrations) || userRegistrations.length === 0 ? (
           <div className={styles.emptyState}>
-            <p>Aucune participation</p>
+            <p>Aucun tournoi rejoint</p>
           </div>
         ) : (
           <div style={{ 

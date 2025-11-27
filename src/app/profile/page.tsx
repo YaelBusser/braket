@@ -1,13 +1,13 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import { useCreateTournamentModal } from '../../components/CreateTournamentModal/CreateTournamentModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs, TournamentCard, type Tab } from '../../components/ui'
+import { Tabs, ContentWithTabs, TournamentCard } from '../../components/ui'
 import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
@@ -15,7 +15,6 @@ type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
 function ProfilePage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const pathname = usePathname()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
   const { openCreateTournamentModal } = useCreateTournamentModal()
@@ -29,34 +28,11 @@ function ProfilePage() {
   // Initialiser avec la valeur par défaut pour afficher immédiatement
   const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
   
-  // Navigation par onglets - déterminer l'onglet actif depuis l'URL
-  const getActiveTabFromPath = (): TabKey => {
-    if (pathname === '/profile/tournaments') return 'tournaments'
-    if (pathname === '/profile/participations') return 'participations'
-    if (pathname === '/profile/overview') return 'overview'
-    if (pathname === '/profile/teams') return 'teams'
-    return 'tournaments' // Par défaut
-  }
-  
-  const [activeTab, setActiveTab] = useState<TabKey>(getActiveTabFromPath())
-  
-  // Synchroniser l'onglet avec l'URL
-  useEffect(() => {
-    const tab = getActiveTabFromPath()
-    setActiveTab(tab)
-  }, [pathname])
-  
-  // Rediriger /profile vers /profile/tournaments
-  useEffect(() => {
-    if (pathname === '/profile' && status === 'authenticated') {
-      router.replace('/profile/tournaments')
-    }
-  }, [pathname, status, router])
+  const [activeTab, setActiveTab] = useState<TabKey>('tournaments')
   
   const handleTabChange = (key: string) => {
     const tabKey = key as TabKey
     setActiveTab(tabKey)
-    router.push(`/profile/${tabKey}`)
   }
   
   // Statistiques utilisateur
@@ -194,8 +170,8 @@ function ProfilePage() {
           {/* Navigation par onglets */}
           <Tabs
             tabs={[
-              { key: 'tournaments', label: 'Mes tournois' },
-              { key: 'participations', label: 'Participations' },
+              { key: 'participations', label: 'Tournois rejoints' },
+              { key: 'tournaments', label: 'Tournois créés' },
               { key: 'overview', label: 'Aperçu' },
               { key: 'teams', label: 'Équipes' }
             ]}
@@ -247,7 +223,7 @@ function ProfilePage() {
           {activeTab === 'tournaments' && (
             <div className={styles.tournamentsTab}>
               <div className={styles.tabHeader}>
-                <h3>Mes tournois</h3>
+                <h3>Tournois créés</h3>
                 <button 
                   className={styles.createBtn}
                   onClick={openCreateTournamentModal}
@@ -306,11 +282,11 @@ function ProfilePage() {
           {activeTab === 'participations' && (
             <div className={styles.registrationsTab}>
               <div className={styles.tabHeader}>
-                <h3>Mes participations</h3>
+                <h3>Tournois rejoints</h3>
               </div>
               
               <div className={styles.emptyState}>
-                <p>Aucune participation</p>
+                <p>Aucun tournoi rejoint</p>
               </div>
             </div>
           )}

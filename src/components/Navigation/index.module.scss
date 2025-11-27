@@ -30,18 +30,7 @@
   height: 100%;
   position: relative;
   // Logo et navigation collés à gauche (après la sidebar)
-  padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-4);
-  padding-right: vars.$spacing-4;
-  
-  @media (min-width: vars.$breakpoint-sm) {
-    padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-6);
-    padding-right: vars.$spacing-6;
-  }
-  
-  @media (min-width: vars.$breakpoint-lg) {
-    padding-left: calc(#{vars.$sidebar-width} + vars.$spacing-8);
-    padding-right: vars.$spacing-8;
-  }
+  margin-left: 1rem;
 }
 
 .leftSection {

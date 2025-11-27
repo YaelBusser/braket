@@ -46,7 +46,7 @@ function Sidebar() {
   }, [])
 
   return (
-    <aside className={styles.sidebar} aria-label="Mes tournois">
+    <aside className={styles.sidebar} aria-label="Tournois créés">
       {/* Bouton créer/ajouter */}
       <button 
         onClick={openCreateTournamentModal}

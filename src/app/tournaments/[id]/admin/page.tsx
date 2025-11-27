@@ -300,7 +300,7 @@ function TournamentAdminContent() {
       const res = await fetch(`/api/tournaments/${id}`, { method: 'DELETE' })
       if (res.ok) {
         notify({ type: 'success', message: 'Tournoi supprimé avec succès' })
-        router.replace('/my-tournaments')
+        router.replace('/profile')
       } else {
         const d = await res.json().catch(() => ({}))
         notify({ type: 'error', message: d.message || 'Erreur lors de la suppression' })
