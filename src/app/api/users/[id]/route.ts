@@ -15,7 +15,6 @@ export async function GET(
         pseudo: true,
         avatarUrl: true,
         bannerUrl: true,
-        isEnterprise: true,
         createdAt: true,
         _count: {
           select: {

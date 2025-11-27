@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useNotification } from '../providers/notification-provider'
+import { useAuthModal } from '../AuthModal/AuthModalContext'
 import { getGamePosterPath, getGameLogoPath } from '@/utils/gameLogoUtils'
 import { GameInfo } from '@/data/games'
 import TournamentCard from '../ui/TournamentCard'
@@ -39,7 +40,8 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
   const router = useRouter()
   const { data: session } = useSession()
   const { notify } = useNotification()
-  const [step, setStep] = useState(0) // 0: Jeu, 1: General, 2: Format, 3: Date, 4: Visuel
+  const { openAuthModal } = useAuthModal()
+  const [step, setStep] = useState(0) // 0: Jeu, 1: General, 2: Format, 3: Date, 4: Visuel, 5: Récapitulatif
   const [isLoading, setIsLoading] = useState(false)
   const [form, setForm] = useState({
     name: '',
@@ -68,7 +70,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
   const [crop, setCrop] = useState({ x: 0, y: 0 })
   const [zoom, setZoom] = useState(1)
-  const [croppedAreerixels, setCroppedAreaPixels] = useState<any>(null)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null)
 
   // Charger les données utilisateur
   useEffect(() => {
@@ -272,6 +274,8 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       setStep(3)
     } else if (step === 3) {
       setStep(4)
+    } else if (step === 4) {
+      setStep(5)
     }
   }
 
@@ -283,6 +287,20 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Vérifier si l'utilisateur est connecté
+    if (!session) {
+      // Sauvegarder l'état actuel dans localStorage avant d'ouvrir la modale d'auth
+      saveToLocalStorage()
+      // Stocker l'URL de retour pour revenir à la création après connexion
+      try {
+        localStorage.setItem('lt_returnTo', window.location.pathname)
+      } catch {}
+      openAuthModal('login')
+      notify({ type: 'info', message: '🔐 Veuillez vous connecter pour créer un tournoi' })
+      return
+    }
+    
     if (!selectedGameId || !selectedGameName) {
       notify({ type: 'error', message: '❌ Veuillez choisir un jeu' })
       return
@@ -323,7 +341,11 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
         throw new Error(data.message || 'Erreur à la création')
       }
       const data = await res.json()
+      // Supprimer les données sauvegardées après création réussie
       localStorage.removeItem(STORAGE_KEY)
+      try {
+        localStorage.removeItem('lt_returnTo')
+      } catch {}
       notify({ type: 'success', message: '🎉 Tournoi créé avec succès !' })
       onClose()
       setTimeout(() => {
@@ -338,7 +360,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
 
   const handleClose = () => {
     setIsClosing(true)
-    // Réinitialiser après fermeture
+    // Sauvegarder l'état avant de fermer (sauf si on vient de créer le tournoi)
+    saveToLocalStorage()
+    // Réinitialiser après fermeture (mais garder le localStorage pour reprendre plus tard)
     setTimeout(() => {
       setStep(0)
       setForm({
@@ -440,10 +464,17 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
             </div>
             <div className={`${styles.progressLine} ${step > 3 ? styles.progressLineActive : ''}`} />
             <div className={styles.progressStep}>
-              <div className={`${styles.progressDot} ${step >= 4 ? styles.progressDotActive : ''}`}>
-                5
+              <div className={`${styles.progressDot} ${step >= 4 ? styles.progressDotActive : ''} ${step > 4 ? styles.progressDotCompleted : ''}`}>
+                {step > 4 ? '✓' : '5'}
               </div>
               <span className={`${styles.progressLabel} ${step >= 4 ? styles.progressLabelActive : ''}`}>Visuel</span>
+            </div>
+            <div className={`${styles.progressLine} ${step > 4 ? styles.progressLineActive : ''}`} />
+            <div className={styles.progressStep}>
+              <div className={`${styles.progressDot} ${step >= 5 ? styles.progressDotActive : ''}`}>
+                6
+              </div>
+              <span className={`${styles.progressLabel} ${step >= 5 ? styles.progressLabelActive : ''}`}>Récapitulatif</span>
             </div>
           </div>
 
@@ -763,10 +794,24 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                 )}
               </div>
 
-              {/* çu avec TournamentCard */}
+            </div>
+          )}
+
+          {/* Étape 5: Récapitulatif */}
+          {step === 5 && (
+            <div className={styles.stepContent}>
+              <div className={styles.summaryHeader}>
+                <h2 className={styles.stepTitle}>Récapitulatif</h2>
+                <p className={styles.stepSubtitle}>Vérifiez les informations avant de créer votre tournoi</p>
+              </div>
+
+              {/* Aperçu de la card en premier */}
               {form.name && selectedGameName && (
-                <div className={styles.formGroup} style={{ marginTop: '10px' }}>
-                  <label className={styles.label}>Aperçu</label>
+                <div className={styles.summaryCardPreview}>
+                  <div className={styles.summaryCardPreviewHeader}>
+                    <span className={styles.summaryCardPreviewIcon}>👁️</span>
+                    <h3 className={styles.summaryCardPreviewTitle}>Aperçu</h3>
+                  </div>
                   <div className={styles.cardPreviewWrapper}>
                     <TournamentCard
                       tournament={{
@@ -802,6 +847,129 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                   </div>
                 </div>
               )}
+
+              {/* Informations récapitulatives en grille */}
+              <div className={styles.summaryGrid}>
+                {/* Jeu */}
+                <div className={styles.summaryCard}>
+                  <div className={styles.summaryCardHeader}>
+                    <span className={styles.summaryCardIcon}>🎮</span>
+                    <h3 className={styles.summaryCardTitle}>Jeu</h3>
+                  </div>
+                  <div className={styles.summaryCardContent}>
+                    {gamePoster && (
+                      <div className={styles.summaryGameImage}>
+                        <img src={gamePoster} alt={selectedGameName} />
+                      </div>
+                    )}
+                    <div className={styles.summaryGameName}>{selectedGameName}</div>
+                  </div>
+                </div>
+
+                {/* Informations générales */}
+                <div className={styles.summaryCard}>
+                  <div className={styles.summaryCardHeader}>
+                    <span className={styles.summaryCardIcon}>📋</span>
+                    <h3 className={styles.summaryCardTitle}>Informations</h3>
+                  </div>
+                  <div className={styles.summaryCardContent}>
+                    <div className={styles.summaryInfoRow}>
+                      <span className={styles.summaryInfoLabel}>Nom</span>
+                      <span className={styles.summaryInfoValue}>{form.name}</span>
+                    </div>
+                    {form.description && (
+                      <div className={styles.summaryInfoRow}>
+                        <span className={styles.summaryInfoLabel}>Description</span>
+                        <p className={styles.summaryInfoDescription}>{form.description}</p>
+                      </div>
+                    )}
+                    <div className={styles.summaryInfoRow}>
+                      <span className={styles.summaryInfoLabel}>Organisé par</span>
+                      <div className={styles.summaryOrganizer}>
+                        <span className={styles.summaryOrganizerIcon}>👤</span>
+                        <span className={styles.summaryInfoValue}>{userPseudo || (session?.user as any)?.pseudo || 'Utilisateur'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Format */}
+                <div className={styles.summaryCard}>
+                  <div className={styles.summaryCardHeader}>
+                    <span className={styles.summaryCardIcon}>⚙️</span>
+                    <h3 className={styles.summaryCardTitle}>Format</h3>
+                  </div>
+                  <div className={styles.summaryCardContent}>
+                    <div className={styles.summaryBadges}>
+                      <span className={`${styles.summaryBadge} ${form.isTeamBased === 'team' ? styles.summaryBadgeTeam : styles.summaryBadgeSolo}`}>
+                        {form.isTeamBased === 'team' ? '👥 Équipe' : '🎯 Solo'}
+                      </span>
+                      {form.isTeamBased === 'team' && form.teamMinSize && form.teamMaxSize && (
+                        <span className={styles.summaryBadge}>
+                          {form.teamMinSize === form.teamMaxSize ? `${form.teamMinSize}v${form.teamMaxSize}` : `${form.teamMinSize}-${form.teamMaxSize}`}
+                        </span>
+                      )}
+                      <span className={styles.summaryBadge}>
+                        {form.format === 'SINGLE_ELIMINATION' ? '🏆 Élimination directe' : form.format}
+                      </span>
+                      <span className={`${styles.summaryBadge} ${form.visibility === 'PUBLIC' ? styles.summaryBadgePublic : styles.summaryBadgePrivate}`}>
+                        {form.visibility === 'PUBLIC' ? '🌐 Public' : '🔒 Privé'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date */}
+                {form.startDate && (
+                  <div className={styles.summaryCard}>
+                    <div className={styles.summaryCardHeader}>
+                      <span className={styles.summaryCardIcon}>📅</span>
+                      <h3 className={styles.summaryCardTitle}>Date</h3>
+                    </div>
+                    <div className={styles.summaryCardContent}>
+                      <div className={styles.summaryDate}>
+                        <div className={styles.summaryDateValue}>
+                          {new Date(form.startDate).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric'
+                          })}
+                        </div>
+                        <div className={styles.summaryDateTime}>
+                          {new Date(form.startDate).toLocaleTimeString('fr-FR', {
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Visuels */}
+                <div className={styles.summaryCard}>
+                  <div className={styles.summaryCardHeader}>
+                    <span className={styles.summaryCardIcon}>🎨</span>
+                    <h3 className={styles.summaryCardTitle}>Visuels</h3>
+                  </div>
+                  <div className={styles.summaryCardContent}>
+                    <div className={styles.summaryVisuals}>
+                      <div className={styles.summaryVisualItem}>
+                        <span className={styles.summaryVisualLabel}>Bannière</span>
+                        <span className={`${styles.summaryVisualBadge} ${posterPreview ? styles.summaryVisualBadgeCustom : ''}`}>
+                          {posterPreview ? '✨ Personnalisée' : '🎨 Par défaut'}
+                        </span>
+                      </div>
+                      <div className={styles.summaryVisualItem}>
+                        <span className={styles.summaryVisualLabel}>Logo</span>
+                        <span className={`${styles.summaryVisualBadge} ${logoPreview ? styles.summaryVisualBadgeCustom : ''}`}>
+                          {logoPreview ? '✨ Personnalisé' : '🎨 Par défaut'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -812,7 +980,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                 Retour
               </button>
             )}
-            {step < 4 ? (
+            {step < 5 ? (
               <button
                 type="button"
                 className={styles.nextButton}
@@ -825,14 +993,32 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                 Suivant
               </button>
             ) : (
-              <button
-                type="button"
-                className={styles.createButton}
-                onClick={handleSubmit}
-                disabled={isLoading || !selectedGameId || !form.name.trim()}
-              >
-                {isLoading ? 'Création...' : 'Créer le tournoi'}
-              </button>
+              !session ? (
+                <button
+                  type="button"
+                  className={styles.createButton}
+                  onClick={() => {
+                    // Sauvegarder l'état actuel avant d'ouvrir la modale d'auth
+                    saveToLocalStorage()
+                    try {
+                      localStorage.setItem('lt_returnTo', window.location.pathname)
+                    } catch {}
+                    openAuthModal('login')
+                    notify({ type: 'info', message: '🔐 Veuillez vous connecter pour créer un tournoi' })
+                  }}
+                >
+                  Se connecter
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.createButton}
+                  onClick={handleSubmit}
+                  disabled={isLoading || !selectedGameId || !form.name.trim()}
+                >
+                  {isLoading ? 'Création...' : 'Créer le tournoi'}
+                </button>
+              )
             )}
           </div>
         </div>

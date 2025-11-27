@@ -16,7 +16,7 @@ export async function GET(
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
-        organizer: { select: { id: true, pseudo: true, avatarUrl: true, isEnterprise: true } },
+        organizer: { select: { id: true, pseudo: true, avatarUrl: true } },
         teams: {
           include: {
             members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
@@ -144,7 +144,7 @@ export async function PATCH(
         ...(maxParticipants !== undefined ? { maxParticipants: maxParticipants === null || maxParticipants === '' ? null : parseInt(String(maxParticipants), 10) } : {}),
       },
       include: {
-        organizer: { select: { id: true, pseudo: true, avatarUrl: true, isEnterprise: true } },
+        organizer: { select: { id: true, pseudo: true, avatarUrl: true } },
         teams: {
           include: {
             members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },

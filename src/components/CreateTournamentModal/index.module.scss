@@ -1247,6 +1247,297 @@
 // Styles pour le calendrier natif (date picker)
 // Note: Les pseudo-éléments webkit doivent être dans un fichier global ou utilisés directement
 
+// Styles pour la section récapitulatif
+.summaryHeader {
+  text-align: center;
+  margin-bottom: vars.$spacing-6;
+}
+
+.summaryCardPreview {
+  background: linear-gradient(135deg, rgba(255, 0, 140, 0.1) 0%, rgba(103, 72, 255, 0.1) 100%);
+  border: 2px solid rgba(255, 0, 140, 0.3);
+  border-radius: vars.$radius-lg;
+  padding: vars.$spacing-6;
+  margin-bottom: vars.$spacing-6;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: vars.$gradient-primary;
+  }
+}
+
+.summaryCardPreviewHeader {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  margin-bottom: vars.$spacing-4;
+}
+
+.summaryCardPreviewIcon {
+  font-size: vars.$font-size-2xl;
+}
+
+.summaryCardPreviewTitle {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-bold;
+  margin: 0;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-6;
+}
+
+.summaryCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-lg;
+  padding: vars.$spacing-5;
+  transition: all vars.$transition-fast;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    border-color: rgba(255, 0, 140, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(255, 0, 140, 0.1);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: vars.$gradient-primary;
+    opacity: 0;
+    transition: opacity vars.$transition-fast;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+.summaryCardHeader {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  margin-bottom: vars.$spacing-4;
+  padding-bottom: vars.$spacing-3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.summaryCardIcon {
+  font-size: vars.$font-size-xl;
+  line-height: 1;
+}
+
+.summaryCardTitle {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-bold;
+  margin: 0;
+}
+
+.summaryCardContent {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-3;
+}
+
+.summaryGameImage {
+  width: 100%;
+  aspect-ratio: 16/9;
+  border-radius: vars.$radius-md;
+  overflow: hidden;
+  margin-bottom: vars.$spacing-3;
+  border: 2px solid vars.$lt-border;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.summaryGameName {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-bold;
+  text-align: center;
+  padding: vars.$spacing-3;
+  background: rgba(255, 0, 140, 0.1);
+  border-radius: vars.$radius-md;
+  border: 1px solid rgba(255, 0, 140, 0.3);
+}
+
+.summaryInfoRow {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+}
+
+.summaryInfoLabel {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summaryInfoValue {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+}
+
+.summaryInfoDescription {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  line-height: 1.6;
+  margin: 0;
+  padding: vars.$spacing-3;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: vars.$radius-sm;
+  border-left: 3px solid vars.$lt-accent-purple;
+}
+
+.summaryOrganizer {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  padding: vars.$spacing-2 vars.$spacing-3;
+  background: rgba(255, 0, 140, 0.1);
+  border-radius: vars.$radius-md;
+  border: 1px solid rgba(255, 0, 140, 0.2);
+  width: fit-content;
+}
+
+.summaryOrganizerIcon {
+  font-size: vars.$font-size-base;
+}
+
+.summaryBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-2;
+}
+
+.summaryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: vars.$spacing-1;
+  padding: vars.$spacing-2 vars.$spacing-3;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-md;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+.summaryBadgeTeam {
+  background: rgba(103, 72, 255, 0.2);
+  border-color: rgba(103, 72, 255, 0.4);
+  color: vars.$lt-text-primary;
+}
+
+.summaryBadgeSolo {
+  background: rgba(255, 0, 140, 0.2);
+  border-color: rgba(255, 0, 140, 0.4);
+  color: vars.$lt-text-primary;
+}
+
+.summaryBadgePublic {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: vars.$lt-text-primary;
+}
+
+.summaryBadgePrivate {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: vars.$lt-text-primary;
+}
+
+.summaryDate {
+  text-align: center;
+  padding: vars.$spacing-4;
+  background: linear-gradient(135deg, rgba(255, 0, 140, 0.1) 0%, rgba(103, 72, 255, 0.1) 100%);
+  border-radius: vars.$radius-md;
+  border: 1px solid rgba(255, 0, 140, 0.2);
+}
+
+.summaryDateValue {
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-bold;
+  margin-bottom: vars.$spacing-2;
+}
+
+.summaryDateTime {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+}
+
+.summaryVisuals {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-3;
+}
+
+.summaryVisualItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: vars.$spacing-3;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: vars.$radius-md;
+  border: 1px solid vars.$lt-border;
+}
+
+.summaryVisualLabel {
+  color: vars.$lt-text-secondary;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+}
+
+.summaryVisualBadge {
+  padding: vars.$spacing-1 vars.$spacing-3;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-sm;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+
+  &.summaryVisualBadgeCustom {
+    background: rgba(255, 0, 140, 0.2);
+    border-color: rgba(255, 0, 140, 0.4);
+    color: vars.$lt-text-primary;
+  }
+}
+
 @media (max-width: vars.$breakpoint-sm) {
   .modalContent {
     max-width: 100%;
@@ -1273,6 +1564,27 @@
 
   .bannerGameName {
     font-size: vars.$font-size-lg;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryCardPreview {
+    padding: vars.$spacing-4;
+  }
+
+  .summaryCard {
+    padding: vars.$spacing-4;
+  }
+
+  .summaryBadges {
+    flex-direction: column;
+  }
+
+  .summaryBadge {
+    width: 100%;
+    justify-content: center;
   }
 }
 

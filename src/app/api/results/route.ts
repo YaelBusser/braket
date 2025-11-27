@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         orderBy: { createdAt: 'asc' }
       })
 
-      if (sibling && sibling.winnerTeamId) {
+      if (sibling && sibling.winnerTeamId && updated.round !== null) {
         // Vérifier si un match r+1 existe déjà avec ces finalistes
         const existsNext = await prisma.match.findFirst({
           where: {

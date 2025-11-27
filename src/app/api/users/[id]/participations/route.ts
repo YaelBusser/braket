@@ -37,8 +37,7 @@ export async function GET(
         organizer: {
           select: {
             id: true,
-            pseudo: true,
-            isEnterprise: true
+            pseudo: true
           }
         },
         gameRef: {

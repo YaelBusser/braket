@@ -20,8 +20,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     password: '',
     confirmPassword: '',
     pseudo: '',
-    rememberMe: false,
-    isEnterprise: false
+    rememberMe: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -49,8 +48,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         password: '',
         confirmPassword: '',
         pseudo: '',
-        rememberMe: false,
-        isEnterprise: false
+        rememberMe: false
       })
       setErrors({})
     }
@@ -181,7 +179,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           email: formData.email,
           password: formData.password,
           pseudo: formData.pseudo,
-          isEnterprise: formData.isEnterprise,
         }),
       })
 
@@ -254,38 +251,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 </p>
               </div>
 
-              {/* Checkbox entreprise */}
-              <div className={styles.enterpriseCheckboxContainer}>
-                <label className={styles.toggleLabel}>
-                  <input
-                    type="checkbox"
-                    name="isEnterprise"
-                    checked={formData.isEnterprise}
-                    onChange={handleChange}
-                    className={styles.toggleInput}
-                  />
-                  <span className={styles.toggleSwitch}></span>
-                  <span className={styles.toggleText}>Je suis une entreprise</span>
-                </label>
-                {formData.isEnterprise && (
-                  <div className={styles.accountTypeBanner}>
-                    <div className={`${styles.accountTypeBadge} ${styles.accountTypeBadgeEnterprise}`}>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                        <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" fill="currentColor"/>
-                      </svg>
-                      <span>Compte entreprise</span>
-                    </div>
-                    <p className={styles.accountTypeNote}>
-                      Connexion par email uniquement - Les connexions Google/Discord ne sont pas disponibles
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Boutons de connexion sociale - Masqués si entreprise */}
-              {!formData.isEnterprise && (
-                <>
-                  <div className={styles.socialButtons}>
+              {/* Boutons de connexion sociale */}
+              <div className={styles.socialButtons}>
                 <button
                   type="button"
                   className={`${styles.socialButton} ${styles.discordButton}`}
@@ -309,14 +276,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                   </svg>
                   Connectez-vous à Google
                 </button>
-                  </div>
+              </div>
 
-                  {/* Séparateur */}
-                  <div className={styles.divider}>
-                    <span>Ou</span>
-                  </div>
-                </>
-              )}
+              {/* Séparateur */}
+              <div className={styles.divider}>
+                <span>Ou</span>
+              </div>
 
               {/* Formulaire email/password */}
               <form onSubmit={handleLogin} className={styles.form}>
@@ -406,38 +371,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                 </p>
               </div>
 
-              {/* Checkbox entreprise */}
-              <div className={styles.enterpriseCheckboxContainer}>
-                <label className={styles.toggleLabel}>
-                  <input
-                    type="checkbox"
-                    name="isEnterprise"
-                    checked={formData.isEnterprise}
-                    onChange={handleChange}
-                    className={styles.toggleInput}
-                  />
-                  <span className={styles.toggleSwitch}></span>
-                  <span className={styles.toggleText}>Je suis une entreprise</span>
-                </label>
-                {formData.isEnterprise && (
-                  <div className={styles.accountTypeBanner}>
-                    <div className={`${styles.accountTypeBadge} ${styles.accountTypeBadgeEnterprise}`}>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="16" height="16">
-                        <path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z" fill="currentColor"/>
-                      </svg>
-                      <span>Compte entreprise</span>
-                    </div>
-                    <p className={styles.accountTypeNote}>
-                      Inscription par email uniquement - Les connexions Google/Discord ne sont pas disponibles
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Boutons de connexion sociale - Masqués si entreprise */}
-              {!formData.isEnterprise && (
-                <>
-                  <div className={styles.socialButtons}>
+              {/* Boutons de connexion sociale */}
+              <div className={styles.socialButtons}>
                     <button
                       type="button"
                       className={`${styles.socialButton} ${styles.discordButton}`}
@@ -461,14 +396,12 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                       </svg>
                       S'inscrire avec Google
                     </button>
-                  </div>
+              </div>
 
-                  {/* Séparateur */}
-                  <div className={styles.divider}>
-                    <span>Ou</span>
-                  </div>
-                </>
-              )}
+              {/* Séparateur */}
+              <div className={styles.divider}>
+                <span>Ou</span>
+              </div>
 
               <form onSubmit={handleRegister} className={styles.form}>
                 {errors.general && (

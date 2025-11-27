@@ -50,8 +50,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       games,
-      hasMore: endIndex < gameNames.length,
-      total: gameNames.length
+      hasMore: endIndex < popularGames.length,
+      total: popularGames.length
     })
 
   } catch (error) {

@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
         pseudo: true,
         email: true,
         avatarUrl: true,
-        isEnterprise: true,
         createdAt: true
       },
       take: 20,

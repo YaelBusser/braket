@@ -56,7 +56,7 @@ export async function POST(
     }
 
     // exiger inscription préalable au tournoi
-    const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId: team.tournamentId, userId } } })
+    const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId: tournament.id, userId } } })
     if (!reg) {
       return NextResponse.json({ message: 'Inscrivez-vous au tournoi avant de rejoindre une équipe' }, { status: 403 })
     }
@@ -71,7 +71,7 @@ export async function POST(
     if (already) return NextResponse.json({ message: 'Déjà membre' }, { status: 400 })
 
     // Empêcher de rejoindre plusieurs équipes du même tournoi
-    const alreadyInTournament = await prisma.teamMember.findFirst({ where: { userId, team: { tournamentId: team.tournamentId } } })
+    const alreadyInTournament = await prisma.teamMember.findFirst({ where: { userId, team: { tournamentId: tournament.id } } })
     if (alreadyInTournament) {
       return NextResponse.json({ message: 'Vous faites déjà partie d\'une équipe de ce tournoi' }, { status: 400 })
     }

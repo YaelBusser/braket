@@ -66,6 +66,8 @@ export default function TournamentAdminPage() {
   return <TournamentAdminContent />
 }
 
+type NotifyPayload = { type?: 'success' | 'error' | 'info'; message: string }
+
 function BracketSettingsSection({ 
   tournament, 
   onUpdate, 
@@ -73,7 +75,7 @@ function BracketSettingsSection({
 }: { 
   tournament: Tournament | null
   onUpdate: (tournament: Tournament) => void
-  notify: (notification: { type: string; message: string }) => void
+  notify: (notification: NotifyPayload) => void
 }) {
   const params = useParams<{ id: string }>()
   const id = params?.id as string

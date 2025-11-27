@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { TournamentCard, CircularCard, GameCardSkeleton, PageContent } from '@/components/ui'
@@ -23,7 +23,6 @@ interface UserResult {
   pseudo: string
   email: string
   avatarUrl: string | null
-  isEnterprise: boolean
   createdAt?: string
 }
 
@@ -50,6 +49,20 @@ type TournamentStatusFilter = 'all' | 'upcoming' | 'in_progress' | 'completed'
 type TournamentFormatFilter = 'all' | string
 
 export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <PageContent style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Chargement de la recherche...</h1>
+        </div>
+      </PageContent>
+    }>
+      <SearchPageContent />
+    </Suspense>
+  )
+}
+
+function SearchPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { data: session } = useSession()

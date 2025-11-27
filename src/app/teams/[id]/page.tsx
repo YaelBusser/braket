@@ -79,20 +79,21 @@ export default function TeamPage({ params }: { params: { id: string } }) {
         
         // Vérifier si l'utilisateur est membre de l'équipe
         if (session?.user) {
-          const userIsMember = data.members.some((member: any) => member.user.id === session.user.id)
+          const userId = (session.user as any).id
+          const userIsMember = data.members.some((member: any) => member.user.id === userId)
           setIsMember(userIsMember)
           
           // Vérifier si l'utilisateur est le capitaine (premier membre)
-          const isFirstMember = data.members.length > 0 && data.members[0].user.id === session.user.id
+          const isFirstMember = data.members.length > 0 && data.members[0].user.id === userId
           setIsCaptain(isFirstMember)
         }
       } else {
-        notify('Équipe introuvable', 'error')
+        notify({ message: 'Équipe introuvable', type: 'error' })
         router.push('/teams')
       }
     } catch (error) {
       console.error('Erreur:', error)
-      notify('Erreur lors du chargement de l\'équipe', 'error')
+      notify({ message: 'Erreur lors du chargement de l\'équipe', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -111,15 +112,15 @@ export default function TeamPage({ params }: { params: { id: string } }) {
       })
 
       if (res.ok) {
-        notify('Vous avez rejoint l\'équipe ! 🎉', 'success')
+        notify({ message: 'Vous avez rejoint l\'équipe ! 🎉', type: 'success' })
         loadTeamData()
       } else {
         const error = await res.json()
-        notify(error.message || 'Erreur lors de la participation à l\'équipe', 'error')
+        notify({ message: error.message || 'Erreur lors de la participation à l\'équipe', type: 'error' })
       }
     } catch (error) {
       console.error('Erreur:', error)
-      notify('Erreur lors de la participation à l\'équipe', 'error')
+      notify({ message: 'Erreur lors de la participation à l\'équipe', type: 'error' })
     }
   }
 
@@ -132,15 +133,15 @@ export default function TeamPage({ params }: { params: { id: string } }) {
       })
 
       if (res.ok) {
-        notify('Vous avez quitté l\'équipe', 'success')
+        notify({ message: 'Vous avez quitté l\'équipe', type: 'success' })
         loadTeamData()
       } else {
         const error = await res.json()
-        notify(error.message || 'Erreur lors de la sortie de l\'équipe', 'error')
+        notify({ message: error.message || 'Erreur lors de la sortie de l\'équipe', type: 'error' })
       }
     } catch (error) {
       console.error('Erreur:', error)
-      notify('Erreur lors de la sortie de l\'équipe', 'error')
+      notify({ message: 'Erreur lors de la sortie de l\'équipe', type: 'error' })
     }
   }
 

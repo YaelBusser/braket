@@ -46,6 +46,8 @@ export default function SettingsPage() {
   const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null)
   const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
 
+  const [activeSection, setActiveSection] = useState<'account' | 'visuals' | 'password'>('account')
+
   // Update formData when session changes
   useEffect(() => {
     if (session?.user) {
@@ -398,8 +400,6 @@ export default function SettingsPage() {
   if (status === 'unauthenticated') {
     return null
   }
-
-  const [activeSection, setActiveSection] = useState<'account' | 'visuals' | 'password'>('account')
 
   return (
     <div className={styles.settingsPage}>

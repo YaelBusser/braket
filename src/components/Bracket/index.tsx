@@ -35,17 +35,20 @@ export default function Bracket({
     // Utiliser maxTeams s'il est défini, sinon 8 par défaut pour l'affichage
     const bracketSize = maxTeams || 8
     
-    const rounds: Array<{ round: number; items: Array<{ id: string; round: number; status?: string }> }> = []
+    const rounds: Array<{ round: number; items: Match[] }> = []
     let currentRound = 1
     let matchesInRound = bracketSize / 2
     
     while (matchesInRound >= 1) {
-      const roundMatches = []
+      const roundMatches: Match[] = []
       for (let i = 0; i < matchesInRound; i++) {
         roundMatches.push({
           id: `empty-${currentRound}-${i}`,
           round: currentRound,
-          status: 'PENDING'
+          status: 'PENDING',
+          teamAId: undefined,
+          teamBId: undefined,
+          winnerTeamId: undefined
         })
       }
       rounds.push({ round: currentRound, items: roundMatches })
@@ -120,17 +123,20 @@ export default function Bracket({
   // Si rounds est vide, emptyBracket devrait avoir généré quelque chose
   if (rounds.length === 0) {
     // Fallback : générer un bracket de 8 équipes par défaut
-    const fallbackRounds: Array<{ round: number; items: Array<{ id: string; round: number; status?: string }> }> = []
+    const fallbackRounds: Array<{ round: number; items: Match[] }> = []
     let currentRound = 1
     let matchesInRound = 4 // 8 équipes = 4 matchs
     
     while (matchesInRound >= 1) {
-      const roundMatches = []
+      const roundMatches: Match[] = []
       for (let i = 0; i < matchesInRound; i++) {
         roundMatches.push({
           id: `fallback-${currentRound}-${i}`,
           round: currentRound,
-          status: 'PENDING'
+          status: 'PENDING',
+          teamAId: undefined,
+          teamBId: undefined,
+          winnerTeamId: undefined
         })
       }
       fallbackRounds.push({ round: currentRound, items: roundMatches })

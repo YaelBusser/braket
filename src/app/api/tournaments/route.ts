@@ -104,19 +104,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Session expirée. Veuillez vous reconnecter.' }, { status: 401 })
     }
 
-    // Vérifier la limite de 10 tournois actifs (non terminés) - uniquement pour les particuliers
-    if (!existingUser.isEnterprise) {
-      const activeTournaments = await prisma.tournament.count({
-        where: { 
-          organizerId: userId, 
-          status: { not: 'COMPLETED' }
-        }
-      })
-      if (activeTournaments >= 10) {
-        return NextResponse.json({ 
-          message: 'Limite atteinte : vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' 
-        }, { status: 409 })
+    // Vérifier la limite de 10 tournois actifs (non terminés)
+    const activeTournaments = await prisma.tournament.count({
+      where: { 
+        organizerId: userId, 
+        status: { not: 'COMPLETED' }
       }
+    })
+    if (activeTournaments >= 10) {
+      return NextResponse.json({ 
+        message: 'Limite atteinte : vous ne pouvez pas avoir plus de 10 tournois actifs simultanément. Terminez ou supprimez un tournoi existant pour en créer un nouveau.' 
+      }, { status: 409 })
     }
 
     // Coercion des enums (MVP: toujours SINGLE_ELIMINATION + PUBLIC)
@@ -175,16 +173,6 @@ export async function GET(request: NextRequest) {
     const session = await getServerSession(authOptions)
     const userId = (session?.user as any)?.id as string | undefined
 
-    // Récupérer le type d'utilisateur si connecté
-    let userIsEnterprise = false
-    if (userId) {
-      const user = await prisma.user.findUnique({ 
-        where: { id: userId },
-        select: { isEnterprise: true }
-      })
-      userIsEnterprise = user?.isEnterprise || false
-    }
-
     const where: any = {}
     if (mine) {
       if (!userId) {
@@ -193,19 +181,6 @@ export async function GET(request: NextRequest) {
       where.organizerId = userId
     } else {
       where.visibility = 'PUBLIC'
-      // Séparation entreprises/particuliers : filtrer selon le type d'utilisateur
-      // Par défaut (non connecté ou particulier), on montre uniquement les tournois de particuliers
-      if (userIsEnterprise) {
-        // Les entreprises ne voient que les tournois d'entreprises
-        where.organizer = {
-          isEnterprise: true
-        }
-      } else {
-        // Les particuliers (et non connectés) ne voient que les tournois de particuliers
-        where.organizer = {
-          isEnterprise: false
-        }
-      }
     }
     if (q) {
       where.OR = [{ name: { contains: q } }, { game: { contains: q } }]
@@ -235,8 +210,7 @@ export async function GET(request: NextRequest) {
         organizer: {
           select: {
             id: true,
-            pseudo: true,
-            isEnterprise: true
+            pseudo: true
           }
         },
         gameRef: {

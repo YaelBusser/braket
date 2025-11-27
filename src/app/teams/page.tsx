@@ -2,7 +2,7 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import { PageContent } from '../../components/ui'
@@ -38,19 +38,7 @@ export default function TeamsPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'my-teams' | 'all-teams'>('my-teams')
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      try { localStorage.setItem('lt_returnTo', '/teams') } catch {}
-      openAuthModal('login')
-      router.push('/')
-      return
-    }
-    if (session?.user) {
-      loadTeams()
-    }
-  }, [session, status, router, openAuthModal])
-
-  const loadTeams = async () => {
+  const loadTeams = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/teams?mine=true')
@@ -62,11 +50,23 @@ export default function TeamsPage() {
       }
     } catch (error) {
       console.error('Erreur:', error)
-      notify('Erreur lors du chargement des équipes', 'error')
+      notify({ message: 'Erreur lors du chargement des équipes', type: 'error' })
     } finally {
       setLoading(false)
     }
-  }
+  }, [notify])
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      try { localStorage.setItem('lt_returnTo', '/teams') } catch {}
+      openAuthModal('login')
+      router.push('/')
+      return
+    }
+    if (session?.user) {
+      loadTeams()
+    }
+  }, [session, status, router, openAuthModal, loadTeams])
 
   if (status === 'loading' || loading) {
     return (
@@ -126,7 +126,7 @@ export default function TeamsPage() {
               <div className={styles.emptyState}>
                 <div className={styles.emptyIcon}>👥</div>
                 <h3>Aucune équipe</h3>
-                <p>Vous n'avez pas encore rejoint d'équipe</p>
+                <p>Vous n&apos;avez pas encore rejoint d&apos;équipe</p>
                 <button 
                   className={styles.createBtn}
                   onClick={() => router.push('/teams/create')}
@@ -191,7 +191,7 @@ export default function TeamsPage() {
 
             <div className={styles.emptyState}>
               <div className={styles.emptyIcon}>🔍</div>
-              <h3>Recherche d'équipes</h3>
+              <h3>Recherche d&apos;équipes</h3>
               <p>Cette fonctionnalité sera bientôt disponible</p>
             </div>
           </div>
