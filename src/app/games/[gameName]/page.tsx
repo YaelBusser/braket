@@ -270,21 +270,20 @@ export default function GamePage() {
                 }}
               />
             ) : (
-                <div style={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '2rem',
-                  fontWeight: 'bold',
-                  color: '#ffffff'
-                }}>
-                  {gameName.charAt(0).toUpperCase()}
-                </div>
-              )
-            })()}
+              <div style={{
+                width: '100%',
+                height: '100%',
+                background: 'linear-gradient(135deg, #ff008c 0%, #6748ff 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '2rem',
+                fontWeight: 'bold',
+                color: '#ffffff'
+              }}>
+                {gameName.charAt(0).toUpperCase()}
+              </div>
+            )}
           </div>
           
           {/* Informations du jeu */}
