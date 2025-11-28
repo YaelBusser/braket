@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { memo } from 'react'
 import styles from './index.module.scss'
 import { formatRelativeTimeWithTZ } from '@/utils/dateUtils'
-import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import SettingsIcon from '../../icons/SettingsIcon'
 
 interface TournamentCardProps {
@@ -18,6 +17,8 @@ interface TournamentCardProps {
       id: string
       name: string
       imageUrl: string | null
+      logoUrl: string | null
+      posterUrl: string | null
     } | null
     posterUrl?: string | null
     logoUrl?: string | null
@@ -90,12 +91,10 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
   // Utiliser gameRef si disponible, sinon fallback sur game
   const gameName = tournament.gameRef?.name || tournament.game || ''
   
-  // Récupérer le logo du jeu depuis le dossier gamesLogo
-  const gameLogoPath = getGameLogoPath(gameName)
-  
   // Image de fond : poster ou image du jeu (on garde l'ancienne logique pour l'image de fond)
   const gameImage = tournament.gameRef?.imageUrl || null
   const backgroundImage = tournament.posterUrl || gameImage
+  const gameLogoUrl = tournament.gameRef?.logoUrl
 
   // Format du mode de jeu
   const formatMode = () => {
@@ -205,8 +204,8 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
         
         {/* Logo du jeu en haut à gauche */}
         <div className={styles.gameLogoOverlay}>
-          {gameLogoPath ? (
-            <Image src={gameLogoPath} alt={gameName} width={40} height={40} loading="lazy" />
+          {gameLogoUrl ? (
+            <Image src={gameLogoUrl} alt={gameName} width={40} height={40} loading="lazy" />
           ) : (
             <div className={styles.gameIconPlaceholder}>
               {getGameIcon()}
@@ -218,10 +217,10 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
       {/* Section contenu en dessous de l'image */}
       <div className={styles.cardContent}>
         {/* Logo organisateur à gauche - utilise le logo du jeu par défaut si pas de logo tournoi */}
-        {organizer?.avatarUrl || tournament.logoUrl || gameLogoPath ? (
+        {organizer?.avatarUrl || tournament.logoUrl || gameLogoUrl ? (
           <div className={styles.organizerLogo}>
             <Image 
-              src={organizer?.avatarUrl || tournament.logoUrl || gameLogoPath || ''} 
+              src={organizer?.avatarUrl || tournament.logoUrl || gameLogoUrl || ''} 
               alt={organizer?.pseudo || tournament.name || gameName}
               width={40}
               height={40}

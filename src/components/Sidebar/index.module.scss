@@ -12,14 +12,131 @@
   flex-direction: column;
   align-items: center;
   padding: 8px 6px;
-  padding-top: vars.$header-height; /* Espace pour le header */
-  gap: 12px;
+  padding-bottom: calc(1rem + 50px + 8px); /* Espace pour le bouton + padding */
+  gap: 0; /* Pas de gap pour que les sections atteignent la barre */
   z-index: vars.$z-sticky; /* En dessous du header */
+  overflow: hidden; /* Pas de scroll sur la sidebar principale */
+  padding-top: calc(vars.$header-height + 1rem);
+}
+
+.createButton {
+  position: absolute;
+  bottom: 1rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  position: relative;
+  padding: 12px 0;
+  
+  // Cacher la scrollbar
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE et Edge */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+}
+
+.sectionTop {
+  padding-bottom: 1rem;
+  padding-top: 0;
+  flex-shrink: 0; /* Ne prend que l'espace nécessaire */
+  // Fade en bas de la section du haut quand il y a du contenu caché
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 24px;
+    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+.sectionBottom {
+  flex: 1 1 auto; /* Prend le reste de l'espace disponible */
+  min-height: 0;
+  // Fade en haut de la section du bas quand il y a du contenu caché
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 24px;
+    background: linear-gradient(to top, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    pointer-events: none;
+    z-index: 2;
+  }
+  
+  // Fade en bas de la section des tournois créés
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 24px;
+    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    pointer-events: none;
+    z-index: 2;
+  }
+}
+
+.separator {
+  width: 90%;
+  height: 3px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 3;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 0;
+  
+  // Fade en haut de la barre de séparation
+  &::before {
+    content: '';
+    position: absolute;
+    top: -15px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 15px;
+    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    pointer-events: none;
+    z-index: -1;
+  }
+  
+  // Fade en bas de la barre de séparation
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 20px;
+    background: linear-gradient(to top, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    pointer-events: none;
+    z-index: -1;
+  }
 }
 
 .avatarButton {
-  width: 44px;
-  height: 44px;
+  width: 50px;
+  height: 50px;
   border-radius: 50%;
   background: #0c0016;
   border: 1px solid rgba(255,255,255,0.08);
@@ -29,15 +146,32 @@
   justify-content: center;
   cursor: pointer;
   transition: transform .15s ease, box-shadow .15s ease;
+  flex-shrink: 0;
 
   &:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,.25); }
 }
 
-.avatarImage { width: 100%; height: 100%; object-fit: cover; }
+.participating {
+  border-radius: 10px;
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+}
 
-.plus {
-  font-size: 20px;
+.avatarImage { 
+  width: 100%; 
+  height: 100%; 
+  object-fit: cover;
+  object-position: center;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+.plusIcon {
+  width: 24px;
+  height: 24px;
   color: vars.$lt-text-secondary;
+  display: block;
 }
 
 @media (max-width: 1024px) {

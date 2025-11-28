@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useNotification } from '../../../components/providers/notification-provider'
-import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import styles from './page.module.scss'
 import { GameInfo } from '@/data/games'
 
@@ -179,9 +178,9 @@ function CreateForm() {
       try {
         const res = await fetch('/api/games')
         const data = await res.json()
-        const list: GameInfo[] = (data.games || []).map((g: any) => ({
-          id: g.id, name: g.name, slug: g.slug, image: getGamePosterPath(g.name) || g.imageUrl
-        }))
+          const list: GameInfo[] = (data.games || []).map((g: any) => ({
+            id: g.id, name: g.name, slug: g.slug, image: g.posterUrl || g.imageUrl
+          }))
         setAllGames(list)
       } catch {}
     })()

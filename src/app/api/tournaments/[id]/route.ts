@@ -8,25 +8,49 @@ import { promises as fsp } from 'fs'
 import path from 'path'
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    
+    // Paramètres pour charger les détails à la demande
+    const includeTeams = searchParams.get('includeTeams') === 'true'
+    const includeMatches = searchParams.get('includeMatches') === 'true'
+    const includeRegistrations = searchParams.get('includeRegistrations') === 'true'
+    
+    // Par défaut, on charge uniquement les données essentielles avec les compteurs
     const tournament = await prisma.tournament.findUnique({
       where: { id },
       include: {
         organizer: { select: { id: true, pseudo: true, avatarUrl: true } },
-        teams: {
-          include: {
-            members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+        gameRef: { select: { id: true, name: true, imageUrl: true, logoUrl: true, posterUrl: true } },
+        _count: { 
+          select: { 
+            registrations: true,
+            teams: true,
+            matches: true
+          } 
+        },
+        // Charger les équipes seulement si demandé
+        ...(includeTeams ? {
+          teams: {
+            include: {
+              members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+            },
           },
-        },
-        matches: {
-          include: { teamA: true, teamB: true, winnerTeam: true }
-        },
-        _count: { select: { registrations: true } },
-        registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+        } : {}),
+        // Charger les matchs seulement si demandé
+        ...(includeMatches ? {
+          matches: {
+            include: { teamA: true, teamB: true, winnerTeam: true }
+          },
+        } : {}),
+        // Charger les inscriptions seulement si demandé
+        ...(includeRegistrations ? {
+          registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+        } : {}),
       },
     })
 

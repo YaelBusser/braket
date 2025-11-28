@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import styles from './page.module.scss'
 import { TournamentCard, GameCardSkeleton } from '@/components/ui'
-import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import { useCreateTournamentModal } from '@/components/CreateTournamentModal/CreateTournamentModalContext'
 
 export default function Home() {
@@ -31,7 +30,7 @@ export default function Home() {
         const games = (data.games || []).slice(0, 6).map((g: any) => ({
           id: g.id,
           name: g.name,
-          image: getGamePosterPath(g.name) || g.imageUrl
+          image: g.posterUrl || g.imageUrl
         }))
         setPopularGames(games)
       } finally {

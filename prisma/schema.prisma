@@ -106,7 +106,9 @@ model Game {
   id          String       @id @default(cuid())
   name        String       @unique
   slug        String       @unique
-  imageUrl    String?
+  imageUrl    String?      // Bannière
+  logoUrl     String?      // Logo
+  posterUrl   String?      // Poster
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 

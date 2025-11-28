@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     for (const g of GAMES) {
       await prisma.game.upsert({
         where: { slug: g.slug },
-        create: { name: g.name, slug: g.slug, imageUrl: g.image },
-        update: { name: g.name, imageUrl: g.image }
+        create: { name: g.name, slug: g.slug, logoUrl: g.image },
+        update: { name: g.name, logoUrl: g.image }
       })
       created += 1
     }

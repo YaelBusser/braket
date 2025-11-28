@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import { findGameByName, GameInfo } from '@/data/games'
+import { GameInfo } from '@/data/games'
 import { ContentContainer, Tabs, TournamentCard } from '@/components/ui'
-import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import styles from './page.module.scss'
 
 interface Tournament {
@@ -40,6 +39,7 @@ export default function GamePage() {
   const { data: session } = useSession()
   const [gameName, setGameName] = useState('')
   const [gameDetails, setGameDetails] = useState<GameDetails | null>(null)
+  const [gameLogoUrl, setGameLogoUrl] = useState<string | null>(null)
   const [tournaments, setTournaments] = useState<Tournament[]>([])
   const [loading, setLoading] = useState(true)
   const [gameLoading, setGameLoading] = useState(true)
@@ -56,13 +56,38 @@ export default function GamePage() {
     }
   }, [params.gameName])
 
-  // Charger les détails du jeu depuis la liste statique
+  // Charger les détails du jeu depuis la base de données
   useEffect(() => {
     if (!gameName) return
     setGameLoading(true)
-    const found = findGameByName(gameName)
-    setGameDetails(found || null)
-    setGameLoading(false)
+    const loadGame = async () => {
+      try {
+        const res = await fetch('/api/games')
+        const data = await res.json()
+        const found = (data.games || []).find((g: any) => 
+          g.name.toLowerCase() === gameName.toLowerCase() || 
+          g.slug === gameName.toLowerCase()
+        )
+        if (found) {
+          setGameDetails({
+            id: found.id,
+            name: found.name,
+            slug: found.slug,
+            image: found.posterUrl || found.imageUrl || ''
+          })
+          setGameLogoUrl(found.logoUrl || null)
+        } else {
+          setGameDetails(null)
+          setGameLogoUrl(null)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du jeu:', error)
+        setGameDetails(null)
+      } finally {
+        setGameLoading(false)
+      }
+    }
+    loadGame()
   }, [gameName])
 
   useEffect(() => {
@@ -233,20 +258,18 @@ export default function GamePage() {
               }}>
                 {gameName.charAt(0).toUpperCase()}
               </div>
-            ) : (() => {
-              const gameLogoPath = getGameLogoPath(gameName)
-              return gameLogoPath ? (
-                <img 
-                  src={gameLogoPath} 
-                  alt={gameName}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    background: '#1a1f2e',
-                  }}
-                />
-              ) : (
+            ) : gameLogoUrl ? (
+              <img 
+                src={gameLogoUrl} 
+                alt={gameName}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  background: '#1a1f2e',
+                }}
+              />
+            ) : (
                 <div style={{
                   width: '100%',
                   height: '100%',

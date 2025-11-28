@@ -11,8 +11,6 @@ import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
 import { Tabs, ContentWithTabs } from '../../../components/ui'
-import { getGameLogoPath } from '@/utils/gameLogoUtils'
-import { findGameByName } from '@/data/games'
 
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
@@ -58,7 +56,7 @@ function TournamentView() {
       if (!id) return
       // Précharger les données immédiatement
       try {
-        // Charger le tournoi en priorité pour afficher rapidement
+        // Charger le tournoi en priorité pour afficher rapidement (sans les détails lourds)
         const tRes = await fetch(`/api/tournaments/${id}`)
         const tData = await tRes.json()
         
@@ -67,6 +65,18 @@ function TournamentView() {
           setTournament(tData.tournament)
           setRegistrations(tData.tournament?.registrations || [])
         })
+        
+        // Charger les registrations seulement si nécessaire (pour vérifier l'inscription de l'utilisateur)
+        if (session?.user) {
+          const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+          const regData = await regRes.json()
+          if (regData.tournament?.registrations) {
+            startTransition(() => {
+              setRegistrations(regData.tournament.registrations)
+              setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+            })
+          }
+        }
         
         // Charger les équipes en parallèle (moins prioritaire)
         const teamRes = await fetch(`/api/teams/${id}`)
@@ -80,7 +90,7 @@ function TournamentView() {
       }
     }
     load()
-  }, [id])
+  }, [id, session])
 
   // Optimisation : combiner les calculs liés à l'utilisateur
   useEffect(() => {
@@ -288,9 +298,7 @@ function TournamentView() {
   }
 
   // Récupérer la bannière du jeu par défaut
-  const gameName = tournament.gameRef?.name || tournament.game || ''
-  const gameDetails = gameName ? findGameByName(gameName) : null
-  const bannerUrl = tournament.posterUrl || gameDetails?.image || null
+  const bannerUrl = tournament.posterUrl || tournament.gameRef?.posterUrl || tournament.gameRef?.imageUrl || null
 
   return (
     <div className={styles.tournamentPage}>
@@ -311,9 +319,7 @@ function TournamentView() {
           <div className={styles.bannerInner}>
             {/* Photo de profil circulaire - utilise le logo du jeu par défaut */}
             {(() => {
-              const gameName = tournament.gameRef?.name || tournament.game || ''
-              const gameLogoPath = getGameLogoPath(gameName)
-              const logoUrl = tournament.logoUrl || gameLogoPath
+              const logoUrl = tournament.logoUrl || tournament.gameRef?.logoUrl
               
               return logoUrl ? (
                 <img 
@@ -471,10 +477,11 @@ function TournamentView() {
                       gap: '0.75rem'
                     }}>
                       {(() => {
-                        const gameLogoPath = getGameLogoPath(gameName)
-                        return gameLogoPath ? (
+                        const gameImageUrl = tournament.gameRef?.logoUrl
+                        const gameName = tournament.gameRef?.name || tournament.game || ''
+                        return gameImageUrl ? (
                           <img 
-                            src={gameLogoPath} 
+                            src={gameImageUrl} 
                             alt={gameName}
                             style={{
                               width: '32px',
@@ -511,7 +518,7 @@ function TournamentView() {
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap'
                         }}>
-                          {gameName || 'Non spécifié'}
+                          {tournament.gameRef?.name || tournament.game || 'Non spécifié'}
                         </div>
                       </div>
                     </div>

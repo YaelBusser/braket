@@ -7,7 +7,6 @@ import ClientPageWrapper from '../../../../components/ClientPageWrapper'
 import Link from 'next/link'
 import Cropper from 'react-easy-crop'
 import styles from './page.module.scss'
-import { getGameLogoPath } from '@/utils/gameLogoUtils'
 import { getCroppedImg } from '@/lib/image'
 import VisualsIcon from '../../../../components/icons/VisualsIcon'
 import SettingsIcon from '../../../../components/icons/SettingsIcon'
@@ -34,12 +33,19 @@ interface Tournament {
   posterUrl: string | null
   createdAt: string
   updatedAt: string
+  gameRef?: {
+    id: string
+    name: string
+    imageUrl: string | null
+    logoUrl: string | null
+    posterUrl: string | null
+  } | null
   _count: {
     registrations: number
     teams: number
     matches: number
   }
-  teams: Array<{
+  teams?: Array<{
     id: string
     name: string
     members: Array<{
@@ -51,7 +57,7 @@ interface Tournament {
       }
     }>
   }>
-  matches: Array<{
+  matches?: Array<{
     id: string
     round: number | null
     status: string
@@ -59,6 +65,14 @@ interface Tournament {
     teamB: { id: string; name: string }
     winnerTeam: { id: string; name: string } | null
     scheduledAt: string | null
+  }>
+  registrations?: Array<{
+    id: string
+    user: {
+      id: string
+      pseudo: string
+      avatarUrl: string | null
+    }
   }>
 }
 
@@ -274,6 +288,18 @@ function TournamentAdminContent() {
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
   const [isLoadingVisuals, setIsLoadingVisuals] = useState(false)
 
+  // États pour suivre quelles données ont été chargées
+  const [loadedData, setLoadedData] = useState<{
+    teams: boolean
+    matches: boolean
+    registrations: boolean
+  }>({
+    teams: false,
+    matches: false,
+    registrations: false
+  })
+
+  // Charger les données de base (sans les détails lourds)
   useEffect(() => {
     const load = async () => {
       try {
@@ -292,6 +318,56 @@ function TournamentAdminContent() {
     }
     if (id) load()
   }, [id, notify])
+
+  // Charger les détails à la demande selon l'onglet actif
+  useEffect(() => {
+    if (!tournament || loading) return
+
+    const loadDetails = async () => {
+      const params = new URLSearchParams()
+      let needsTeams = false
+      let needsMatches = false
+      let needsRegistrations = false
+      
+      if (activeSection === 'participants') {
+        if (!loadedData.teams) {
+          params.set('includeTeams', 'true')
+          needsTeams = true
+        }
+        if (!tournament.isTeamBased && !loadedData.registrations) {
+          params.set('includeRegistrations', 'true')
+          needsRegistrations = true
+        }
+      } else if (activeSection === 'matches') {
+        if (!loadedData.matches) {
+          params.set('includeMatches', 'true')
+          needsMatches = true
+        }
+      }
+
+      // Si on a besoin de charger des détails
+      if (params.toString()) {
+        try {
+          const res = await fetch(`/api/tournaments/${id}?${params.toString()}`)
+          const data = await res.json()
+          if (res.ok && data.tournament) {
+            // Fusionner les nouvelles données avec les données existantes
+            setTournament(prev => prev ? { ...prev, ...data.tournament } : data.tournament)
+            // Marquer les données comme chargées
+            setLoadedData(prev => ({
+              teams: prev.teams || needsTeams,
+              matches: prev.matches || needsMatches,
+              registrations: prev.registrations || needsRegistrations
+            }))
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement des détails:', error)
+        }
+      }
+    }
+
+    loadDetails()
+  }, [activeSection, tournament?.id, loading, loadedData])
 
   const handleDelete = async () => {
     if (!confirm('Supprimer définitivement ce tournoi ? Cette action est irréversible.')) return
@@ -514,8 +590,7 @@ function TournamentAdminContent() {
     )
   }
 
-  const gameName = tournament.game || ''
-  const gameLogoPath = getGameLogoPath(gameName)
+  const gameImageUrl = tournament.gameRef?.logoUrl
 
   return (
     <div className={styles.adminPage}>
@@ -523,9 +598,9 @@ function TournamentAdminContent() {
         {/* Sidebar */}
         <aside className={styles.sidebar}>
           <div className={styles.sidebarHeader}>
-            {tournament.logoUrl || gameLogoPath ? (
+            {tournament.logoUrl || gameImageUrl ? (
               <div className={styles.sidebarLogo}>
-                <img src={tournament.logoUrl || gameLogoPath || ''} alt={tournament.name} />
+                <img src={tournament.logoUrl || gameImageUrl || ''} alt={tournament.name} />
               </div>
             ) : (
               <div className={styles.sidebarLogoPlaceholder}>
@@ -851,8 +926,8 @@ function TournamentAdminContent() {
                         <img src={logoPreviewUrl} alt="Logo preview" className={styles.visualsAvatar} />
                       ) : tournament.logoUrl ? (
                         <img src={tournament.logoUrl} alt="Logo actuel" className={styles.visualsAvatar} />
-                      ) : gameLogoPath ? (
-                        <img src={gameLogoPath} alt="Logo du jeu" className={styles.visualsAvatar} />
+                      ) : gameImageUrl ? (
+                        <img src={gameImageUrl} alt="Logo du jeu" className={styles.visualsAvatar} />
                       ) : (
                         <div className={styles.visualsAvatarPlaceholder}>
                           🎮

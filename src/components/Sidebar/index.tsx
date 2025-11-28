@@ -10,11 +10,18 @@ type MiniTournament = {
   id: string
   name: string
   posterUrl?: string | null
+  logoUrl?: string | null
   game?: string | null
+  gameRef?: {
+    imageUrl?: string | null
+    logoUrl?: string | null
+    posterUrl?: string | null
+  } | null
 }
 
 function Sidebar() {
   const [participating, setParticipating] = useState<MiniTournament[]>([])
+  const [created, setCreated] = useState<MiniTournament[]>([])
   const { openCreateTournamentModal } = useCreateTournamentModal()
   const [isPending, startTransition] = useTransition()
 
@@ -33,6 +40,7 @@ function Sidebar() {
         // Utiliser startTransition pour ne pas bloquer le rendu
         startTransition(() => {
           setParticipating(data.participating || [])
+          setCreated(data.created || [])
         })
       } catch {}
     }
@@ -45,40 +53,78 @@ function Sidebar() {
     }
   }, [])
 
+  const renderTournamentLogo = (t: MiniTournament, isParticipating: boolean = false) => {
+    const imageUrl = t.logoUrl || t.gameRef?.logoUrl
+    return (
+      <Link 
+        key={t.id} 
+        href={`/tournaments/${t.id}`} 
+        className={`${styles.avatarButton} ${isParticipating ? styles.participating : ''}`} 
+        title={t.name}
+        prefetch={true}
+      >
+        {imageUrl ? (
+          <Image 
+            src={imageUrl} 
+            alt={t.name} 
+            width={88}
+            height={88}
+            className={styles.avatarImage}
+            loading="lazy"
+            quality={90}
+          />
+        ) : (
+          <span className={styles.plus}>🎮</span>
+        )}
+      </Link>
+    )
+  }
+
   return (
-    <aside className={styles.sidebar} aria-label="Tournois créés">
-      {/* Bouton créer/ajouter */}
+    <aside className={styles.sidebar} aria-label="Tournois">
+      {/* Tournois auxquels je participe */}
+      {participating.length > 0 && (
+        <div className={`${styles.section} ${styles.sectionTop}`}>
+          {participating.map(t => renderTournamentLogo(t, true))}
+        </div>
+      )}
+
+      {/* Barre de séparation - fixe entre les sections */}
+      {(participating.length > 0 && created.length > 0) && (
+        <div className={styles.separator} />
+      )}
+
+      {/* Tournois que j'ai créés */}
+      {created.length > 0 && (
+        <div className={`${styles.section} ${styles.sectionBottom}`}>
+          {created.map(t => renderTournamentLogo(t, false))}
+        </div>
+      )}
+
+      {/* Bouton créer/ajouter - en bas */}
       <button 
         onClick={openCreateTournamentModal}
-        className={styles.avatarButton} 
+        className={`${styles.avatarButton} ${styles.createButton}`} 
         title="Créer un tournoi"
         type="button"
       >
-        <span className={styles.plus}>+</span>
-      </button>
-
-      {participating.map(t => (
-        <Link 
-          key={t.id} 
-          href={`/tournaments/${t.id}`} 
-          className={styles.avatarButton} 
-          title={t.name}
-          prefetch={true}
+        <svg 
+          className={styles.plusIcon}
+          width="24" 
+          height="24" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {t.posterUrl ? (
-            <Image 
-              src={t.posterUrl} 
-              alt={t.name} 
-              width={40}
-              height={40}
-              className={styles.avatarImage}
-              loading="lazy"
-            />
-          ) : (
-            <span className={styles.plus}>🎮</span>
-          )}
-        </Link>
-      ))}
+          <path 
+            d="M12 5V19M5 12H19" 
+            stroke="currentColor" 
+            strokeWidth="2" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
     </aside>
   )
 }

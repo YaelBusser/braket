@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { TournamentCard, CircularCard, GameCardSkeleton, PageContent } from '@/components/ui'
 import { formatRelativeTime } from '@/utils/dateUtils'
-import { getGamePosterPath } from '@/utils/gameLogoUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
 
@@ -16,6 +15,8 @@ interface GameResult {
   name: string
   slug: string
   imageUrl: string | null
+  logoUrl: string | null
+  posterUrl: string | null
 }
 
 interface UserResult {
@@ -438,7 +439,7 @@ function SearchPageContent() {
                   <Link key={game.id} href={`/games/${encodeURIComponent(game.name)}`} className={styles.gameCard}>
                     <div className={styles.gameImageContainer}>
                       {(() => {
-                        const posterPath = getGamePosterPath(game.name) || game.imageUrl
+                        const posterPath = game.posterUrl || game.imageUrl
                         return posterPath ? (
                           <img src={posterPath} alt={game.name} className={styles.gameImage} />
                         ) : (

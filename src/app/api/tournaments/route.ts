@@ -217,7 +217,9 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            imageUrl: true
+            imageUrl: true,
+            logoUrl: true,
+            posterUrl: true
           }
         },
         _count: {

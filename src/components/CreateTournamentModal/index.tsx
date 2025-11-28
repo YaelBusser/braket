@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useNotification } from '../providers/notification-provider'
 import { useAuthModal } from '../AuthModal/AuthModalContext'
-import { getGamePosterPath, getGameLogoPath } from '@/utils/gameLogoUtils'
 import { GameInfo } from '@/data/games'
 import TournamentCard from '../ui/TournamentCard'
 import Cropper from 'react-easy-crop'
@@ -93,8 +92,13 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
         try {
           const res = await fetch('/api/games')
           const data = await res.json()
-          const list: GameInfo[] = (data.games || []).map((g: any) => ({
-            id: g.id, name: g.name, slug: g.slug, image: getGamePosterPath(g.name) || g.imageUrl
+          const list: (GameInfo & { logoUrl?: string | null; posterUrl?: string | null })[] = (data.games || []).map((g: any) => ({
+            id: g.id, 
+            name: g.name, 
+            slug: g.slug, 
+            image: g.posterUrl || g.imageUrl,
+            logoUrl: g.logoUrl,
+            posterUrl: g.posterUrl
           }))
           setAllGames(list)
         } catch {}
@@ -404,8 +408,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
 
   if (!isOpen && !isClosing) return null
 
-  const gameLogo = selectedGameId ? getGameLogoPath(selectedGameName) : null
-  const gamePoster = selectedGameId ? getGamePosterPath(selectedGameName) : null
+  const selectedGame = selectedGameId ? allGames.find(g => g.id === selectedGameId) : null
+  const gameLogo = selectedGame && 'logoUrl' in selectedGame ? selectedGame.logoUrl : null
+  const gamePoster = selectedGame && 'posterUrl' in selectedGame ? selectedGame.posterUrl : selectedGame?.image || null
 
   return (
     <div className={`${styles.modalOverlay} ${isClosing ? styles.modalOverlayClosing : ''}`} onClick={handleClose}>
@@ -822,7 +827,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                         gameRef: {
                           id: selectedGameId || '',
                           name: selectedGameName,
-                          imageUrl: gamePoster || null
+                          imageUrl: selectedGame?.image || null,
+                          logoUrl: gameLogo || null,
+                          posterUrl: gamePoster || null
                         },
                         posterUrl: posterPreview || null,
                         logoUrl: logoPreview || null,

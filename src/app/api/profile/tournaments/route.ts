@@ -11,27 +11,69 @@ export async function GET(_request: NextRequest) {
 
     const participating = await prisma.tournament.findMany({
       where: {
-        OR: [
-          { registrations: { some: { userId } } },
-          { teams: { some: { members: { some: { userId } } } } }
+        AND: [
+          {
+            OR: [
+              { registrations: { some: { userId } } },
+              { teams: { some: { members: { some: { userId } } } } }
+            ]
+          },
+          {
+            status: { not: 'COMPLETED' }
+          }
         ]
       },
       select: {
         id: true,
         name: true,
         posterUrl: true,
+        logoUrl: true,
         game: true,
-        status: true
+        status: true,
+        gameRef: {
+          select: {
+            imageUrl: true,
+            logoUrl: true,
+            posterUrl: true
+          }
+        }
+      }
+    })
+
+    const created = await prisma.tournament.findMany({
+      where: {
+        AND: [
+          { organizerId: userId },
+          { status: { not: 'COMPLETED' } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        posterUrl: true,
+        logoUrl: true,
+        game: true,
+        status: true,
+        gameRef: {
+          select: {
+            imageUrl: true,
+            logoUrl: true,
+            posterUrl: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
       }
     })
 
     // Favorites: placeholder (pas encore de table). Retourne vide pour l'instant
     const favorites: any[] = []
 
-    return NextResponse.json({ participating, favorites })
+    return NextResponse.json({ participating, created, favorites })
   } catch (error) {
     console.error('profile/tournaments error', error)
-    return NextResponse.json({ participating: [], favorites: [] }, { status: 500 })
+    return NextResponse.json({ participating: [], created: [], favorites: [] }, { status: 500 })
   }
 }
 

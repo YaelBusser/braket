@@ -6,16 +6,16 @@ export type GameInfo = {
 }
 
 export const GAMES: GameInfo[] = [
-  { id: 'cs-2', name: 'CS 2', slug: 'cs-2', image: '/images/games/cs-2.jpg' },
-  { id: 'valorant', name: 'Valorant', slug: 'valorant', image: '/images/games/valorant.jpg' },
-  { id: 'rocket-league', name: 'Rocket League', slug: 'rocket-league', image: '/images/games/rocket-league.jpg' },
-  { id: 'league-of-legends', name: 'League of Legends', slug: 'league-of-legends', image: '/images/games/league-of-legends.jpg' },
-  { id: 'dota-2', name: 'Dota 2', slug: 'dota-2', image: '/images/games/dota-2.jpg' },
-  { id: 'street-fighter-6', name: 'Street Fighter 6', slug: 'street-fighter-6', image: '/images/games/street-fighter-6.png' },
-  { id: 'fortnite', name: 'Fortnite', slug: 'fortnite', image: '/images/games/fortnite.jpg' },
-  { id: 'pubg', name: 'pubg', slug: 'pubg', image: '/images/games/pubg.jpg' },
-  { id: 'apex-legends', name: 'Apex Legends', slug: 'apex-legends', image: '/images/games/apex-legends.jpg' },
-  { id: 'call-of-duty-7', name: 'Call of Duty 7', slug: 'call-of-duty-7', image: '/images/games/call-of-duty-7.jpg' },
+  { id: 'cs-2', name: 'CS 2', slug: 'cs-2', image: '/images/gamesPoster/cs2.webp' },
+  { id: 'valorant', name: 'Valorant', slug: 'valorant', image: '/images/gamesPoster/valorant.webp' },
+  { id: 'rocket-league', name: 'Rocket League', slug: 'rocket-league', image: '/images/gamesPoster/rocket-league.webp' },
+  { id: 'league-of-legends', name: 'League of Legends', slug: 'league-of-legends', image: '/images/gamesPoster/league-of-legends.webp' },
+  { id: 'dota-2', name: 'Dota 2', slug: 'dota-2', image: '/images/gamesPoster/dota-2.webp' },
+  { id: 'street-fighter-6', name: 'Street Fighter 6', slug: 'street-fighter-6', image: '/images/gamesPoster/street-fighter-6.webp' },
+  { id: 'fortnite', name: 'Fortnite', slug: 'fortnite', image: '/images/gamesPoster/fortnite.webp' },
+  { id: 'pubg', name: 'pubg', slug: 'pubg', image: '/images/gamesPoster/pubg.webp' },
+  { id: 'apex-legends', name: 'Apex Legends', slug: 'apex-legends', image: '/images/gamesPoster/apex-legends.webp' },
+  { id: 'call-of-duty-7', name: 'Call of Duty 7', slug: 'call-of-duty-7', image: '/images/gamesPoster/call-of-duty-bo-7.webp' },
 ]
 
 export function findGameByName(name: string): GameInfo | undefined {
