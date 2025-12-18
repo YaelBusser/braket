@@ -18,6 +18,7 @@ function ProfilePage() {
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
   const { openCreateTournamentModal } = useCreateTournamentModal()
+  const isAdmin = (session?.user as any)?.isAdmin === 1
   
   
   // États pour les données utilisateur
@@ -224,12 +225,14 @@ function ProfilePage() {
             <div className={styles.tournamentsTab}>
               <div className={styles.tabHeader}>
                 <h3>Tournois créés</h3>
-                <button 
-                  className={styles.createBtn}
-                  onClick={openCreateTournamentModal}
-                >
-                  Créer un tournoi
-                </button>
+                {isAdmin && (
+                  <button 
+                    className={styles.createBtn}
+                    onClick={openCreateTournamentModal}
+                  >
+                    Créer un tournoi
+                  </button>
+                )}
               </div>
               
               <div className={styles.tournamentList}>
@@ -238,12 +241,14 @@ function ProfilePage() {
                 ) : !userTournaments || !Array.isArray(userTournaments) || userTournaments.length === 0 ? (
                   <div className={styles.emptyState}>
                     <p>Aucun tournoi créé</p>
-                    <button 
-                      className={styles.createBtn}
-                      onClick={openCreateTournamentModal}
-                    >
-                      Créer mon premier tournoi
-                    </button>
+                    {isAdmin && (
+                      <button 
+                        className={styles.createBtn}
+                        onClick={openCreateTournamentModal}
+                      >
+                        Créer mon premier tournoi
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div style={{ 
