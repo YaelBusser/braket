@@ -1,0 +1,198 @@
+🌍 Contexte du projet
+
+Nous développons une plateforme web de gestion de tournois (MVP).
+Objectif : permettre à des particuliers, associations ou entreprises de créer, organiser et participer à des tournois (jeux vidéo, sport, jeux de société).
+
+Le projet est développé en mode agile (SCRUM).
+Chaque fonctionnalité est découpée en épopées → user stories → tâches techniques.
+Les prompts fournis doivent être utilisés dans Cursor pour générer du code et avancer sprint par sprint.
+
+🛠️ Stack technique
+
+Frontend : Next.js (React, TypeScript, SEO-ready)
+
+Backend : Next.js API routes (Node.js + Express-like)
+
+ORM : Prisma (MariaDB)
+
+Auth : NextAuth.js (JWT + Google login)
+
+DB : MariaDB
+
+Paiements : Stripe (checkout + webhook)
+
+Infra : VPS (Docker, docker-compose, CI/CD GitHub Actions)
+
+Emails : Nodemailer (SMTP ou SendGrid)
+
+
+🟦 Épopée 1 : Gestion des comptes et rôles
+🎯 Objectif Sprint :
+
+Inscription / connexion (email + Google), profil utilisateur minimal.
+
+Prompt 1 : Configurer Prisma + MariaDB
+Je veux configurer Prisma dans mon projet Next.js avec MariaDB.
+
+1. Ajoute Prisma au projet et initialise le schéma.
+2. Crée le modèle `User` avec les champs :
+   - id (string, cuid, primary key)
+   - email (unique)
+   - passwordHash (nullable si connexion via Google)
+   - pseudo (string)
+   - type (enum : "particulier", "association", "entreprise")
+   - avatarUrl (string, optionnel)
+   - createdAt, updatedAt
+
+3. Configure Prisma Client dans `lib/prisma.ts`.
+4. Génère une première migration `init`.
+
+Prompt 2 : Mettre en place NextAuth.js
+Je veux intégrer NextAuth.js avec Prisma Adapter.
+
+1. Ajoute NextAuth.js au projet.
+2. Configure l’authentification par email/password custom.
+3. Utilise PrismaAdapter pour stocker les sessions et utilisateurs.
+4. Mets en place les API routes `/api/auth/[...nextauth].ts`.
+5. Configure JWT pour les sessions.
+
+Prompt 3 : Inscription manuelle
+Je veux créer une page `/register` avec un formulaire d’inscription.
+
+1. Champs : email, mot de passe, pseudo.
+2. Au submit → hash du mot de passe avec bcrypt → création utilisateur en DB via Prisma.
+3. Redirection vers `/login` après succès.
+
+Prompt 4 : Page Profil
+Je veux créer une page `/profile`.
+
+1. Accessible uniquement si l’utilisateur est connecté.
+2. Affiche pseudo, email, photo de profil.
+3. Formulaire pour mettre à jour pseudo + photo.
+4. Utilise NextAuth session pour récupérer les infos utilisateur.
+
+🟦 Épopée 2 : Gestion des tournois
+🎯 Objectif Sprint :
+
+Création + rejoindre + équipes + validation résultats.
+
+Prompt 1 : Modèles Prisma
+Je veux définir les modèles Prisma pour les tournois :
+
+- Tournament :
+  - id (cuid), name, description, game, format, visibility (enum : public/private), price (float), startDate, endDate, createdBy (User relation)
+- Team :
+  - id, name, tournamentId, captainId (User relation)
+- TeamMember :
+  - id, teamId, userId
+- Match :
+  - id, tournamentId, round, teamAId, teamBId, winnerId (nullable)
+
+Prompt 2 : API création de tournoi
+Crée une API `/api/tournaments` avec Next.js API routes :
+
+- POST → créer un tournoi.
+- GET → liste des tournois.
+- GET /:id → détails tournoi.
+- PATCH → mise à jour tournoi (organisateur seulement).
+
+Prompt 3 : UI création tournoi
+Crée une page `/tournaments/create`.
+
+1. Formulaire : nom, description, jeu (select), format (elim directe par défaut), visibilité (radio public/privé), date début/fin.
+2. Soumission → appel API POST `/api/tournaments`.
+3. Redirection vers `/tournaments/[id]`.
+
+Prompt 4 : Gestion équipes
+Crée une API `/api/teams` :
+- POST : créer une équipe (nom + joueurs).
+- POST /:id/join : rejoindre une équipe.
+- GET /:tournamentId : liste équipes.
+
+Crée une UI sur la page tournoi :
+- Liste des équipes inscrites.
+- Bouton "Créer une équipe".
+- Bouton "Rejoindre une équipe".
+
+Prompt 5 : Validation résultats
+Crée une API `/api/results` :
+- POST : organiser valide un résultat → enregistre vainqueur du match.
+- GET /:matchId : récupérer état d’un match.
+
+UI dans la page tournoi :
+- Liste matchs avec état.
+- Si organisateur → bouton "Valider résultat".
+
+🟦 Épopée 3 : Monétisation & paiements
+🎯 Objectif Sprint :
+
+Tournois gratuits + payants.
+
+Prompt 1 : Intégration Stripe
+Intègre Stripe dans mon projet Next.js.
+
+1. Ajoute SDK Stripe.
+2. Ajoute champ `price` dans Tournament.
+3. Crée une API `/api/payment/checkout` qui génère une session de paiement.
+4. Webhook Stripe `/api/payment/webhook` → enregistre paiement et ajoute l’utilisateur au tournoi.
+
+Prompt 2 : UI paiement
+Dans la page tournoi, si `price > 0` :
+- Afficher bouton "Payer et rejoindre".
+- Au clic → appel API checkout → redirection Stripe.
+- Après succès → redirection vers `/tournaments/[id]`.
+
+🟦 Épopée 4 : Engagement & expérience utilisateur
+🎯 Objectif Sprint :
+
+Leaderboard + profils publics + email notifications.
+
+Prompt 1 : Leaderboard
+Crée un leaderboard par tournoi.
+
+1. Endpoint `/api/tournaments/:id/leaderboard` → retourne classement basé sur victoires.
+2. UI sur la page tournoi : tableau classement.
+
+Prompt 2 : Profil public
+Crée une page `/users/[id]`.
+
+1. Affiche pseudo, avatar, liste des tournois rejoints et créés.
+2. Accessible même sans être connecté.
+
+Prompt 3 : Notifications email
+Ajoute un système d’email.
+
+1. Utilise Nodemailer (SMTP local ou SendGrid).
+2. Envoie un email quand :
+   - un joueur rejoint un tournoi
+   - un tournoi commence
+   - un joueur gagne un match
+3. Crée une utilitaire `lib/email.ts` pour factoriser l’envoi.
+
+🟦 Épopée 5 : Infra & DevOps
+🎯 Objectif Sprint :
+
+Docker + migrations + CI/CD.
+
+Prompt 1 : Docker
+Crée un Dockerfile pour Next.js avec Prisma et MariaDB.
+
+1. Multi-stage build.
+2. Démarre en prod sur `npm run start`.
+3. docker-compose.yml avec :
+   - app (Next.js)
+   - db (MariaDB)
+
+Prompt 2 : Prisma migrations
+Ajoute un script dans package.json :
+- "migrate:dev" → `prisma migrate dev`
+- "migrate:deploy" → `prisma migrate deploy`
+
+Assure-toi que ça tourne au build Docker.
+
+Prompt 3 : CI/CD
+Mets en place GitHub Actions pour CI/CD.
+
+1. Lint + test.
+2. Build image Docker.
+3. Déploiement auto sur VPS via SSH ou Docker registry.

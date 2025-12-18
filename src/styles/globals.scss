@@ -1,0 +1,536 @@
+@use 'variables.module' as vars;
+@use 'components/index';
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap');
+
+
+// ===========================================
+// GLOBAL STYLES
+// ===========================================
+
+// Reset and base styles
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  line-height: vars.$line-height-normal;
+  -webkit-text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --bg-page: #{vars.$bg-page};
+  --sidebar-width: #{vars.$sidebar-width};
+  --content-offset: calc((100vw - #{vars.$sidebar-width} - #{vars.$container-xl}) / 2 - #{vars.$sidebar-width});
+  
+  // Par défaut, thème dark
+  &.dark {
+    --bg-page: #{vars.$bg-page};
+    --text-primary: #{vars.$lt-text-primary};
+    --text-secondary: #{vars.$lt-text-secondary};
+    --bg-secondary: #{vars.$lt-dark-secondary};
+    --bg-tertiary: #{vars.$lt-dark-tertiary};
+    --border: #{vars.$lt-border};
+  }
+  
+  // Thème light
+  &.light {
+    --bg-page: #{vars.$white};
+    --text-primary: #{vars.$black};
+    --text-secondary: #{vars.$gray-700};
+    --bg-secondary: #{vars.$gray-50};
+    --bg-tertiary: #{vars.$gray-100};
+    --border: #{vars.$gray-300};
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    --content-offset: calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2 - #{vars.$sidebar-width});
+  }
+  
+  @media (max-width: 1024px) {
+    --content-offset: 0;
+  }
+}
+
+body {
+  font-family: vars.$font-family-secondary;
+  font-size: vars.$font-size-base; // 16pt
+  font-weight: vars.$font-weight-normal; // Regular
+  line-height: vars.$line-height-normal;
+  color: vars.$lt-text-primary;
+  background-color: vars.$bg-page;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color vars.$transition-base, color vars.$transition-base;
+}
+
+// Support du thème light pour le body
+html.light body {
+  background-color: var(--bg-page, #{vars.$white});
+  color: var(--text-primary, #{vars.$black});
+}
+
+// Typography
+// Police principale : Funnel Display pour les titres
+h1, h2, h3, h4, h5, h6 {
+  font-family: vars.$font-family-primary; // Funnel Display
+  line-height: vars.$line-height-tight;
+  color: vars.$lt-text-primary;
+  margin: 0;
+  transition: color vars.$transition-base;
+}
+
+// Support du thème light pour les titres
+html.light h1,
+html.light h2,
+html.light h3,
+html.light h4,
+html.light h5,
+html.light h6 {
+  color: var(--text-primary, #{vars.$black});
+}
+
+// H1 : Funnel Display Bold, 48pt
+h1 {
+  font-size: 3rem; // 48pt (48/16 = 3rem)
+  font-weight: 700; // Bold
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: 3rem; // 48pt
+  }
+}
+
+// H2 : Funnel Display Medium, 32pt
+h2 {
+  font-size: 2rem; // 32pt (32/16 = 2rem)
+  font-weight: 500; // Medium
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: 2rem; // 32pt
+  }
+}
+
+// H3 : Funnel Display Regular, 24pt
+h3 {
+  font-size: 1.5rem; // 24pt (24/16 = 1.5rem)
+  font-weight: 400; // Regular
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: 1.5rem; // 24pt
+  }
+}
+
+h4 {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-semibold;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-2xl;
+  }
+}
+
+h5 {
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-medium;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-xl;
+  }
+}
+
+h6 {
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  
+  @media (min-width: vars.$breakpoint-md) {
+    font-size: vars.$font-size-lg;
+  }
+}
+
+// Corps de texte : Red Hat Display Regular, 16pt
+p {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 1rem; // 16pt (16/16 = 1rem)
+  font-weight: 400; // Regular
+  margin: 0;
+  line-height: vars.$line-height-relaxed;
+}
+
+// Texte secondaire/légendes : Red Hat Display Light, 12pt
+.text-secondary,
+.text-muted,
+small,
+.text-sm {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 0.75rem; // 12pt (12/16 = 0.75rem)
+  font-weight: 300; // Light
+}
+
+// Appels à l'action/mots importants : Red Hat Display Bold, 16pt
+strong,
+b,
+.font-bold {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 1rem; // 16pt (16/16 = 1rem)
+  font-weight: 700; // Bold
+}
+
+// Citations/exemples : Red Hat Display Italic, 12pt
+em,
+i,
+cite,
+blockquote {
+  font-family: vars.$font-family-secondary; // Red Hat Display
+  font-size: 0.75rem; // 12pt (12/16 = 0.75rem)
+  font-style: italic;
+  font-weight: 400; // Regular
+}
+
+a {
+  color: vars.$lt-accent-blue;
+  text-decoration: none;
+  transition: color vars.$transition-fast;
+  
+  &:hover {
+    color: vars.$lt-accent-purple;
+  }
+  
+  &:focus {
+    outline: none;
+  }
+  &:focus-visible {
+    outline: 2px solid vars.$lt-accent-blue;
+    outline-offset: 2px;
+  }
+}
+
+// Support du thème light pour les liens
+html.light a {
+  color: vars.$lt-accent-blue;
+  
+  &:hover {
+    color: vars.$lt-accent-purple;
+  }
+}
+
+// Lists
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Images
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+// Form elements
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+// Focus styles
+// Focus global par défaut désactivé, mais réactivé pour :focus-visible
+// (préserve l'accessibilité au clavier, évite le halo lors du clic souris)
+*:focus {
+  outline: none;
+}
+*:focus-visible {
+  outline: 2px solid vars.$primary;
+  outline-offset: 2px;
+}
+
+// Selection
+::selection {
+  background-color: vars.$primary-light;
+  color: vars.$primary-dark;
+}
+
+// Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: vars.$gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  background: vars.$gray-300;
+  border-radius: vars.$radius-full;
+  
+  &:hover {
+    background: vars.$gray-400;
+  }
+}
+
+// Notifications (keyframes)
+@keyframes lt_toast_in { from { opacity: 0; transform: translate(calc(var(--lt-toast-x, 0px)), 8px) } to { opacity: 1; transform: translate(0, 0) } }
+@keyframes lt_toast_out { from { opacity: 1; transform: translate(0, 0) } to { opacity: 0; transform: translate(calc(var(--lt-toast-x, 0px)), 8px) } }
+
+// Utility classes
+.container {
+  width: 100%;
+  max-width: vars.$container-xl;
+  margin: 0 auto;
+  padding: 0 vars.$spacing-6;
+  padding-left: calc(vars.$spacing-6 + vars.$spacing-4);
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding: 0 vars.$spacing-8;
+    padding-left: calc(vars.$spacing-8 + vars.$spacing-4);
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding: 0 vars.$spacing-10;
+    padding-left: calc(vars.$spacing-10 + vars.$spacing-6);
+    max-width: vars.$container-2xl;
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-8;
+    }
+  }
+}
+
+// Container centré avec décalage automatique (pour le contenu, pas les bannières)
+// Le mainContentWrapper a déjà un margin-left de sidebar-width
+// On calcule le padding pour centrer le contenu dans la zone disponible
+.content-centered {
+  width: 100%;
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  
+  // Zone disponible = 100vw - sidebar-width (car mainContentWrapper a déjà le margin-left)
+  // Pour centrer : (zone_disponible - container_width) / 2
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-6);
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-8);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-8);
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-10);
+  }
+
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-6;
+    padding-right: vars.$spacing-6;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-8;
+      padding-right: vars.$spacing-8;
+    }
+  }
+}
+
+// Surfaces & list rows inspirées plateformes e-sport
+.surface {
+  background: linear-gradient(180deg, rgba(17,24,39,0.9), rgba(17,24,39,0.75));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+.list {
+  display: grid;
+  gap: 8px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.row:hover { background: rgba(255,255,255,0.04); }
+.rowPoster { width: 56px; height: 40px; border-radius: 6px; object-fit: cover; }
+.chip { background: #111827; color: #fff; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Layout utilities
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-2 {
+  gap: vars.$spacing-2;
+}
+
+.gap-4 {
+  gap: vars.$spacing-4;
+}
+
+.gap-6 {
+  gap: vars.$spacing-6;
+}
+
+.gap-8 {
+  gap: vars.$spacing-8;
+}
+
+// Spacing utilities
+.p-4 {
+  padding: vars.$spacing-4;
+}
+
+.p-6 {
+  padding: vars.$spacing-6;
+}
+
+.p-8 {
+  padding: vars.$spacing-8;
+}
+
+.m-4 {
+  margin: vars.$spacing-4;
+}
+
+.m-6 {
+  margin: vars.$spacing-6;
+}
+
+.m-8 {
+  margin: vars.$spacing-8;
+}
+
+// Text utilities
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// Layout avec sidebar
+.mainContentWrapper {
+  margin-left: vars.$sidebar-width;
+  margin-top: vars.$header-height;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - #{vars.$header-height});
+  flex: 1;
+  background-color: vars.$bg-page;
+  transition: background-color vars.$transition-base;
+
+  @media (max-width: 1024px) {
+    margin-left: 0;
+  }
+}
+
+// Support du thème light pour le contenu principal
+html.light .mainContentWrapper {
+  background-color: var(--bg-page, #{vars.$white});
+}
+
+.text-sm {
+  font-size: vars.$font-size-sm;
+}
+
+.text-lg {
+  font-size: vars.$font-size-lg;
+}
+
+.text-xl {
+  font-size: vars.$font-size-xl;
+}
+
+.font-medium {
+  font-weight: vars.$font-weight-medium;
+}
+
+.font-semibold {
+  font-weight: vars.$font-weight-semibold;
+}
+
+.font-bold {
+  font-weight: vars.$font-weight-bold;
+}
+
+// Color utilities
+.text-primary {
+  color: vars.$lt-text-primary;
+}
+
+.text-secondary {
+  color: vars.$lt-text-secondary;
+}
+
+.text-muted {
+  color: vars.$lt-text-muted;
+}
+
+.bg-primary {
+  background-color: vars.$lt-dark-bg;
+}
+
+.bg-secondary {
+  background-color: vars.$lt-dark-secondary;
+}
+
+// Animation utilities
+.transition {
+  transition: all vars.$transition-base;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:opacity-80:hover {
+  opacity: 0.8;
+}

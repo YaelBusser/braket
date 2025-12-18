@@ -1,0 +1,90 @@
+@use '../styles/variables.module' as vars;
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 200px);
+  padding: vars.$spacing-8 vars.$spacing-4;
+}
+
+.content {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.title {
+  font-size: 8rem;
+  font-weight: vars.$font-weight-bold;
+  line-height: 1;
+  margin: 0;
+  background: linear-gradient(135deg, vars.$primary, vars.$secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.subtitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$text-primary;
+  margin: vars.$spacing-4 0 vars.$spacing-2;
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.description {
+  font-size: vars.$font-size-base;
+  color: vars.$text-secondary;
+  margin: 0 0 vars.$spacing-8;
+  line-height: 1.6;
+  animation: fadeIn 0.6s ease-out 0.4s both;
+}
+
+.homeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: vars.$spacing-2;
+  padding: vars.$spacing-4 vars.$spacing-8;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$white;
+  background-color: vars.$primary;
+  border: 1px solid vars.$primary;
+  border-radius: vars.$radius-lg;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  animation: fadeIn 0.6s ease-out 0.6s both;
+
+  &:hover {
+    background-color: vars.$primary-hover;
+    border-color: vars.$primary-hover;
+    transform: translateY(-2px);
+    box-shadow: vars.$shadow-md;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: vars.$shadow-sm;
+  }
+
+  &:focus-visible {
+    outline: 2px solid vars.$primary;
+    outline-offset: 2px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
