@@ -1,6 +1,5 @@
 @use 'variables.module' as vars;
 @use 'components/index';
-@import url('https://fonts.googleapis.com/css2?family=Funnel+Display:wght@300..800&family=Red+Hat+Display:ital,wght@0,300..900;1,300..900&display=swap');
 
 
 // ===========================================
@@ -56,7 +55,7 @@ html {
 }
 
 body {
-  font-family: vars.$font-family-secondary;
+  font-family: vars.$font-family-secondary !important;
   font-size: vars.$font-size-base; // 16pt
   font-weight: vars.$font-weight-normal; // Regular
   line-height: vars.$line-height-normal;
@@ -76,7 +75,7 @@ html.light body {
 // Typography
 // Police principale : Funnel Display pour les titres
 h1, h2, h3, h4, h5, h6 {
-  font-family: vars.$font-family-primary; // Funnel Display
+  font-family: vars.$font-family-primary !important; // Funnel Display
   line-height: vars.$line-height-tight;
   color: vars.$lt-text-primary;
   margin: 0;

@@ -18,6 +18,7 @@ export default function Home() {
   const [loadingGames, setLoadingGames] = useState(false)
   const router = useRouter()
   const userId = (session?.user as any)?.id || null
+  const isAdmin = (session?.user as any)?.isAdmin === 1
   const { openCreateTournamentModal } = useCreateTournamentModal()
 
   // Charger les jeux populaires depuis la DB
@@ -89,13 +90,15 @@ export default function Home() {
           <p className={styles.heroSubtitle}>
             Votre plateforme de tournois esport. Créez, participez, gagnez.
           </p>
-          <button
-            className={styles.heroCtaButton}
-            onClick={openCreateTournamentModal}
-            type="button"
-          >
-            Créer un tournoi
-          </button>
+          {isAdmin && (
+            <button
+              className={styles.heroCtaButton}
+              onClick={openCreateTournamentModal}
+              type="button"
+            >
+              Créer un tournoi
+            </button>
+          )}
           
           {/* Barre de recherche déplacée dans le header */}
         </div>
