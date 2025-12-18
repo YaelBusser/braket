@@ -130,14 +130,15 @@ export const authOptions: NextAuthOptions = {
         // Pour les connexions OAuth, récupérer l'utilisateur depuis la base de données
         if (account && (account.provider === 'discord' || account.provider === 'google')) {
           try {
-            const dbUser = await prisma.user.findUnique({
+            const dbUser = (await prisma.user.findUnique({
               where: { email: user.email! },
-              select: { id: true, pseudo: true, avatarUrl: true, image: true }
-            })
+            })) as any
             if (dbUser) {
               token.id = dbUser.id
               token.name = dbUser.pseudo
               token.picture = dbUser.avatarUrl || dbUser.image || null
+              const rawIsAdmin = (dbUser as any).isAdmin
+              ;(token as any).isAdmin = rawIsAdmin ? 1 : 0
             } else {
               token.id = (user as any).id
               token.name = user.name
@@ -152,14 +153,15 @@ export const authOptions: NextAuthOptions = {
         } else {
           // Pour les connexions credentials, récupérer l'utilisateur depuis la base de données
           try {
-            const dbUser = await prisma.user.findUnique({
+            const dbUser = (await prisma.user.findUnique({
               where: { email: (user as any).email || '' },
-              select: { id: true, pseudo: true, avatarUrl: true, image: true }
-            })
+            })) as any
             if (dbUser) {
               token.id = dbUser.id
               token.name = dbUser.pseudo
               token.picture = dbUser.avatarUrl || dbUser.image || null
+              const rawIsAdmin = (dbUser as any).isAdmin
+              ;(token as any).isAdmin = rawIsAdmin ? 1 : 0
             } else {
               token.id = (user as any).id
               token.name = user.name
@@ -178,6 +180,9 @@ export const authOptions: NextAuthOptions = {
       if (trigger === 'update' && session) {
         if (session.name) token.name = session.name
         if ((session as any).image) token.picture = (session as any).image
+        if ((session as any).isAdmin !== undefined) {
+          ;(token as any).isAdmin = (session as any).isAdmin
+        }
       }
 
       return token
@@ -190,6 +195,27 @@ export const authOptions: NextAuthOptions = {
         }
         if ((token as any).picture) {
           session.user.image = (token as any).picture as string
+        }
+
+        // Toujours resynchroniser isAdmin depuis la base à partir de l'email
+        try {
+          const email =
+            session.user.email ||
+            ((token as any).email as string | undefined) ||
+            undefined
+
+          if (email) {
+            const dbUser = (await prisma.user.findUnique({
+              where: { email },
+            })) as any
+            const rawIsAdmin = (dbUser as any)?.isAdmin
+            ;(session.user as any).isAdmin = rawIsAdmin ? 1 : 0
+          } else {
+            ;(session.user as any).isAdmin = 0
+          }
+        } catch (error) {
+          console.error('Error syncing isAdmin in session callback:', error)
+          ;(session.user as any).isAdmin = 0
         }
       }
       return session

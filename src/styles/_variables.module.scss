@@ -1,3 +1,4 @@
+
 // ===========================================
 // DESIGN SYSTEM - VARIABLES
 // ===========================================
@@ -151,11 +152,11 @@ $border-dark: $lt-border;
 $border-accent: $primary-600;   // MAGENTA
 
 // Typography
-// Police principale : Funnel Display
-$font-family-primary: 'Funnel Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-// Police secondaire : Red Hat Display
-$font-family-secondary: 'Red Hat Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-$font-family-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+// Police principale : Funnel Display (via next/font -> --font-primary)
+$font-family-primary: var(--font-primary), sans-serif;
+// Police secondaire : Red Hat Display (via next/font -> --font-secondary)
+$font-family-secondary: var(--font-secondary), sans-serif;
+$font-family-mono: 'JetBrains Mono', sans-serif;
 
 $font-size-xs: 0.75rem;    // 12px
 $font-size-sm: 0.875rem;   // 14px

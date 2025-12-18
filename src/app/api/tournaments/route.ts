@@ -104,6 +104,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Session expirée. Veuillez vous reconnecter.' }, { status: 401 })
     }
 
+    // Vérifier que l'utilisateur est administrateur
+    if (!(existingUser as any).isAdmin) {
+      return NextResponse.json({ message: 'Accès réservé aux administrateurs' }, { status: 403 })
+    }
+
     // Vérifier la limite de 10 tournois actifs (non terminés)
     const activeTournaments = await prisma.tournament.count({
       where: { 

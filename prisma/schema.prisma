@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime                 @updatedAt
   name          String?
   emailVerified DateTime?
+  isAdmin       Boolean                  @default(false)
   image         String?
   accounts      Account[]
   sessions      Session[]
