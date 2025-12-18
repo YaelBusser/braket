@@ -56,8 +56,8 @@ function TournamentView() {
       if (!id) return
       // Précharger les données immédiatement
       try {
-        // Charger le tournoi en priorité pour afficher rapidement (sans les détails lourds)
-        const tRes = await fetch(`/api/tournaments/${id}`)
+        // Charger le tournoi avec les matchs pour le bracket
+        const tRes = await fetch(`/api/tournaments/${id}?includeMatches=true`)
         const tData = await tRes.json()
         
         // Mettre à jour le tournoi immédiatement (priorité)
@@ -1478,9 +1478,8 @@ function TournamentView() {
             <Suspense fallback={<div style={{ color: '#9ca3af', textAlign: 'center', padding: '2rem' }}>Chargement du tableau...</div>}>
               <Bracket 
                 matches={tournament.matches || []} 
-                maxTeams={tournament.bracketMaxTeams || undefined}
+                totalSlots={tournament.bracketMaxTeams || 8}
                 tournamentStatus={tournament.status}
-                participantCount={tournament.isTeamBased ? teams.length : (tournament._count?.registrations || 0)}
                 isTeamBased={tournament.isTeamBased || false}
               />
             </Suspense>
@@ -1499,7 +1498,7 @@ function MatchesSection({ tournamentId, isOrganizer }: { tournamentId: string; i
 
   useEffect(() => {
     const load = async () => {
-      const res = await fetch(`/api/tournaments/${tournamentId}`)
+      const res = await fetch(`/api/tournaments/${tournamentId}?includeMatches=true`)
       const data = await res.json()
       setMatches(data.tournament?.matches || [])
       setLoading(false)

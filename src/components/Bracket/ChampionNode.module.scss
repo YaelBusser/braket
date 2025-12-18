@@ -1,0 +1,49 @@
+$bg-node: #1e2530;
+$border-color: #3d4654;
+$text-muted: #6b7280;
+$accent-gold: #ffd700;
+$accent-green: #00d4aa;
+
+.championNode {
+  width: 120px;
+  background: $bg-node;
+  border: 1px dashed $border-color;
+  border-radius: 8px;
+  padding: 1rem 0.75rem;
+  text-align: center;
+  
+  &.hasWinner {
+    border-style: solid;
+    border-color: $accent-gold;
+    
+    .trophy {
+      animation: float 3s ease-in-out infinite;
+    }
+    
+    .winnerName {
+      color: $accent-green;
+      font-weight: 600;
+      font-style: normal;
+    }
+  }
+}
+
+.trophy {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.winnerName {
+  font-size: 0.75rem;
+  color: $text-muted;
+  font-style: italic;
+}
+
+.handle {
+  opacity: 0 !important;
+}

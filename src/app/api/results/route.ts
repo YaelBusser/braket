@@ -31,48 +31,17 @@ export async function POST(request: NextRequest) {
 
     const updated = await prisma.match.update({
       where: { id: matchId },
-      data: { winnerTeamId, status: 'COMPLETED' }
+      data: { winnerTeamId, status: 'COMPLETED' },
+      include: { teamA: true, teamB: true, winnerTeam: true }
     })
 
-    // Tentative d'avancement: si un autre match du même round est déjà complété
-    // et qu'aucun match du round suivant n'existe avec ces vainqueurs, créer le match suivant
-    try {
-      const sibling = await prisma.match.findFirst({
-        where: {
-          tournamentId: updated.tournamentId,
-          round: updated.round,
-          status: 'COMPLETED',
-          NOT: { id: updated.id }
-        },
-        orderBy: { createdAt: 'asc' }
-      })
-
-      if (sibling && sibling.winnerTeamId && updated.round !== null) {
-        // Vérifier si un match r+1 existe déjà avec ces finalistes
-        const existsNext = await prisma.match.findFirst({
-          where: {
-            tournamentId: updated.tournamentId,
-            round: updated.round + 1,
-            OR: [
-              { teamAId: winnerTeamId, teamBId: sibling.winnerTeamId },
-              { teamAId: sibling.winnerTeamId, teamBId: winnerTeamId }
-            ]
-          }
-        })
-        if (!existsNext) {
-          await prisma.match.create({
-            data: {
-              tournamentId: updated.tournamentId,
-              round: updated.round + 1,
-              teamAId: winnerTeamId,
-              teamBId: sibling.winnerTeamId,
-              status: 'PENDING'
-            }
-          })
-        }
-      }
-    } catch (e) {
-      console.warn('Bracket advance warning:', e)
+    // Propager le gagnant vers le round suivant
+    if (updated.round !== null) {
+      await propagateWinnerToNextRound(
+        updated.tournamentId, 
+        updated.round, 
+        winnerTeamId
+      )
     }
 
     return NextResponse.json({ match: updated })
@@ -82,4 +51,99 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Propage le gagnant vers le match du round suivant.
+ * Logique : Dans un bracket à élimination directe, les matchs sont regroupés par paires.
+ * Match 0 et 1 du round 1 → Match 0 du round 2
+ * Match 2 et 3 du round 1 → Match 1 du round 2
+ * etc.
+ */
+async function propagateWinnerToNextRound(
+  tournamentId: string,
+  currentRound: number,
+  winnerTeamId: string
+) {
+  try {
+    // Récupérer tous les matchs du round actuel pour ce tournoi
+    const currentRoundMatches = await prisma.match.findMany({
+      where: {
+        tournamentId,
+        round: currentRound
+      },
+      orderBy: { createdAt: 'asc' }
+    })
 
+    // Trouver la position du match actuel
+    const matchIndex = currentRoundMatches.findIndex(m => 
+      m.teamAId === winnerTeamId || m.teamBId === winnerTeamId
+    )
+    
+    if (matchIndex === -1) return
+
+    // Calculer la position du match pair (0-1 forment paire 0, 2-3 forment paire 1, etc.)
+    const pairIndex = Math.floor(matchIndex / 2)
+    const isFirstOfPair = matchIndex % 2 === 0
+    const siblingIndex = isFirstOfPair ? matchIndex + 1 : matchIndex - 1
+
+    // Vérifier si le match "sibling" existe et est terminé
+    const siblingMatch = currentRoundMatches[siblingIndex]
+    
+    if (!siblingMatch || siblingMatch.status !== 'COMPLETED' || !siblingMatch.winnerTeamId) {
+      // Le match pair n'est pas encore terminé, on attend
+      return
+    }
+
+    const nextRound = currentRound + 1
+    
+    // Vérifier si un match existe déjà pour ce round suivant à cette position
+    const existingNextMatch = await prisma.match.findFirst({
+      where: {
+        tournamentId,
+        round: nextRound,
+        OR: [
+          { teamAId: winnerTeamId },
+          { teamBId: winnerTeamId },
+          { teamAId: siblingMatch.winnerTeamId },
+          { teamBId: siblingMatch.winnerTeamId }
+        ]
+      }
+    })
+
+    if (existingNextMatch) {
+      // Un match existe déjà, on ajoute l'équipe manquante
+      const updateData: any = {}
+      
+      if (!existingNextMatch.teamAId) {
+        updateData.teamAId = winnerTeamId
+      } else if (!existingNextMatch.teamBId) {
+        updateData.teamBId = winnerTeamId
+      }
+      
+      if (Object.keys(updateData).length > 0) {
+        await prisma.match.update({
+          where: { id: existingNextMatch.id },
+          data: updateData
+        })
+      }
+    } else {
+      // Créer le match du round suivant
+      // L'ordre : gagnant du premier match de la paire en teamA, gagnant du second en teamB
+      const teamAId = isFirstOfPair ? winnerTeamId : siblingMatch.winnerTeamId
+      const teamBId = isFirstOfPair ? siblingMatch.winnerTeamId : winnerTeamId
+
+      await prisma.match.create({
+        data: {
+          tournamentId,
+          round: nextRound,
+          teamAId,
+          teamBId,
+          status: 'PENDING'
+        }
+      })
+      
+      console.log(`Match créé pour le round ${nextRound}: ${teamAId} vs ${teamBId}`)
+    }
+  } catch (e) {
+    console.warn('Erreur propagation bracket:', e)
+  }
+}
