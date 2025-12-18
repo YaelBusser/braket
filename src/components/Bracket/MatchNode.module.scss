@@ -104,37 +104,20 @@ $accent-vs: #ff6b35;
 
 .vsSeparator {
   position: relative;
-  width: 36px;
+  width: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
-}
-
-.diagonalBg {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    $bg-team-a 0%,
-    $bg-team-a 45%,
-    $accent-vs 45%,
-    $accent-vs 55%,
-    $bg-team-b 55%,
-    $bg-team-b 100%
-  );
-  opacity: 0.3;
+  background: linear-gradient(90deg, $bg-team-a 0%, $bg-team-b 100%);
 }
 
 .vsText {
-  position: relative;
-  z-index: 1;
-  font-size: 0.6rem;
-  font-weight: 800;
-  color: $accent-vs;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-style: italic;
+  color: #8b949e;
+  letter-spacing: 1px;
 }
 
 .handle {
