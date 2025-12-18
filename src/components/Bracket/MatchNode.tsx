@@ -65,7 +65,6 @@ function MatchNode({ data }: { data: MatchNodeData }) {
       
       {/* VS Separator */}
       <div className={styles.vsSeparator}>
-        <div className={styles.diagonalBg} />
         <span className={styles.vsText}>VS</span>
       </div>
       
