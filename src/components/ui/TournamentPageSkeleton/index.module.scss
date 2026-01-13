@@ -1,0 +1,526 @@
+@use '../../../styles/variables.module' as vars;
+
+// Animation shimmer
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+// Mixin pour l'effet shimmer
+@mixin shimmer-effect {
+  position: relative;
+  overflow: hidden;
+  background: vars.$bg-dark-secondary;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonPage {
+  background: vars.$bg-page;
+  min-height: 100vh;
+}
+
+// Bannière
+.skeletonBanner {
+  position: relative;
+  height: 400px;
+  background: vars.$bg-dark-tertiary;
+  overflow: visible; // Important : permet au logo de dépasser
+
+  // Effet shimmer sur un pseudo-élément séparé pour ne pas couper le logo
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+    z-index: 0;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 10rem;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.3) 40%, vars.$bg-page 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.bannerContent {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bannerInner {
+  width: 100%;
+  max-width: vars.$container-2xl;
+  margin: 0 auto;
+  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18);
+  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18);
+  padding-bottom: 2rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  
+  @media (min-width: vars.$breakpoint-sm) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20);
+  }
+  
+  @media (min-width: vars.$breakpoint-lg) {
+    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22);
+    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22);
+  }
+  
+  @media (max-width: 1024px) {
+    padding-left: vars.$spacing-18;
+    padding-right: vars.$spacing-18;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    @media (min-width: vars.$breakpoint-sm) {
+      padding-left: vars.$spacing-20;
+      padding-right: vars.$spacing-20;
+    }
+  }
+}
+
+// Photo de profil
+.skeletonProfilePicture {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  @include shimmer-effect;
+  background: vars.$bg-dark-tertiary;
+  border: 2px solid vars.$bg-page;
+  flex-shrink: 0;
+  margin-bottom: -70px;
+  z-index: 10;
+
+  @media (max-width: 1024px) {
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 768px) {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+// Infos bannière
+.bannerInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin-bottom: -70px;
+  gap: 0.5rem;
+
+  @media (max-width: 1024px) {
+    margin-bottom: 0;
+  }
+}
+
+.skeletonTitle {
+  height: 2.5rem;
+  width: 300px;
+  max-width: 100%;
+  border-radius: 8px;
+  @include shimmer-effect;
+
+  @media (max-width: 768px) {
+    height: 1.75rem;
+    width: 200px;
+  }
+}
+
+.skeletonEventDetails {
+  height: 1.25rem;
+  width: 200px;
+  border-radius: 4px;
+  @include shimmer-effect;
+}
+
+.skeletonStatusTag {
+  height: 1.5rem;
+  width: 80px;
+  border-radius: 6px;
+  margin-top: 0.25rem;
+  @include shimmer-effect;
+}
+
+// Section droite
+.bannerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  padding-bottom: 1rem;
+
+  @media (max-width: 1024px) {
+    align-items: flex-start;
+    width: 100%;
+  }
+}
+
+.skeletonCountdown {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.skeletonCountdownUnit {
+  width: 44px;
+  height: 56px;
+  border-radius: 8px;
+  @include shimmer-effect;
+
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 52px;
+  }
+}
+
+.skeletonCountdownSeparator {
+  width: 8px;
+  height: 20px;
+  margin-bottom: 12px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonJoinButton {
+  height: 48px;
+  width: 180px;
+  border-radius: 8px;
+  @include shimmer-effect;
+}
+
+// Contenu principal
+.contentWrapper {
+  padding: 3rem 0;
+}
+
+// Tabs skeleton
+.skeletonTabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 2rem;
+}
+
+.skeletonTab {
+  height: 20px;
+  width: 80px;
+  border-radius: 4px;
+  margin: 1rem 1.5rem;
+  @include shimmer-effect;
+
+  &:first-child {
+    margin-left: 0;
+  }
+}
+
+// Grille de sections
+.sectionsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+// Section générique
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeletonSectionTitle {
+  height: 1.25rem;
+  width: 100px;
+  border-radius: 4px;
+  @include shimmer-effect;
+}
+
+// Cartes Format
+.formatGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.skeletonFormatCard {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.skeletonFormatIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  @include shimmer-effect;
+}
+
+.skeletonFormatContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skeletonFormatLabel {
+  height: 12px;
+  width: 40px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonFormatValue {
+  height: 14px;
+  width: 80%;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+// Section Équipes
+.teamsStats {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.skeletonTeamStat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skeletonTeamStatLabel {
+  height: 12px;
+  width: 60px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonTeamStatValue {
+  height: 1.5rem;
+  width: 40px;
+  border-radius: 4px;
+  @include shimmer-effect;
+}
+
+// Avatars équipes
+.teamsAvatars {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.skeletonTeamAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid vars.$bg-page;
+  @include shimmer-effect;
+
+  &:not(:first-child) {
+    margin-left: -8px;
+  }
+}
+
+.skeletonTeamNames {
+  height: 14px;
+  width: 150px;
+  border-radius: 2px;
+  margin-left: 0.5rem;
+  @include shimmer-effect;
+}
+
+// Section Hébergé par
+.skeletonHostCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  background: transparent;
+}
+
+.skeletonHostAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  @include shimmer-effect;
+}
+
+.skeletonHostContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skeletonHostName {
+  height: 14px;
+  width: 100px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonHostRole {
+  height: 12px;
+  width: 140px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonHostButton {
+  height: 36px;
+  width: 90px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  @include shimmer-effect;
+}
+
+// Section Calendrier (Timeline)
+.skeletonTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.skeletonTimelineItem {
+  display: flex;
+  gap: 1rem;
+}
+
+.skeletonTimelineDot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+}
+
+.skeletonTimelineLine {
+  width: 2px;
+  height: 60px;
+  background: #374151;
+  position: relative;
+}
+
+.skeletonTimelineCircle {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  @include shimmer-effect;
+}
+
+.skeletonTimelineContent {
+  flex: 1;
+  padding-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.skeletonTimelineDate {
+  height: 12px;
+  width: 120px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonTimelineTitle {
+  height: 14px;
+  width: 150px;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+.skeletonTimelineDesc {
+  height: 12px;
+  width: 250px;
+  max-width: 100%;
+  border-radius: 2px;
+  @include shimmer-effect;
+}
+
+// Section Description
+.skeletonDescription {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeletonDescLine {
+  height: 14px;
+  border-radius: 2px;
+  @include shimmer-effect;
+
+  &:nth-child(1) {
+    width: 100%;
+  }
+  &:nth-child(2) {
+    width: 90%;
+  }
+  &:nth-child(3) {
+    width: 75%;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .skeletonBanner {
+    height: 300px;
+  }
+
+  .formatGrid {
+    grid-template-columns: 1fr;
+  }
+}

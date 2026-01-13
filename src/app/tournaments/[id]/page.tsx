@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs } from '../../../components/ui'
+import { Tabs, ContentWithTabs, TournamentPageSkeleton } from '../../../components/ui'
 
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
@@ -207,56 +207,7 @@ function TournamentView() {
 
   // Afficher un squelette pendant le chargement initial
   if (!tournament) {
-    return (
-      <div className={styles.tournamentPage}>
-        <div className={styles.banner}>
-          <div className={styles.bannerContent}>
-            <div className={styles.bannerInner}>
-              <div className={styles.profilePicture} style={{ 
-                background: 'linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%)',
-                backgroundSize: '200% 100%',
-                animation: 'shimmer 1.5s infinite'
-              }}></div>
-              <div className={styles.bannerInfo}>
-                <h1 className={styles.title} style={{ 
-                  background: 'linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%)',
-                  backgroundSize: '200% 100%',
-                  animation: 'shimmer 1.5s infinite',
-                  borderRadius: '8px',
-                  height: '2rem',
-                  width: '300px'
-                }}></h1>
-                <div className={styles.eventDetails} style={{ 
-                  background: '#374151',
-                  borderRadius: '4px',
-                  height: '1.25rem',
-                  width: '200px',
-                  marginTop: '0.5rem'
-                }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <ContentWithTabs style={{ margin: '3rem 0' }}>
-          <div style={{ 
-            background: '#1f2937',
-            borderRadius: '12px',
-            padding: '2rem',
-            border: '1px solid #374151',
-            textAlign: 'center',
-            color: '#9ca3af'
-          }}>
-            Chargement du tournoi...
-          </div>
-        </ContentWithTabs>
-        <style jsx>{`
-          @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-          }
-        `}</style>
-      </div>
-    )
+    return <TournamentPageSkeleton />
   }
 
   const isOrganizer = (session?.user as any)?.id === tournament.organizerId

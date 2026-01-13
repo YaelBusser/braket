@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../styles/variables.module' as vars;
 
 .profilePage {
@@ -877,7 +878,7 @@
   transition: all vars.$transition-fast;
 
   &:hover {
-    background: darken(vars.$lt-error, 10%);
+    background: color.adjust(vars.$lt-error, $lightness: -10%);
     transform: translateY(-1px);
   }
 }
