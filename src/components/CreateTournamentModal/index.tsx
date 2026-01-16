@@ -326,8 +326,10 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       fd.append('isTeamBased', String(form.isTeamBased === 'team'))
       
       if (form.isTeamBased === 'team') {
-        if (form.teamMinSize) fd.append('teamMinSize', form.teamMinSize)
-        if (form.teamMaxSize) fd.append('teamMaxSize', form.teamMaxSize)
+        // Toujours envoyer les valeurs, même si vides
+        console.log('Modal - Sending teamMinSize:', form.teamMinSize, 'teamMaxSize:', form.teamMaxSize)
+        fd.append('teamMinSize', form.teamMinSize || '')
+        fd.append('teamMaxSize', form.teamMaxSize || '')
       }
       
       if (form.startDate) fd.append('startDate', form.startDate)

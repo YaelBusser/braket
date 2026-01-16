@@ -9,12 +9,13 @@
 /* --- HERO SECTION --- */
 .heroSection {
   background: #000; /* vidéo en fond */
-  height: clamp(360px, 75vh, 700px);
+  min-height: clamp(360px, 75vh, 700px);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   margin-left: calc(-1 * vars.$sidebar-width);
   padding-left: vars.$sidebar-width;
   width: calc(100% + vars.$sidebar-width);
+  padding-bottom: vars.$spacing-12;
   
   @media (max-width: 1024px) {
     margin-left: 0;
@@ -49,71 +50,140 @@
 
 .heroContent {
   position: relative;
-  height: 100%;
+  min-height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   flex-direction: column;
   padding-top: vars.$spacing-16;
-  // Utilise le même décalage que ContentContainer pour aligner avec le contenu
-  padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
-  padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-18) !important;
+  padding-bottom: vars.$spacing-8;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: vars.$spacing-6;
+  padding-right: vars.$spacing-6;
+  gap: vars.$spacing-8;
   
   @media (min-width: vars.$breakpoint-sm) {
-    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
-    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-20) !important;
+    padding-left: vars.$spacing-8;
+    padding-right: vars.$spacing-8;
   }
   
   @media (min-width: vars.$breakpoint-lg) {
-    padding-left: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
-    padding-right: max(calc((100vw - #{vars.$sidebar-width} - #{vars.$container-2xl}) / 2), vars.$spacing-22) !important;
+    padding-left: vars.$spacing-10;
+    padding-right: vars.$spacing-10;
   }
+}
 
-  @media (max-width: 1024px) {
-    padding-left: vars.$spacing-18 !important;
-    padding-right: vars.$spacing-18 !important;
-    
-    @media (min-width: vars.$breakpoint-sm) {
-      padding-left: vars.$spacing-20 !important;
-      padding-right: vars.$spacing-20 !important;
-    }
+.heroTopSection {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-direction: row;
+  width: 100%;
+  gap: vars.$spacing-8;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: vars.$spacing-6;
   }
+}
+
+.heroTextContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+  justify-content: flex-start;
 }
 
 .heroTitle {
   margin: 0;
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
   color: #fff;
   text-shadow: 0 4px 20px rgba(0,0,0,0.7);
-  margin-bottom: vars.$spacing-2;
-  text-align: center;
+  text-align: left;
   line-height: 1.1;
+  
+  @media (max-width: 768px) {
+    font-size: 2.25rem;
+    text-align: left;
+  }
 }
 
 .heroSubtitle {
   font-size: 1.25rem;
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.95);
   text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  margin-bottom: vars.$spacing-8;
-  text-align: center;
+  margin: 0;
+  text-align: left;
   font-weight: 400;
+  line-height: 1.6;
+  max-width: 800px;
+  
+  @media (max-width: 768px) {
+    font-size: 1rem;
+    text-align: left;
+  }
+}
+
+.heroCtaButtonWrapper {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  padding-top: vars.$spacing-4;
+  
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: vars.$spacing-4;
+  }
 }
 
 .heroCtaButton {
-  margin-top: vars.$spacing-4;
-  background: vars.$lt-accent-blue;
+  background: vars.$lt-accent-purple;
   color: #ffffff;
   border: none;
-  padding: vars.$spacing-2 vars.$spacing-5;
-  border-radius: vars.$radius-md;
+  padding: vars.$spacing-4 vars.$spacing-8;
+  border-radius: vars.$radius-lg;
   font-weight: 700;
+  font-size: vars.$font-size-xl;
   cursor: pointer;
-  box-shadow: none;
-  transition: background 0.2s ease;
+  box-shadow: 0 8px 24px rgba(255, 0, 140, 0.4);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  white-space: nowrap;
 
   &:hover {
-    background: darken(vars.$lt-accent-blue, 4%);
+    background: vars.$primary-700;
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(255, 0, 140, 0.5);
+  }
+  
+  @media (max-width: 768px) {
+    font-size: vars.$font-size-lg;
+    padding: vars.$spacing-3 vars.$spacing-6;
+  }
+}
+
+.heroCtaButtonSecondary {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  padding: vars.$spacing-3 vars.$spacing-6;
+  border-radius: vars.$radius-lg;
+  font-weight: 600;
+  font-size: vars.$font-size-lg;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
   }
 }
 
@@ -512,6 +582,311 @@
   font-weight: 500;
 }
 
+
+/* --- CONCEPT SECTION --- */
+.conceptSection {
+  margin-top: vars.$spacing-16;
+  margin-bottom: vars.$spacing-12;
+  padding: vars.$spacing-12 0;
+}
+
+.conceptHeader {
+  text-align: center;
+  margin-bottom: vars.$spacing-10;
+}
+
+.conceptTitle {
+  font-size: vars.$font-size-4xl;
+  font-weight: 800;
+  color: vars.$lt-accent-purple;
+  margin: 0 0 vars.$spacing-4 0;
+  
+  @media (max-width: 768px) {
+    font-size: vars.$font-size-3xl;
+  }
+}
+
+.conceptSubtitle {
+  font-size: vars.$font-size-xl;
+  color: vars.$text-secondary;
+  margin: 0;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+  
+  @media (max-width: 768px) {
+    font-size: vars.$font-size-lg;
+    padding: 0 vars.$spacing-4;
+  }
+}
+
+.conceptGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: vars.$spacing-6;
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: vars.$spacing-4;
+  }
+}
+
+.conceptCard {
+  background: vars.$bg-dark-secondary;
+  border: 1px solid vars.$border-dark;
+  border-radius: vars.$radius-2xl;
+  padding: vars.$spacing-8;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 0, 140, 0.3);
+  }
+}
+
+.conceptIcon {
+  font-size: 3rem;
+  margin-bottom: vars.$spacing-4;
+  display: block;
+}
+
+.conceptCardTitle {
+  font-size: vars.$font-size-2xl;
+  font-weight: 700;
+  color: vars.$text-primary;
+  margin: 0 0 vars.$spacing-4 0;
+}
+
+.conceptCardText {
+  font-size: vars.$font-size-base;
+  color: vars.$text-secondary;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* --- FEATURED TOURNAMENT SECTION --- */
+.featuredSection {
+  margin-top: vars.$spacing-10;
+  width: 100%;
+  position: relative;
+  z-index: 2;
+  // S'assurer que la section prend exactement la même largeur que heroTopSection
+  box-sizing: border-box;
+}
+
+.featuredHeader {
+  margin-bottom: vars.$spacing-6;
+  text-align: left;
+}
+
+.featuredBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  background: linear-gradient(135deg, rgba(255, 0, 140, 0.2), rgba(103, 72, 255, 0.2));
+  border: 1px solid rgba(255, 0, 140, 0.3);
+  padding: vars.$spacing-2 vars.$spacing-4;
+  border-radius: vars.$radius-full;
+  font-size: vars.$font-size-sm;
+  font-weight: 600;
+  color: vars.$lt-accent-purple;
+  margin-bottom: vars.$spacing-4;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badgeIcon {
+  font-size: vars.$font-size-lg;
+}
+
+.featuredTitle {
+  font-size: vars.$font-size-3xl;
+  font-weight: 800;
+  color: vars.$text-primary;
+  margin: 0;
+  background: linear-gradient(135deg, vars.$lt-accent-purple, vars.$lt-accent-blue);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+  @media (max-width: 768px) {
+    font-size: vars.$font-size-2xl;
+  }
+}
+
+/* Carousel des tournois en tendance */
+.carouselWrapper {
+  position: relative;
+  width: 100%;
+  // Même largeur que heroTopSection
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.carouselContainer {
+  position: relative;
+  width: 100%;
+  overflow: visible;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  // S'assurer qu'il n'y a aucun espace
+  min-width: 0;
+}
+
+.carouselButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: vars.$radius-full;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 10;
+  
+  // Bouton gauche : positionné en dehors à gauche
+  &:first-of-type {
+    left: -64px; // -48px (largeur) - 16px (espace)
+  }
+  
+  // Bouton droit : positionné en dehors à droite
+  &:last-of-type {
+    right: -64px; // -48px (largeur) - 16px (espace)
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) scale(1.1);
+  }
+  
+  &:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+  
+  @media (max-width: 768px) {
+    width: 40px;
+    height: 40px;
+    
+    &:first-of-type {
+      left: -56px;
+    }
+    
+    &:last-of-type {
+      right: -56px;
+    }
+  }
+}
+
+.carousel {
+  display: flex;
+  gap: vars.$spacing-4;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  flex: 1;
+  width: 100%;
+  padding: vars.$spacing-4 0;
+  padding-left: 0;
+  padding-right: 0;
+  box-sizing: border-box;
+  margin: 0;
+  // S'assurer que le contenu prend toute la largeur sans débordement
+  min-width: 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  
+  @media (max-width: 768px) {
+    gap: vars.$spacing-3;
+  }
+}
+
+.carouselItem {
+  // Calcul précis : 3 cartes + 2 gaps = 100% de la largeur
+  // Chaque carte = (100% - 2 gaps) / 3
+  // On utilise flex-basis pour forcer la taille exacte
+  flex: 0 0 calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  scroll-snap-align: start;
+  width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  min-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  max-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  
+  @media (max-width: 768px) {
+    flex: 0 0 calc((100% - 2 * #{vars.$spacing-3}) / 3);
+    width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
+    min-width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
+    max-width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
+  }
+}
+
+
+.trendingBadge {
+  position: absolute;
+  top: vars.$spacing-3;
+  left: vars.$spacing-3;
+  background: vars.$lt-accent-purple;
+  color: #fff;
+  font-weight: 800;
+  font-size: vars.$font-size-xl;
+  padding: vars.$spacing-2 vars.$spacing-4;
+  border-radius: vars.$radius-lg;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  line-height: 1;
+  
+  @media (max-width: 768px) {
+    font-size: vars.$font-size-lg;
+    padding: vars.$spacing-1 vars.$spacing-3;
+    top: vars.$spacing-2;
+    left: vars.$spacing-2;
+  }
+}
+
+
+.featuredTournamentCard {
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  transform: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+  
+  :global(.tournamentCard) {
+    max-width: 100%;
+    width: 100%;
+    height: 100%;
+  }
+  
+  // Augmenter la taille de l'image dans les cartes du carousel
+  :global(.cardImage) {
+    padding-bottom: 60%; // Augmenter de 56.25% à 60% pour des cartes plus grandes
+  }
+}
 
 /* --- TOURNAMENTS --- */
 .tournaments {

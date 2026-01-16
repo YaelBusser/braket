@@ -6,13 +6,16 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { SearchBar } from '../ui'
 import { useAuthModal } from '../AuthModal/AuthModalContext'
+import { useCreateTournamentModal } from '../CreateTournamentModal/CreateTournamentModalContext'
 import UserMenu from '../UserMenu'
 import styles from './index.module.scss'
 
 function Navigation() {
   const { data: session, status } = useSession()
   const { openAuthModal } = useAuthModal()
+  const { openCreateTournamentModal } = useCreateTournamentModal()
   const [mounted, setMounted] = useState(false)
+  const isAdmin = (session?.user as any)?.isAdmin === 1
 
   // Éviter les problèmes d'hydratation en s'assurant que le composant est monté côté client
   useEffect(() => {
@@ -85,6 +88,15 @@ function Navigation() {
               redirectHomeOnEmpty
             />
           </div>
+          {mounted && session && isAdmin && (
+            <button 
+              onClick={openCreateTournamentModal}
+              className={styles.navLink}
+              type="button"
+            >
+              Créer un tournoi
+            </button>
+          )}
           {renderAuthSection}
         </div>
       </div>

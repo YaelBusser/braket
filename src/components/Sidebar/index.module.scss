@@ -1,5 +1,4 @@
 @use '../../styles/variables.module' as vars;
-@use 'sass:color';
 
 .sidebar {
   position: fixed;
@@ -7,21 +6,16 @@
   left: 0;
   height: 100vh;
   width: vars.$sidebar-width;
-  background: color.adjust(vars.$lt-dark-bg, $lightness: 8%); /* Variante plus claire du background du header */
+  background: vars.$lt-dark-bg; /* #0C0016 */
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 8px 6px;
-  padding-bottom: calc(1rem + 50px + 8px); /* Espace pour le bouton + padding */
+  padding-bottom: 1rem;
   gap: 0; /* Pas de gap pour que les sections atteignent la barre */
   z-index: vars.$z-sticky; /* En dessous du header */
   overflow: hidden; /* Pas de scroll sur la sidebar principale */
   padding-top: calc(vars.$header-height + 1rem);
-}
-
-.createButton {
-  position: absolute;
-  bottom: 1rem;
 }
 
 .section {
@@ -58,7 +52,7 @@
     right: 0;
     width: 100%;
     height: 24px;
-    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    background: linear-gradient(to bottom, transparent, vars.$lt-dark-bg);
     pointer-events: none;
     z-index: 2;
   }
@@ -76,7 +70,7 @@
     right: 0;
     width: 100%;
     height: 24px;
-    background: linear-gradient(to top, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    background: linear-gradient(to top, transparent, vars.$lt-dark-bg);
     pointer-events: none;
     z-index: 2;
   }
@@ -90,7 +84,7 @@
     right: 0;
     width: 100%;
     height: 24px;
-    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    background: linear-gradient(to bottom, transparent, vars.$lt-dark-bg);
     pointer-events: none;
     z-index: 2;
   }
@@ -114,7 +108,7 @@
     right: 0;
     width: 100%;
     height: 15px;
-    background: linear-gradient(to bottom, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    background: linear-gradient(to bottom, transparent, vars.$lt-dark-bg);
     pointer-events: none;
     z-index: -1;
   }
@@ -128,7 +122,7 @@
     right: 0;
     width: 100%;
     height: 20px;
-    background: linear-gradient(to top, transparent, color.adjust(vars.$lt-dark-bg, $lightness: 8%));
+    background: linear-gradient(to top, transparent, vars.$lt-dark-bg);
     pointer-events: none;
     z-index: -1;
   }
@@ -138,7 +132,7 @@
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background: #0c0016;
+  background: vars.$lt-dark-bg;
   border: 1px solid rgba(255,255,255,0.08);
   overflow: hidden;
   display: flex;
@@ -165,13 +159,6 @@
   object-position: center;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
-}
-
-.plusIcon {
-  width: 24px;
-  height: 24px;
-  color: vars.$lt-text-secondary;
-  display: block;
 }
 
 @media (max-width: 1024px) {

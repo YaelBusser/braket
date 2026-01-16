@@ -4,7 +4,6 @@ import { useEffect, useState, memo, useTransition } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useCreateTournamentModal } from '../CreateTournamentModal/CreateTournamentModalContext'
 import styles from './index.module.scss'
 
 type MiniTournament = {
@@ -23,10 +22,8 @@ type MiniTournament = {
 function Sidebar() {
   const [participating, setParticipating] = useState<MiniTournament[]>([])
   const [created, setCreated] = useState<MiniTournament[]>([])
-  const { openCreateTournamentModal } = useCreateTournamentModal()
   const [isPending, startTransition] = useTransition()
   const { data: session } = useSession()
-  const isAdmin = (session?.user as any)?.isAdmin === 1
 
   // Charger les données de manière non-bloquante après le premier rendu
   useEffect(() => {
@@ -102,33 +99,6 @@ function Sidebar() {
         <div className={`${styles.section} ${styles.sectionBottom}`}>
           {created.map(t => renderTournamentLogo(t, false))}
         </div>
-      )}
-
-      {/* Bouton créer/ajouter - en bas (réservé aux admins) */}
-      {isAdmin && (
-        <button 
-          onClick={openCreateTournamentModal}
-          className={`${styles.avatarButton} ${styles.createButton}`} 
-          title="Créer un tournoi"
-          type="button"
-        >
-          <svg 
-            className={styles.plusIcon}
-            width="24" 
-            height="24" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path 
-              d="M12 5V19M5 12H19" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
       )}
     </aside>
   )

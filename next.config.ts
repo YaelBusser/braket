@@ -5,6 +5,20 @@ const nextConfig: NextConfig = {
   // Configuration pour le rendu côté client
   serverExternalPackages: ['@prisma/client'],
   
+  // Configuration des images
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.discordapp.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.discordapp.com',
+      },
+    ],
+  },
+  
   // Configuration des pages
   async rewrites() {
     return [

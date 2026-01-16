@@ -29,11 +29,12 @@ $secondary-800: #3e2a99;
 $secondary-900: #291c66;
 
 // LeTournoi specific colors
-$lt-dark-bg: #0c0016;           // NOIR - Neutral dark (60%)
-$lt-dark-secondary: #1a0030;    // Dark variant
-$lt-dark-tertiary: #2d004d;     // Dark variant
+$lt-dark-bg: #0c0016;           // Background primaire
+$lt-header-bg: #150125;         // Background secondaire
+$lt-dark-secondary: #150125;    // Background secondaire (alias)
+$lt-dark-tertiary: #1e1335;     // Background tertiaire
 $lt-border: #3d0066;            // Border dark
-$lt-text-primary: #ffffff;      // white
+$lt-text-primary: #fbf8ff;      // Texte standard
 $lt-text-secondary: #b8a3c7;   // Light text on dark
 $lt-text-muted: #8b6fa3;       // Muted text
 $lt-accent-blue: #6748ff;       // INDIGO - Secondary color
@@ -136,7 +137,7 @@ $bg-dark-secondary: $lt-dark-secondary;
 $bg-dark-tertiary: $lt-dark-tertiary;
 
 // Page background (peut être changé selon dark/light mode)
-$bg-page: #0a0e1a;              // Background principal des pages (bleu très foncé, comme la page tournoi)
+$bg-page: $lt-dark-tertiary;    // Background tertiaire (#1E1335)
 
 // Text colors
 $text-primary: $lt-text-primary;

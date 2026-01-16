@@ -1,65 +1,207 @@
 "use client"
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, useRef } from 'react'
 import { useSession } from 'next-auth/react'
+import Link from 'next/link'
 import styles from './page.module.scss'
-import { TournamentCard, GameCardSkeleton } from '@/components/ui'
-import { useCreateTournamentModal } from '@/components/CreateTournamentModal/CreateTournamentModalContext'
+import { TournamentCard } from '@/components/ui'
 
 export default function Home() {
   const { status, data: session } = useSession()
-  const [tournaments, setTournaments] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('')
-  const [animated, setAnimated] = useState(false)
-  const [popularGames, setPopularGames] = useState<any[]>([])
-  const [loadingGames, setLoadingGames] = useState(false)
-  const router = useRouter()
+  const [featuredTournaments, setFeaturedTournaments] = useState<any[]>([])
+  const [featuredLoading, setFeaturedLoading] = useState(true)
   const userId = (session?.user as any)?.id || null
-  const isAdmin = (session?.user as any)?.isAdmin === 1
-  const { openCreateTournamentModal } = useCreateTournamentModal()
 
-  // Charger les jeux populaires depuis la DB
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const isScrollingRef = useRef(false)
+
   useEffect(() => {
-    const load = async () => {
-      setLoadingGames(true)
+    // Charger les tournois en tendance (tous ceux avec featuredPosition)
+    const loadFeatured = async () => {
+      setFeaturedLoading(true)
       try {
-        const res = await fetch('/api/games')
+        const res = await fetch('/api/tournaments/featured')
         const data = await res.json()
-        const games = (data.games || []).slice(0, 6).map((g: any) => ({
-          id: g.id,
-          name: g.name,
-          image: g.posterUrl || g.imageUrl
-        }))
-        setPopularGames(games)
+        
+        // S'assurer que seuls les tournois avec featuredPosition valide sont affichés
+        const validTournaments = (data.tournaments || []).filter((t: any) => 
+          t.featuredPosition !== null && 
+          t.featuredPosition >= 1
+        )
+        
+        setFeaturedTournaments(validTournaments)
+      } catch (error) {
+        console.error('Error loading featured tournaments:', error)
       } finally {
-        setLoadingGames(false)
+        setFeaturedLoading(false)
       }
     }
-    load()
+    loadFeatured()
   }, [])
 
+  // Initialiser le scroll pour voir les 3 premières cartes
   useEffect(() => {
-    const load = async () => {
-      setLoading(true)
-      const params = new URLSearchParams()
-      if (query.trim()) {
-        // Utiliser la recherche globale au lieu du filtre par jeu
-        params.set('q', query.trim())
+    if (carouselRef.current && featuredTournaments.length > 0) {
+      // Attendre que le DOM soit prêt
+      const initScroll = () => {
+        if (carouselRef.current) {
+          // Scroll à 0 pour voir les 3 premières cartes
+          carouselRef.current.scrollLeft = 0
+        }
       }
-      const res = await fetch(`/api/tournaments?${params.toString()}`)
-      const data = await res.json()
-      setTournaments(data.tournaments || [])
-      setLoading(false)
+      
+      // Essayer plusieurs fois pour s'assurer que le DOM est prêt
+      setTimeout(initScroll, 100)
+      setTimeout(initScroll, 300)
+      setTimeout(initScroll, 500)
     }
-    load()
-  }, [query])
+  }, [featuredTournaments.length])
 
+  const scrollToIndex = (index: number) => {
+    if (!carouselRef.current || featuredTournaments.length === 0 || isScrollingRef.current) return
+    
+    const carousel = carouselRef.current
+    const items = Array.from(carousel.children) as HTMLElement[]
+    if (items.length === 0) return
+    
+    const item = items[index]
+    if (!item) return
+    
+    // Empêcher les clics multiples pendant le scroll
+    isScrollingRef.current = true
+    
+    // Calculer la position de scroll pour aligner la carte à gauche (première position visible)
+    const itemLeft = item.offsetLeft
+    
+    carousel.scrollTo({
+      left: itemLeft,
+      behavior: 'smooth'
+    })
+    
+    // Mettre à jour l'index immédiatement
+    setCurrentIndex(index)
+    
+    // Réactiver les clics après le scroll
+    setTimeout(() => {
+      isScrollingRef.current = false
+    }, 500) // Durée du scroll smooth
+  }
+
+  const handlePrev = () => {
+    if (featuredTournaments.length === 0 || isScrollingRef.current) return
+    
+    // Attendre que le scroll soit terminé et récupérer l'index actuel depuis le DOM
+    const carousel = carouselRef.current
+    if (!carousel) return
+    
+    // Calculer l'index réel basé sur la position de scroll actuelle
+    const items = Array.from(carousel.children) as HTMLElement[]
+    if (items.length === 0) return
+    
+    const carouselRect = carousel.getBoundingClientRect()
+    let closestIndex = 0
+    let closestDistance = Infinity
+    
+    items.forEach((item, index) => {
+      const rect = item.getBoundingClientRect()
+      const distance = Math.abs(rect.left - carouselRect.left)
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestIndex = index
+      }
+    })
+    
+    // Utiliser l'index réel détecté plutôt que currentIndex qui peut être désynchronisé
+    const actualIndex = closestIndex
+    const newIndex = actualIndex === 0 ? featuredTournaments.length - 1 : actualIndex - 1
+    scrollToIndex(newIndex)
+  }
+
+  const handleNext = () => {
+    if (featuredTournaments.length === 0 || isScrollingRef.current) return
+    
+    // Attendre que le scroll soit terminé et récupérer l'index actuel depuis le DOM
+    const carousel = carouselRef.current
+    if (!carousel) return
+    
+    // Calculer l'index réel basé sur la position de scroll actuelle
+    const items = Array.from(carousel.children) as HTMLElement[]
+    if (items.length === 0) return
+    
+    const carouselRect = carousel.getBoundingClientRect()
+    let closestIndex = 0
+    let closestDistance = Infinity
+    
+    items.forEach((item, index) => {
+      const rect = item.getBoundingClientRect()
+      const distance = Math.abs(rect.left - carouselRect.left)
+      if (distance < closestDistance) {
+        closestDistance = distance
+        closestIndex = index
+      }
+    })
+    
+    // Vérifier si on est à la fin
+    const scrollLeft = carousel.scrollLeft
+    const scrollWidth = carousel.scrollWidth
+    const clientWidth = carousel.clientWidth
+    const isNearEnd = scrollLeft + clientWidth >= scrollWidth - 10
+    
+    // Utiliser l'index réel détecté plutôt que currentIndex qui peut être désynchronisé
+    const actualIndex = isNearEnd ? featuredTournaments.length - 1 : closestIndex
+    const newIndex = actualIndex >= featuredTournaments.length - 1 ? 0 : actualIndex + 1
+    scrollToIndex(newIndex)
+  }
+
+  // Détecter le scroll pour mettre à jour l'index
   useEffect(() => {
-    setAnimated(true)
-  }, [])
+    const carousel = carouselRef.current
+    if (!carousel || featuredTournaments.length === 0) return
+
+    const handleScroll = () => {
+      const items = Array.from(carousel.children) as HTMLElement[]
+      if (items.length === 0) return
+
+      const carouselRect = carousel.getBoundingClientRect()
+      let closestIndex = 0
+      let closestDistance = Infinity
+
+      // Trouver la carte la plus proche du bord gauche
+      items.forEach((item, index) => {
+        const rect = item.getBoundingClientRect()
+        const distance = Math.abs(rect.left - carouselRect.left)
+
+        if (distance < closestDistance) {
+          closestDistance = distance
+          closestIndex = index
+        }
+      })
+
+      // Vérifier si on est à la fin ou au début du scroll
+      const scrollLeft = carousel.scrollLeft
+      const scrollWidth = carousel.scrollWidth
+      const clientWidth = carousel.clientWidth
+      const isNearEnd = scrollLeft + clientWidth >= scrollWidth - 10 // 10px de marge
+      const isNearStart = scrollLeft <= 10 // 10px de marge
+
+      if (isNearEnd) {
+        // On est à la fin, on met l'index à la dernière carte
+        setCurrentIndex(featuredTournaments.length - 1)
+      } else if (isNearStart) {
+        // On est au début, on met l'index à la première carte
+        setCurrentIndex(0)
+      } else {
+        // On est au milieu, on utilise la carte la plus proche
+        setCurrentIndex(closestIndex)
+      }
+    }
+
+    // Initial check
+    handleScroll()
+    
+    carousel.addEventListener('scroll', handleScroll)
+    return () => carousel.removeEventListener('scroll', handleScroll)
+  }, [featuredTournaments.length])
 
   useEffect(() => {
     // Thème header pour jeux vidéo
@@ -84,127 +226,139 @@ export default function Home() {
         
         {/* Contenu du header */}
         <div className={`container ${styles.heroContent}`}>
-          <h1 className={styles.heroTitle}>
-            Organisez votre tournoi de rêve
-          </h1>
-          <p className={styles.heroSubtitle}>
-            Votre plateforme de tournois esport. Créez, participez, gagnez.
-          </p>
-          {isAdmin && (
-            <button
-              className={styles.heroCtaButton}
-              onClick={openCreateTournamentModal}
-              type="button"
-            >
-              Créer un tournoi
-            </button>
-          )}
+          <div className={styles.heroTopSection}>
+            <div className={styles.heroTextContainer}>
+              <h1 className={styles.heroTitle}>
+                Rejoignez les tournois et gagnez des gains
+              </h1>
+              <p className={styles.heroSubtitle}>
+                La plateforme esport où les joueurs participent à des tournois compétitifs et remportent des récompenses. 
+                Participez aux compétitions, affrontez les meilleurs joueurs, et gagnez des prix à chaque victoire.
+              </p>
+            </div>
+            <div className={styles.heroCtaButtonWrapper}>
+              {status === 'authenticated' ? (
+                <Link href="/tournaments" className={styles.heroCtaButton}>
+                  Voir les tournois
+                </Link>
+              ) : (
+                <Link href="/api/auth/signin" className={styles.heroCtaButton}>
+                  Rejoindre maintenant
+                </Link>
+              )}
+            </div>
+          </div>
           
-          {/* Barre de recherche déplacée dans le header */}
+          
+          {/* Section Tournois en tendance dans le hero */}
+          {featuredTournaments.length > 0 && (
+            <div className={styles.featuredSection}>
+              <div className={styles.featuredHeader}>
+                <div className={styles.featuredBadge}>
+                  <span className={styles.badgeIcon}>🔥</span>
+                  <span>En tendance</span>
+                </div>
+              </div>
+              
+              {/* Carousel des tournois */}
+              <div className={styles.carouselWrapper}>
+                <button 
+                  className={styles.carouselButton}
+                  onClick={handlePrev}
+                  aria-label="Tournoi précédent"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 18l-6-6 6-6"/>
+                  </svg>
+                </button>
+                
+                <div className={styles.carouselContainer}>
+                  <div className={styles.carousel} ref={carouselRef}>
+                    {featuredTournaments.map((tournament, index) => {
+                      const position = tournament.featuredPosition || index + 1
+                      return (
+                        <div 
+                          key={tournament.id} 
+                          className={styles.carouselItem}
+                          data-index={index}
+                        >
+                          <div className={styles.trendingBadge}>
+                            #{position}
+                          </div>
+                          <TournamentCard
+                            tournament={tournament}
+                            userId={userId}
+                            className={styles.featuredTournamentCard}
+                          />
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                
+                <button 
+                  className={styles.carouselButton}
+                  onClick={handleNext}
+                  aria-label="Tournoi suivant"
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Contenu principal */}
       <div className={`container ${styles.mainContent}`}>
-        {/* Section Tournois (remontée) */}
-        <div className={styles.tournaments}>
-          {/* En-tête simplifié: uniquement le titre */}
-          <div className={styles.tournamentsHeader}>
-            <h2 className={styles.tournamentsTitle}>Tournois recommandés</h2>
+        {/* Section Explication du concept */}
+        <div className={styles.conceptSection}>
+          <div className={styles.conceptHeader}>
+            <h2 className={styles.conceptTitle}>Notre concept</h2>
+            <p className={styles.conceptSubtitle}>
+              Une plateforme esport où vous participez à des tournois compétitifs et remportez des gains
+            </p>
           </div>
           
-          {loading ? (
-            <div className={styles.tournamentsGrid}>
-              {Array.from({ length: 6 }).map((_, index) => (
-                <TournamentCard key={index} loading={true} />
-              ))}
+          <div className={styles.conceptGrid}>
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🎮</div>
+              <h3 className={styles.conceptCardTitle}>Participez aux tournois</h3>
+              <p className={styles.conceptCardText}>
+                Rejoignez des tournois organisés par la communauté et affrontez d'autres joueurs dans vos jeux favoris. 
+                Que vous soyez débutant ou professionnel, trouvez des compétitions adaptées à votre niveau.
+              </p>
             </div>
-          ) : tournaments.length === 0 ? (
-            <div className={styles.emptyTournamentsContainer}>
-              <div>Aucun tournoi public dans cette catégorie.</div>
+            
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>🏆</div>
+              <h3 className={styles.conceptCardTitle}>Gagnez des récompenses</h3>
+              <p className={styles.conceptCardText}>
+                Remportez des gains et des prix en participant aux tournois. Plus vous progressez, plus les récompenses 
+                sont importantes. Montrez vos compétences et soyez récompensé pour votre talent.
+              </p>
             </div>
-          ) : (
-            <div className={styles.tournamentsGrid}>
-              {tournaments
-                .filter(t => (t as any).status !== 'COMPLETED')
-                .sort((a, b) => {
-                  const getTime = (x: any) => new Date(x?.startDate || x?.createdAt || x?.updatedAt || 0).getTime()
-                  return getTime(b as any) - getTime(a as any)
-                })
-                .slice(0, 6)
-                .map((t) => (
-                  <TournamentCard
-                    key={t.id}
-                    tournament={t}
-                    userId={userId}
-                  />
-                ))}
+            
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>📊</div>
+              <h3 className={styles.conceptCardTitle}>Suivez vos performances</h3>
+              <p className={styles.conceptCardText}>
+                Consultez vos statistiques détaillées, votre historique de participations et vos gains accumulés. 
+                Suivez votre progression, améliorez votre classement et devenez un champion reconnu.
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Section Jeux populaires (grille) */}
-        <div className={styles.popularGames}>
-          <div className={styles.popularGamesHeader}>
-            <h2 className={styles.popularGamesTitle}>Parcourir les jeux</h2>
-            <Link 
-              href="/games"
-              className={styles.browseGamesBtn}
-            >
-              Voir tout
-            </Link>
+            
+            <div className={styles.conceptCard}>
+              <div className={styles.conceptIcon}>👥</div>
+              <h3 className={styles.conceptCardTitle}>Rejoignez des équipes</h3>
+              <p className={styles.conceptCardText}>
+                Formez ou rejoignez des équipes pour participer aux tournois en mode équipe. Travaillez ensemble, 
+                développez votre stratégie et remportez la victoire en équipe.
+              </p>
+            </div>
           </div>
-          
-          {loadingGames ? (
-            <div className={styles.popularGamesGrid}>
-              <GameCardSkeleton count={6} />
-            </div>
-          ) : (
-            <div className={styles.popularGamesGrid}>
-              {popularGames.slice(0, 6).map((game, index) => (
-                <div
-                  key={index}
-                  className={styles.popularGameCard}
-                  onClick={() => {
-                    router.push(`/games/${encodeURIComponent(game.name)}`)
-                  }}
-                >
-                  <div className={styles.popularGameImageContainer}>
-                    {game.image ? (
-                      <Image 
-                        src={game.image} 
-                        alt={game.name}
-                        width={600}
-                        height={857}
-                        className={styles.popularGameImage}
-                        quality={100}
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className={styles.popularGameImage} style={{
-                        background: 'linear-gradient(135deg, #ff008c, #6748ff)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.5rem',
-                        color: '#ffffff',
-                        fontWeight: 'bold'
-                      }}>
-                        {game.name.charAt(0)}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Texte en dessous de l'image */}
-                  <div className={styles.popularGameText}>
-                    <div className={styles.popularGameTitle}>
-                      {game.name}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </main>

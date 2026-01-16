@@ -89,7 +89,7 @@ export async function PATCH(
     const body = await request.json()
     const { 
       name, description, game, format, visibility, startDate, endDate, status, registrationDeadline,
-      bracketMinTeams, bracketMaxTeams, maxParticipants
+      bracketMinTeams, bracketMaxTeams, maxParticipants, teamMinSize, teamMaxSize
     } = body || {}
 
     // Validation des paramètres du bracket si fournis
@@ -151,6 +151,48 @@ export async function PATCH(
       }
     }
 
+    // Validation de teamMinSize et teamMaxSize si fournis
+    if (teamMinSize !== undefined || teamMaxSize !== undefined) {
+      // Vérifier que le tournoi n'a pas encore commencé
+      if (existing.status !== 'REG_OPEN') {
+        return NextResponse.json({ 
+          message: 'Impossible de modifier la taille des équipes : le tournoi a déjà commencé' 
+        }, { status: 400 })
+      }
+
+      const minSize = teamMinSize !== undefined && teamMinSize !== null && teamMinSize !== '' 
+        ? parseInt(String(teamMinSize), 10) 
+        : existing.teamMinSize
+      const maxSize = teamMaxSize !== undefined && teamMaxSize !== null && teamMaxSize !== '' 
+        ? parseInt(String(teamMaxSize), 10) 
+        : existing.teamMaxSize
+
+      if (teamMinSize !== undefined && teamMinSize !== null && teamMinSize !== '') {
+        const minSizeNum = parseInt(String(teamMinSize), 10)
+        if (isNaN(minSizeNum) || minSizeNum < 1) {
+          return NextResponse.json({ 
+            message: 'La taille minimale d\'équipe doit être au moins 1' 
+          }, { status: 400 })
+        }
+      }
+
+      if (teamMaxSize !== undefined && teamMaxSize !== null && teamMaxSize !== '') {
+        const maxSizeNum = parseInt(String(teamMaxSize), 10)
+        if (isNaN(maxSizeNum) || maxSizeNum < 1) {
+          return NextResponse.json({ 
+            message: 'La taille maximale d\'équipe doit être au moins 1' 
+          }, { status: 400 })
+        }
+      }
+
+      // Vérifier que minSize <= maxSize si les deux sont définis
+      if (minSize !== null && maxSize !== null && minSize > maxSize) {
+        return NextResponse.json({ 
+          message: 'La taille minimale ne peut pas être supérieure à la taille maximale' 
+        }, { status: 400 })
+      }
+    }
+
     const updated = await prisma.tournament.update({
       where: { id },
       data: {
@@ -166,6 +208,8 @@ export async function PATCH(
         ...(bracketMinTeams !== undefined ? { bracketMinTeams: bracketMinTeams !== null && bracketMinTeams !== '' ? parseInt(String(bracketMinTeams), 10) : null } : {}),
         ...(bracketMaxTeams !== undefined ? { bracketMaxTeams: bracketMaxTeams !== null && bracketMaxTeams !== '' ? parseInt(String(bracketMaxTeams), 10) : null } : {}),
         ...(maxParticipants !== undefined ? { maxParticipants: maxParticipants === null || maxParticipants === '' ? null : parseInt(String(maxParticipants), 10) } : {}),
+        ...(teamMinSize !== undefined ? { teamMinSize: teamMinSize !== null && teamMinSize !== '' ? parseInt(String(teamMinSize), 10) : null } : {}),
+        ...(teamMaxSize !== undefined ? { teamMaxSize: teamMaxSize !== null && teamMaxSize !== '' ? parseInt(String(teamMaxSize), 10) : null } : {}),
       },
       include: {
         organizer: { select: { id: true, pseudo: true, avatarUrl: true } },

@@ -73,10 +73,34 @@ export async function POST(request: NextRequest) {
       // options
       const isTeamBasedStr = form.get('isTeamBased') as string | null
       const maxParticipantsStr = form.get('maxParticipants') as string | null
+      const teamMinSizeValue = form.get('teamMinSize')
+      const teamMaxSizeValue = form.get('teamMaxSize')
       const kindStr = form.get('kind') as string | null
       if (isTeamBasedStr) (global as any).__tmp_isTeamBased = isTeamBasedStr === 'true'
-      if (maxParticipantsStr) (global as any).__tmp_maxParticipants = parseInt(maxParticipantsStr)
+      if (maxParticipantsStr) (global as any).__tmp_maxParticipants = globalThis.parseInt(maxParticipantsStr, 10)
+      // Parser teamMinSize et teamMaxSize (vérifier que c'est une string)
+      const teamMinSizeStr = typeof teamMinSizeValue === 'string' ? teamMinSizeValue : null
+      const teamMaxSizeStr = typeof teamMaxSizeValue === 'string' ? teamMaxSizeValue : null
+      if (teamMinSizeStr !== null && teamMinSizeStr.trim() !== '') {
+        const trimmed = teamMinSizeStr.trim()
+        const parsed = globalThis.parseInt(trimmed, 10)
+        (global as any).__tmp_teamMinSize = !globalThis.isNaN(parsed) && parsed > 0 ? parsed : null
+      } else {
+        (global as any).__tmp_teamMinSize = null
+      }
+      if (teamMaxSizeStr !== null && teamMaxSizeStr.trim() !== '') {
+        const trimmed = teamMaxSizeStr.trim()
+        const parsed = globalThis.parseInt(trimmed, 10)
+        (global as any).__tmp_teamMaxSize = !globalThis.isNaN(parsed) && parsed > 0 ? parsed : null
+      } else {
+        (global as any).__tmp_teamMaxSize = null
+      }
       if (kindStr) (global as any).__tmp_kind = kindStr
+      
+      // Debug logs
+      console.log('Tournament creation - isTeamBased:', (global as any).__tmp_isTeamBased)
+      console.log('Tournament creation - teamMinSizeStr:', teamMinSizeStr, '-> parsed:', (global as any).__tmp_teamMinSize)
+      console.log('Tournament creation - teamMaxSizeStr:', teamMaxSizeStr, '-> parsed:', (global as any).__tmp_teamMaxSize)
       const regDL = form.get('registrationDeadline') as string | null
       if (regDL) registrationDeadline = regDL
     } else {
@@ -90,7 +114,20 @@ export async function POST(request: NextRequest) {
       startDate = body?.startDate
       endDate = body?.endDate
       ;(global as any).__tmp_isTeamBased = body?.isTeamBased === true
-      ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? parseInt(body.maxParticipants) : undefined
+      ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? globalThis.parseInt(String(body.maxParticipants), 10) : undefined
+      // Parser teamMinSize et teamMaxSize même si vides (retournera null si vide ou invalide)
+      if (body?.teamMinSize !== undefined && body?.teamMinSize !== null && body?.teamMinSize !== '') {
+        const parsed = globalThis.parseInt(String(body.teamMinSize), 10)
+        ;(global as any).__tmp_teamMinSize = !globalThis.isNaN(parsed) ? parsed : null
+      } else {
+        ;(global as any).__tmp_teamMinSize = null
+      }
+      if (body?.teamMaxSize !== undefined && body?.teamMaxSize !== null && body?.teamMaxSize !== '') {
+        const parsed = globalThis.parseInt(String(body.teamMaxSize), 10)
+        ;(global as any).__tmp_teamMaxSize = !globalThis.isNaN(parsed) ? parsed : null
+      } else {
+        ;(global as any).__tmp_teamMaxSize = null
+      }
       registrationDeadline = body?.registrationDeadline
     }
 
@@ -126,12 +163,44 @@ export async function POST(request: NextRequest) {
     const safeFormat = 'SINGLE_ELIMINATION'
     const safeVisibility = visibility === 'PRIVATE' ? 'PRIVATE' : 'PUBLIC'
 
+    // Validation de teamMinSize et teamMaxSize si fournis
+    const teamMinSize = (global as any).__tmp_teamMinSize
+    const teamMaxSize = (global as any).__tmp_teamMaxSize
+    if (teamMinSize !== undefined && teamMinSize !== null) {
+      if (globalThis.isNaN(teamMinSize) || teamMinSize < 1) {
+        return NextResponse.json({ 
+          message: 'La taille minimale d\'équipe doit être au moins 1' 
+        }, { status: 400 })
+      }
+    }
+    if (teamMaxSize !== undefined && teamMaxSize !== null) {
+      if (globalThis.isNaN(teamMaxSize) || teamMaxSize < 1) {
+        return NextResponse.json({ 
+          message: 'La taille maximale d\'équipe doit être au moins 1' 
+        }, { status: 400 })
+      }
+    }
+    // Vérifier que minSize <= maxSize si les deux sont définis
+    if (teamMinSize !== undefined && teamMinSize !== null && 
+        teamMaxSize !== undefined && teamMaxSize !== null && 
+        teamMinSize > teamMaxSize) {
+      return NextResponse.json({ 
+        message: 'La taille minimale ne peut pas être supérieure à la taille maximale' 
+      }, { status: 400 })
+    }
+
     try {
       // Si uniquement gameId fourni, récupérer le nom pour le champ legacy
       if (!game && gameId) {
         const g = await prisma.game.findUnique({ where: { id: gameId } })
         if (g) game = g.name
       }
+      
+      // Debug: vérifier les valeurs avant création
+      const teamMinSizeValue = (global as any).__tmp_teamMinSize !== undefined ? (global as any).__tmp_teamMinSize : null
+      const teamMaxSizeValue = (global as any).__tmp_teamMaxSize !== undefined ? (global as any).__tmp_teamMaxSize : null
+      console.log('Before tournament creation - teamMinSize:', teamMinSizeValue, 'teamMaxSize:', teamMaxSizeValue)
+      
       const tournament = await prisma.tournament.create({
         data: {
         name: name!,
@@ -143,7 +212,9 @@ export async function POST(request: NextRequest) {
         posterUrl: posterUrl || null,
         logoUrl: logoUrl || null,
         isTeamBased: Boolean((global as any).__tmp_isTeamBased),
-        maxParticipants: (global as any).__tmp_maxParticipants || null,
+        maxParticipants: (global as any).__tmp_maxParticipants !== undefined ? (global as any).__tmp_maxParticipants : null,
+        teamMinSize: (global as any).__tmp_teamMinSize !== undefined ? (global as any).__tmp_teamMinSize : null,
+        teamMaxSize: (global as any).__tmp_teamMaxSize !== undefined ? (global as any).__tmp_teamMaxSize : null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         organizerId: userId,
@@ -205,6 +276,7 @@ export async function GET(request: NextRequest) {
     const orderBy: any =
       sort === 'start_asc' ? { startDate: 'asc' } :
       sort === 'start_desc' ? { startDate: 'desc' } :
+      sort === 'featured' ? { featuredPosition: 'asc' } :
       { createdAt: 'desc' }
 
 

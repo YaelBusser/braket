@@ -1,0 +1,68 @@
+@use '@/styles/variables.module' as vars;
+
+.title {
+  color: #fff;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: vars.$spacing-6;
+  text-transform: none;
+}
+
+.searchSection {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-8;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.searchBarWrapper {
+  flex: 1;
+  min-width: 300px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+.filtersWrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.tournamentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-6;
+  width: 100%;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: vars.$spacing-8 0;
+  text-align: center;
+  color: #6b7280;
+  min-height: auto;
+}
+
+.emptyMessage {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+}

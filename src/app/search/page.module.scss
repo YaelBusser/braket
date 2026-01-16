@@ -15,6 +15,46 @@
   text-transform: none;
 }
 
+.searchSection {
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-6;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.searchBarWrapper {
+  flex: 1;
+  min-width: 300px;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    min-width: auto;
+  }
+}
+
+.filtersWrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.additionalFilters {
+  display: flex;
+  gap: vars.$spacing-4;
+  flex-wrap: wrap;
+  margin-top: vars.$spacing-4;
+}
+
 .filters {
   display: flex;
   gap: vars.$spacing-2;

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { TournamentCard, CircularCard, GameCardSkeleton, PageContent } from '@/components/ui'
+import { TournamentCard, CircularCard, GameCardSkeleton, PageContent, SearchBar, TournamentFilters } from '@/components/ui'
 import { formatRelativeTime } from '@/utils/dateUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
@@ -74,6 +74,8 @@ function SearchPageContent() {
   const [tournamentStatusFilter, setTournamentStatusFilter] = useState<TournamentStatusFilter>('all')
   const [tournamentFormatFilter, setTournamentFormatFilter] = useState<TournamentFormatFilter>('all')
   const [tournamentCategoryFilter, setTournamentCategoryFilter] = useState<string>('all')
+  const [selectedGameIds, setSelectedGameIds] = useState<string[]>([])
+  const [availableGames, setAvailableGames] = useState<GameResult[]>([])
   const userId = (session?.user as any)?.id || null
   
   // Results
@@ -107,6 +109,21 @@ function SearchPageContent() {
       clearTimeout(timeoutRef.current)
     }
     timeoutRef.current = setTimeout(fn, delay)
+  }, [])
+
+  // Charger la liste des jeux disponibles pour le filtre
+  useEffect(() => {
+    const loadGames = async () => {
+      try {
+        const res = await fetch('/api/games')
+        const data = await res.json()
+        setAvailableGames(data.games || [])
+      } catch (error) {
+        console.error('Error loading games for filter:', error)
+        setAvailableGames([])
+      }
+    }
+    loadGames()
   }, [])
 
   // Load tournaments avec debounce
@@ -292,11 +309,32 @@ function SearchPageContent() {
       filtered = filtered.filter(t => t.category === tournamentCategoryFilter)
     }
 
+    // Filtre par jeux (plusieurs jeux peuvent être sélectionnés)
+    if (selectedGameIds.length > 0) {
+      filtered = filtered.filter(t => {
+        // Vérifier si le jeu correspond par ID ou par nom
+        if (t.gameRef && t.gameRef.id) {
+          return selectedGameIds.includes(t.gameRef.id)
+        }
+        if (t.gameId) {
+          return selectedGameIds.includes(t.gameId)
+        }
+        // Fallback sur le nom du jeu si on n'a pas l'ID
+        if (t.game) {
+          return selectedGameIds.some(gameId => {
+            const game = availableGames.find(g => g.id === gameId)
+            return game && game.name === t.game
+          })
+        }
+        return false
+      })
+    }
+
     return filtered
   }
 
-  // Obtenir les formats et catégories uniques des tournois
-  const availableFormats = Array.from(new Set(tournaments.map(t => t.format).filter(Boolean)))
+  // Obtenir les formats et catégories uniques des tournois (exclure SINGLE_ELIMINATION)
+  const availableFormats = Array.from(new Set(tournaments.map(t => t.format).filter(Boolean))).filter(format => format !== 'SINGLE_ELIMINATION')
   const availableCategories = Array.from(new Set(tournaments.map(t => t.category).filter(Boolean)))
 
   const filteredTournaments = getFilteredTournaments()
@@ -305,90 +343,88 @@ function SearchPageContent() {
     <PageContent style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         <div className={styles.header}>
           <h1 className={styles.title}>
-            {q ? `Résultats de la recherche ${q}` : 'Résultats de la recherche'}
+            {q ? `Résultats de la recherche "${q}"` : 'Rechercher'}
           </h1>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-            <div className={styles.filters}>
-              {filters.map((filter) => (
-                <button
-                  key={filter}
-                  className={`${styles.filterBtn} ${activeFilter === filter ? styles.filterBtnActive : ''}`}
-                  onClick={() => setActiveFilter(filter)}
-                >
-                  {filter}
-                </button>
-              ))}
+          {/* Barre de recherche avec filtres */}
+          <div className={styles.searchSection}>
+            <div className={styles.searchBarWrapper}>
+              <SearchBar
+                placeholder="Rechercher des tournois, jeux, utilisateurs..."
+                size="md"
+                variant="dark"
+                autoSearchDelay={500}
+                defaultValue={q}
+              />
             </div>
-
-            {/* Filtres supplémentaires pour les tournois */}
-            {(activeFilter === 'Tout' || activeFilter === 'Tournois') && tournaments.length > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
-                {/* Filtres de statut à gauche */}
-                <div className={styles.filters} style={{ marginBottom: 0 }}>
-                  {[
-                    { id: 'all', label: 'Tous' },
-                    { id: 'upcoming', label: 'À venir' },
-                    { id: 'in_progress', label: 'En cours' },
-                    { id: 'completed', label: 'Terminés' }
-                  ].map((filter) => (
-                    <button
-                      key={filter.id}
-                      className={`${styles.filterBtn} ${tournamentStatusFilter === filter.id ? styles.filterBtnActive : ''}`}
-                      onClick={() => setTournamentStatusFilter(filter.id as TournamentStatusFilter)}
-                    >
-                      {filter.label}
-                    </button>
-                  ))}
-                </div>
-                
-                {/* Filtres supplémentaires à droite */}
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                  {/* Filtre par format */}
-                  {availableFormats.length > 0 && (
-                    <div className={styles.filters} style={{ marginBottom: 0 }}>
-                      <button
-                        className={`${styles.filterBtn} ${tournamentFormatFilter === 'all' ? styles.filterBtnActive : ''}`}
-                        onClick={() => setTournamentFormatFilter('all')}
-                      >
-                        Tous les formats
-                      </button>
-                      {availableFormats.map((format) => (
-                        <button
-                          key={format}
-                          className={`${styles.filterBtn} ${tournamentFormatFilter === format ? styles.filterBtnActive : ''}`}
-                          onClick={() => setTournamentFormatFilter(format)}
-                        >
-                          {format}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {/* Filtre par catégorie */}
-                  {availableCategories.length > 0 && (
-                    <div className={styles.filters} style={{ marginBottom: 0 }}>
-                      <button
-                        className={`${styles.filterBtn} ${tournamentCategoryFilter === 'all' ? styles.filterBtnActive : ''}`}
-                        onClick={() => setTournamentCategoryFilter('all')}
-                      >
-                        Toutes les catégories
-                      </button>
-                      {availableCategories.map((category) => (
-                        <button
-                          key={category}
-                          className={`${styles.filterBtn} ${tournamentCategoryFilter === category ? styles.filterBtnActive : ''}`}
-                          onClick={() => setTournamentCategoryFilter(category)}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
+            
+            {/* Filtres à droite de la barre de recherche */}
+            {(activeFilter === 'Tout' || activeFilter === 'Tournois') && (
+              <div className={styles.filtersWrapper}>
+                <TournamentFilters
+                  games={availableGames}
+                  selectedGames={selectedGameIds}
+                  onGamesChange={setSelectedGameIds}
+                  statusFilter={tournamentStatusFilter}
+                  onStatusChange={setTournamentStatusFilter}
+                />
               </div>
             )}
           </div>
+
+          {/* Filtres de type de recherche */}
+          <div className={styles.filters}>
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                className={`${styles.filterBtn} ${activeFilter === filter ? styles.filterBtnActive : ''}`}
+                onClick={() => setActiveFilter(filter)}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+
+          {/* Filtres supplémentaires pour les tournois (format et catégorie) */}
+          {(activeFilter === 'Tout' || activeFilter === 'Tournois') && tournaments.length > 0 && (
+            <div className={styles.additionalFilters}>
+              {/* Filtre par format */}
+              {availableFormats.length > 0 && (
+                <div className={styles.filters} style={{ marginBottom: 0 }}>
+                  {availableFormats.map((format) => (
+                    <button
+                      key={format}
+                      className={`${styles.filterBtn} ${tournamentFormatFilter === format ? styles.filterBtnActive : ''}`}
+                      onClick={() => setTournamentFormatFilter(format)}
+                    >
+                      {format}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* Filtre par catégorie */}
+              {availableCategories.length > 0 && (
+                <div className={styles.filters} style={{ marginBottom: 0 }}>
+                  <button
+                    className={`${styles.filterBtn} ${tournamentCategoryFilter === 'all' ? styles.filterBtnActive : ''}`}
+                    onClick={() => setTournamentCategoryFilter('all')}
+                  >
+                    Toutes les catégories
+                  </button>
+                  {availableCategories.map((category) => (
+                    <button
+                      key={category}
+                      className={`${styles.filterBtn} ${tournamentCategoryFilter === category ? styles.filterBtnActive : ''}`}
+                      onClick={() => setTournamentCategoryFilter(category)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Section Tournois */}

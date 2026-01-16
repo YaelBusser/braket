@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { memo } from 'react'
 import styles from './index.module.scss'
 import { formatRelativeTimeWithTZ } from '@/utils/dateUtils'
-import SettingsIcon from '../../icons/SettingsIcon'
 
 interface TournamentCardProps {
   tournament?: {
@@ -54,13 +53,6 @@ interface TournamentCardProps {
 }
 
 function TournamentCard({ tournament, className = '', variant = 'default', loading = false, userId }: TournamentCardProps) {
-  // Vérifier si l'utilisateur est propriétaire du tournoi
-  const isOwner = tournament && userId && (
-    tournament.organizer?.id === userId ||
-    tournament.host?.id === userId ||
-    tournament.organizerId === userId
-  )
-  
   // Si loading, afficher le skeleton
   if (loading || !tournament) {
     return (
@@ -96,26 +88,81 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
   const backgroundImage = tournament.posterUrl || gameImage
   const gameLogoUrl = tournament.gameRef?.logoUrl
 
-  // Format du mode de jeu
+  // Format du mode de jeu (5v5, 4v4, etc.)
   const formatMode = () => {
-    if (tournament.isTeamBased && tournament.teamMinSize && tournament.teamMaxSize) {
-      return `${tournament.teamMinSize}v${tournament.teamMaxSize}`
-    }
     if (tournament.isTeamBased) {
-      return 'Équipe'
+      // Si on a teamMinSize et teamMaxSize, utiliser les deux
+      if (tournament.teamMinSize && tournament.teamMaxSize) {
+        return `${tournament.teamMinSize}v${tournament.teamMaxSize}`
+      }
+      // Si on a seulement teamMaxSize, utiliser pour les deux côtés (5v5)
+      if (tournament.teamMaxSize) {
+        return `${tournament.teamMaxSize}v${tournament.teamMaxSize}`
+      }
+      // Si on a seulement teamMinSize, utiliser pour les deux côtés
+      if (tournament.teamMinSize) {
+        return `${tournament.teamMinSize}v${tournament.teamMinSize}`
+      }
     }
+    // Tournoi individuel
     return '1v1'
   }
 
-  // Format des emplacements
+  // Format des emplacements (places restantes / total)
   const formatSlots = () => {
     if (maxParticipants > 0) {
-      return `${participantsCount}/${maxParticipants} participants`
+      const remaining = maxParticipants - participantsCount
+      return {
+        remaining,
+        total: maxParticipants,
+        text: `${remaining} place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} / ${maxParticipants}`
+      }
     }
     if (participantsCount > 0) {
-      return `${participantsCount} participant${participantsCount > 1 ? 's' : ''}`
+      return {
+        remaining: null,
+        total: null,
+        text: `${participantsCount} participant${participantsCount > 1 ? 's' : ''}`
+      }
     }
-    return ''
+    return {
+      remaining: null,
+      total: null,
+      text: ''
+    }
+  }
+
+  const slotsInfo = formatSlots()
+
+  // Format du statut du tournoi
+  const getStatusLabel = () => {
+    switch (tournament.status) {
+      case 'DRAFT':
+        return 'Brouillon'
+      case 'REG_OPEN':
+        return 'Inscriptions ouvertes'
+      case 'IN_PROGRESS':
+        return 'En cours'
+      case 'COMPLETED':
+        return 'Terminé'
+      default:
+        return tournament.status
+    }
+  }
+
+  const getStatusColor = () => {
+    switch (tournament.status) {
+      case 'DRAFT':
+        return styles.statusDraft
+      case 'REG_OPEN':
+        return styles.statusOpen
+      case 'IN_PROGRESS':
+        return styles.statusInProgress
+      case 'COMPLETED':
+        return styles.statusCompleted
+      default:
+        return styles.statusDefault
+    }
   }
 
   // Région par défaut
@@ -167,19 +214,6 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
   // Nouveau design avec texte en dessous
   return (
     <div className={`${styles.tournamentCard} ${styles.unified} ${variant === 'compact' ? styles.compact : ''} ${className}`} style={{ position: 'relative' }}>
-      {/* Icône de gestion pour le propriétaire */}
-      {isOwner && (
-        <Link 
-          href={`/tournaments/${tournament.id}/admin`}
-          className={styles.adminIcon}
-          title="Gérer le tournoi"
-          onClick={(e) => e.stopPropagation()}
-          prefetch={true}
-        >
-          <SettingsIcon width={18} height={18} fill="#fff" />
-        </Link>
-      )}
-      
       <Link 
         href={`/tournaments/${tournament.id}`} 
         prefetch={true}
@@ -245,13 +279,24 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
             {tournament.name}
           </h3>
           
-          {/* Détails du tournoi */}
+          {/* Tags : Format et Statut */}
+          <div className={styles.tagsRow}>
+            <span className={styles.formatTag}>{formatMode()}</span>
+            <span className={`${styles.statusTag} ${getStatusColor()}`}>
+              {getStatusLabel()}
+            </span>
+          </div>
+          
+          {/* Détails du tournoi : Places et format de tournoi */}
           <div className={styles.tournamentDetails}>
-            {formatMode()}
-            {formatSlots() && ` • ${formatSlots()}`}
+            {slotsInfo.text && (
+              <span className={styles.slotsInfo}>
+                {slotsInfo.text}
+              </span>
+            )}
             {tournament.format && tournament.format !== 'SINGLE_ELIMINATION' && (
               <>
-                {' • '}
+                {slotsInfo.text && ' • '}
                 {tournament.format === 'DOUBLE_ELIMINATION' ? 'Double élimination' : 
                  tournament.format === 'ROUND_ROBIN' ? 'Round robin' : 'Elimination directe'}
               </>

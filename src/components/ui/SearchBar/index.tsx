@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './index.module.scss'
-import SearchIcon from '../SearchIcon'
 
 interface SearchBarProps {
   placeholder?: string
@@ -14,6 +13,7 @@ interface SearchBarProps {
   hideButton?: boolean
   autoSearchDelay?: number // ms; si fourni, déclenche une recherche en debounce
   redirectHomeOnEmpty?: boolean
+  defaultValue?: string // Valeur initiale du champ de recherche
 }
 
 export default function SearchBar({ 
@@ -24,11 +24,19 @@ export default function SearchBar({
   variant = 'dark',
   hideButton = false,
   autoSearchDelay,
-  redirectHomeOnEmpty
+  redirectHomeOnEmpty,
+  defaultValue = ''
 }: SearchBarProps) {
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(defaultValue)
   const router = useRouter()
   const prevQueryRef = useRef('')
+  
+  // Synchroniser avec defaultValue si elle change
+  useEffect(() => {
+    if (defaultValue !== undefined) {
+      setQuery(defaultValue)
+    }
+  }, [defaultValue])
 
   const handleSearch = () => {
     if (query.trim().length >= 2) {
@@ -80,15 +88,28 @@ export default function SearchBar({
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
-        {!hideButton && (
-          <button
-            className={styles.searchButton}
-            onClick={handleSearch}
-            type="button"
-          >
-            <SearchIcon width={20} height={20} />
-          </button>
-        )}
+        <div className={styles.searchIconWrapper}>
+          {!hideButton ? (
+            <button
+              className={styles.searchButton}
+              onClick={handleSearch}
+              type="button"
+              aria-label="Rechercher"
+            >
+              <img 
+                src="/icons/search.svg" 
+                alt="Rechercher" 
+                className={styles.searchIcon}
+              />
+            </button>
+          ) : (
+            <img 
+              src="/icons/search.svg" 
+              alt="Rechercher" 
+              className={styles.searchIcon}
+            />
+          )}
+        </div>
       </div>
     </div>
   )

@@ -1,0 +1,240 @@
+@use '@/styles/variables.module' as vars;
+
+.filtersContainer {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  flex-wrap: wrap;
+}
+
+.filterWrapper {
+  position: relative;
+}
+
+.filterButton {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-2;
+  padding: vars.$spacing-2 vars.$spacing-4;
+  background: #1f2937;
+  color: #ffffff;
+  border: 1px solid rgba(251, 248, 255, 0.3);
+  border-radius: vars.$radius-lg;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #374151;
+    border-color: rgba(251, 248, 255, 0.5);
+  }
+}
+
+.filterButtonActive {
+  background: vars.$primary-600;
+  border-color: vars.$primary-600;
+
+  &:hover {
+    background: vars.$primary-700;
+    border-color: vars.$primary-700;
+  }
+}
+
+.filterLabel {
+  font-weight: 600;
+}
+
+.filterValue {
+  color: rgba(251, 248, 255, 0.8);
+  font-weight: 400;
+}
+
+.dropdownIcon {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + vars.$spacing-2);
+  left: 0;
+  min-width: 280px;
+  max-width: 400px;
+  max-height: 400px;
+  background: #1f2937;
+  border: 1px solid rgba(251, 248, 255, 0.3);
+  border-radius: vars.$radius-xl;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  z-index: vars.$z-dropdown;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: vars.$spacing-4;
+  border-bottom: 1px solid rgba(251, 248, 255, 0.1);
+}
+
+.dropdownTitle {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.clearButton {
+  background: transparent;
+  border: none;
+  color: vars.$primary-600;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: vars.$spacing-1 vars.$spacing-2;
+  border-radius: vars.$radius-base;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 0, 140, 0.1);
+    color: vars.$primary-500;
+  }
+}
+
+.dropdownContent {
+  padding: vars.$spacing-2;
+  overflow-y: auto;
+  max-height: 300px;
+  
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-3 vars.$spacing-4;
+  cursor: pointer;
+  border-radius: vars.$radius-lg;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(251, 248, 255, 0.05);
+  }
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: vars.$primary-600;
+  flex-shrink: 0;
+}
+
+.checkboxText {
+  color: #ffffff;
+  font-size: 0.875rem;
+  font-weight: 400;
+  flex: 1;
+}
+
+.emptyMessage {
+  padding: vars.$spacing-4;
+  color: rgba(251, 248, 255, 0.6);
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.statusFilters {
+  display: flex;
+  gap: vars.$spacing-2;
+  flex-wrap: wrap;
+}
+
+.statusButton {
+  padding: vars.$spacing-2 vars.$spacing-4;
+  background: #1f2937;
+  color: #ffffff;
+  border: 1px solid rgba(251, 248, 255, 0.3);
+  border-radius: vars.$radius-lg;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #374151;
+    border-color: rgba(251, 248, 255, 0.5);
+  }
+}
+
+.statusButtonActive {
+  background: vars.$primary-600;
+  border-color: vars.$primary-600;
+  color: #ffffff;
+
+  &:hover {
+    background: vars.$primary-700;
+    border-color: vars.$primary-700;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .filtersContainer {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .filterWrapper {
+    width: 100%;
+  }
+
+  .filterButton {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dropdown {
+    left: 0;
+    right: 0;
+    min-width: auto;
+    max-width: none;
+  }
+
+  .statusFilters {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .statusButton {
+    flex: 1;
+    min-width: 0;
+  }
+}
