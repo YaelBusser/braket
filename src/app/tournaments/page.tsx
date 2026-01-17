@@ -138,8 +138,10 @@ function TournamentsList() {
             placeholder="Rechercher un tournoi..."
             size="md"
             variant="dark"
-            onSearch={(v) => setQ(v)}
+            onSearch={(v) => setQ(v || '')}
+            autoSearchDelay={300}
             defaultValue={q}
+            className={styles.customSearchBar}
           />
         </div>
         

@@ -58,16 +58,15 @@ export default function SearchBar({
   useEffect(() => {
     if (!autoSearchDelay) return
     const timer = setTimeout(() => {
-      if (query.trim().length >= 2) {
-        if (onSearch) {
-          onSearch(query.trim())
-        } else {
-          router.push(`/search?q=${encodeURIComponent(query.trim())}`)
-        }
+      // Si onSearch est fourni, appeler même si la chaîne est vide (pour réafficher tous les résultats)
+      if (onSearch) {
+        onSearch(query.trim())
+      } else if (query.trim().length >= 2) {
+        router.push(`/search?q=${encodeURIComponent(query.trim())}`)
       }
     }, autoSearchDelay)
     return () => clearTimeout(timer)
-  }, [query, autoSearchDelay])
+  }, [query, autoSearchDelay, onSearch, router])
 
   // Redirection vers la home si on efface tout le champ
   useEffect(() => {
