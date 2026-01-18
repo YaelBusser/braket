@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useNotification } from '../providers/notification-provider'
@@ -25,6 +25,8 @@ interface TournamentDraft {
     teamMinSize: string
     teamMaxSize: string
     startDate: string
+    prizes: string
+    rules: string
   }
   selectedGameId: string | null
   selectedGameName: string
@@ -51,7 +53,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     isTeamBased: 'solo',
     teamMinSize: '',
     teamMaxSize: '',
-    startDate: ''
+    startDate: '',
+    prizes: '',
+    rules: ''
   })
   const [gameQuery, setGameQuery] = useState('')
   const [gameResults, setGameResults] = useState<GameInfo[]>([])
@@ -85,10 +89,13 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     }
   }, [isOpen, session])
 
-  // Charger les jeux depuis la DB
+  // Charger les jeux depuis la DB (une seule fois, pas à chaque ouverture)
+  const gamesLoadedRef = useRef(false)
+  
   useEffect(() => {
-    if (isOpen) {
-      (async () => {
+    if (isOpen && !gamesLoadedRef.current && allGames.length === 0) {
+      gamesLoadedRef.current = true
+      ;(async () => {
         try {
           const res = await fetch('/api/games')
           const data = await res.json()
@@ -101,10 +108,12 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
             posterUrl: g.posterUrl
           }))
           setAllGames(list)
-        } catch {}
+        } catch {
+          gamesLoadedRef.current = false // Réessayer au prochain chargement si erreur
+        }
       })()
     }
-  }, [isOpen])
+  }, [isOpen, allGames.length])
 
   // Restaurer depuis localStorage
   useEffect(() => {
@@ -122,57 +131,86 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     }
   }, [isOpen])
 
-  // Sauvegarder dans localStorage
-  const saveToLocalStorage = () => {
-    try {
-      const draft: TournamentDraft = {
-        step,
-        form,
-        selectedGameId,
-        selectedGameName
-      }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
-    } catch {}
-  }
+  // Référence pour le debounce de sauvegarde
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Sauvegarder dans localStorage avec debounce
+  const saveToLocalStorage = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current)
+    }
+    saveTimeoutRef.current = setTimeout(() => {
+      try {
+        const draft: TournamentDraft = {
+          step,
+          form,
+          selectedGameId,
+          selectedGameName
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(draft))
+      } catch {}
+    }, 300) // Debounce de 300ms
+  }, [step, form, selectedGameId, selectedGameName])
 
   useEffect(() => {
     if (isOpen) {
       saveToLocalStorage()
     }
-  }, [step, form, selectedGameId, selectedGameName, isOpen])
-
-  // Gérer le scroll du body
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.width = '100%'
-      document.body.style.overflow = 'hidden'
-    } else {
-      const scrollY = document.body.style.top
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      document.body.style.overflow = ''
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1)
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
       }
     }
-    return () => {
+  }, [isOpen, saveToLocalStorage])
+
+  // Gérer le scroll du body de manière optimisée
+  const scrollYRef = useRef<number>(0)
+  
+  useEffect(() => {
+    if (isOpen) {
+      // Sauvegarder la position de scroll actuelle
+      scrollYRef.current = window.scrollY
+      // Empêcher le scroll du body de manière synchrone pour éviter les bugs
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollYRef.current}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+      // Empêcher le scroll sur mobile
+      document.body.style.touchAction = 'none'
+    } else {
+      // Restaurer le scroll de manière synchrone
+      const savedScrollY = scrollYRef.current
       document.body.style.position = ''
       document.body.style.top = ''
       document.body.style.width = ''
       document.body.style.overflow = ''
+      document.body.style.touchAction = ''
+      // Restaurer la position de scroll après un court délai pour éviter les saccades
+      setTimeout(() => {
+        if (savedScrollY) {
+          window.scrollTo({ top: savedScrollY, behavior: 'instant' })
+        }
+      }, 0)
+    }
+    return () => {
+      // Nettoyage en cas de démontage
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+      document.body.style.touchAction = ''
     }
   }, [isOpen])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
-  }
+  }, [])
 
-  const handleGameInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Debounce pour la recherche de jeux
+  const gameSearchTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  
+  const handleGameInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
     setGameQuery(value)
     setSelectedGameId(null)
@@ -183,14 +221,21 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       return
     }
     
-    try {
-      const q = value.trim().toLowerCase()
-      const results = allGames.filter(g => g.name.toLowerCase().includes(q) || g.slug.toLowerCase().includes(q))
-      setGameResults(results.slice(0, 20))
-    } catch {}
-  }
+    // Debounce la recherche
+    if (gameSearchTimeoutRef.current) {
+      clearTimeout(gameSearchTimeoutRef.current)
+    }
+    
+    gameSearchTimeoutRef.current = setTimeout(() => {
+      try {
+        const q = value.trim().toLowerCase()
+        const results = allGames.filter(g => g.name.toLowerCase().includes(q) || g.slug.toLowerCase().includes(q))
+        setGameResults(results.slice(0, 20))
+      } catch {}
+    }, 150) // Debounce de 150ms
+  }, [allGames])
 
-  const handlePickGame = (name: string, id: string) => {
+  const handlePickGame = useCallback((name: string, id: string) => {
     if (selectedGameId === id) {
       setForm(prev => ({ ...prev, game: '' }))
       setSelectedGameId(null)
@@ -203,9 +248,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     setSelectedGameId(id)
     setSelectedGameName(name)
     setGameResults([])
-  }
+  }, [selectedGameId])
 
-  const handlePosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePosterChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const url = URL.createObjectURL(file)
@@ -215,9 +260,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       setZoom(1)
       setShowCropper(true)
     }
-  }
+  }, [])
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const url = URL.createObjectURL(file)
@@ -227,7 +272,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       setZoom(1)
       setShowCropper(true)
     }
-  }
+  }, [])
 
   const onCropComplete = useCallback((_croppedArea: any, croppedPixels: any) => {
     setCroppedAreaPixels(croppedPixels)
@@ -259,7 +304,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     }
   }
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (step === 0) {
       // Vérifier qu'un jeu est sélectionné
       if (!selectedGameId) {
@@ -277,17 +322,22 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     } else if (step === 2) {
       setStep(3)
     } else if (step === 3) {
+      // Vérifier que la date est remplie
+      if (!form.startDate || !form.startDate.trim()) {
+        notify({ type: 'error', message: '❌ Veuillez sélectionner une date de début pour le tournoi' })
+        return
+      }
       setStep(4)
     } else if (step === 4) {
       setStep(5)
     }
-  }
+  }, [step, selectedGameId, form.name, form.startDate, notify])
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (step > 0) {
       setStep(step - 1)
     }
-  }
+  }, [step])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -313,12 +363,18 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       notify({ type: 'error', message: '❌ Veuillez entrer un nom pour le tournoi' })
       return
     }
+    if (!form.startDate || !form.startDate.trim()) {
+      notify({ type: 'error', message: '❌ Veuillez sélectionner une date de début pour le tournoi' })
+      return
+    }
     
     setIsLoading(true)
     try {
       const fd = new FormData()
       fd.append('name', form.name)
       if (form.description) fd.append('description', form.description)
+      if (form.prizes) fd.append('prizes', form.prizes)
+      if (form.rules) fd.append('rules', form.rules)
       fd.append('game', selectedGameName)
       fd.append('gameId', selectedGameId)
       fd.append('format', form.format)
@@ -332,7 +388,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
         fd.append('teamMaxSize', form.teamMaxSize || '')
       }
       
-      if (form.startDate) fd.append('startDate', form.startDate)
+      fd.append('startDate', form.startDate)
       
       if (posterFile) fd.append('poster', posterFile)
       if (logoFile) fd.append('logo', logoFile)
@@ -364,7 +420,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     }
   }
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setIsClosing(true)
     // Sauvegarder l'état avant de fermer (sauf si on vient de créer le tournoi)
     saveToLocalStorage()
@@ -380,7 +436,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
         isTeamBased: 'solo',
         teamMinSize: '',
         teamMaxSize: '',
-        startDate: ''
+        startDate: '',
+        prizes: '',
+        rules: ''
       })
       setSelectedGameId(null)
       setSelectedGameName('')
@@ -397,7 +455,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       if (logoPreview) URL.revokeObjectURL(logoPreview)
       onClose()
     }, 300)
-  }
+  }, [saveToLocalStorage, onClose, originalImageUrl, posterPreview, logoPreview])
 
   // Nettoyage des URLs lors du démontage
   useEffect(() => {
@@ -405,14 +463,94 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       if (logoPreview) URL.revokeObjectURL(logoPreview)
       if (posterPreview) URL.revokeObjectURL(posterPreview)
       if (originalImageUrl) URL.revokeObjectURL(originalImageUrl)
+      // Nettoyer les timeouts
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+      if (gameSearchTimeoutRef.current) {
+        clearTimeout(gameSearchTimeoutRef.current)
+      }
     }
   }, [logoPreview, posterPreview, originalImageUrl])
 
-  if (!isOpen && !isClosing) return null
+  // Mémoriser les valeurs calculées pour éviter les recalculs
+  const selectedGame = useMemo(() => 
+    selectedGameId ? allGames.find(g => g.id === selectedGameId) : null,
+    [selectedGameId, allGames]
+  )
+  
+  const gameLogo = useMemo(() => 
+    selectedGame && 'logoUrl' in selectedGame ? selectedGame.logoUrl : null,
+    [selectedGame]
+  )
+  
+  const gamePoster = useMemo(() => 
+    selectedGame && 'posterUrl' in selectedGame ? selectedGame.posterUrl : selectedGame?.image || null,
+    [selectedGame]
+  )
 
-  const selectedGame = selectedGameId ? allGames.find(g => g.id === selectedGameId) : null
-  const gameLogo = selectedGame && 'logoUrl' in selectedGame ? selectedGame.logoUrl : null
-  const gamePoster = selectedGame && 'posterUrl' in selectedGame ? selectedGame.posterUrl : selectedGame?.image || null
+  // Mémoriser les jeux filtrés pour éviter les recalculs
+  const displayedGames = useMemo(() => {
+    if (gameQuery.length >= 2 && gameResults.length > 0) {
+      return gameResults
+    }
+    return allGames
+  }, [gameQuery, gameResults, allGames])
+
+  // Mémoriser l'objet tournament pour le récapitulatif
+  const previewTournament = useMemo(() => {
+    if (!form.name || !selectedGameName) return null
+    return {
+      id: 'preview',
+      name: form.name,
+      description: form.description,
+      game: selectedGameName,
+      gameRef: {
+        id: selectedGameId || '',
+        name: selectedGameName,
+        imageUrl: selectedGame?.image || null,
+        logoUrl: gameLogo || null,
+        posterUrl: gamePoster || null
+      },
+      posterUrl: posterPreview || null,
+      logoUrl: logoPreview || null,
+      startDate: form.startDate || null,
+      endDate: null,
+      createdAt: new Date().toISOString(),
+      status: 'DRAFT' as const,
+      format: form.format,
+      isTeamBased: form.isTeamBased === 'team',
+      teamMinSize: form.teamMinSize ? parseInt(form.teamMinSize) : null,
+      teamMaxSize: form.teamMaxSize ? parseInt(form.teamMaxSize) : null,
+      organizer: session?.user ? {
+        id: (session.user as any).id,
+        pseudo: userPseudo || (session.user as any).name || 'Organisateur',
+        avatarUrl: null
+      } : null,
+      _count: {
+        registrations: 0
+      }
+    }
+  }, [
+    form.name,
+    form.description,
+    form.format,
+    form.isTeamBased,
+    form.teamMinSize,
+    form.teamMaxSize,
+    form.startDate,
+    selectedGameName,
+    selectedGameId,
+    selectedGame,
+    gameLogo,
+    gamePoster,
+    posterPreview,
+    logoPreview,
+    session,
+    userPseudo
+  ])
+
+  if (!isOpen && !isClosing) return null
 
   return (
     <div className={`${styles.modalOverlay} ${isClosing ? styles.modalOverlayClosing : ''}`} onClick={handleClose}>
@@ -514,9 +652,9 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                     ))}
                   </div>
                 )}
-                {!gameQuery && allGames.length > 0 && (
+                {!gameQuery && displayedGames.length > 0 && (
                   <div className={styles.gamesGrid}>
-                    {allGames.map(g => (
+                    {displayedGames.map(g => (
                       <div
                         key={g.id}
                         className={`${styles.gameCard} ${selectedGameId === g.id ? styles.gameCardSelected : ''}`}
@@ -524,7 +662,7 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                       >
                         <div className={styles.gameCardImageContainer}>
                           {g.image ? (
-                            <img src={g.image} alt={g.name} className={styles.gameCardImage} />
+                            <img src={g.image} alt={g.name} className={styles.gameCardImage} loading="lazy" />
                           ) : (
                             <div className={styles.gameCardImagePlaceholder}>
                               {g.name.charAt(0).toUpperCase()}
@@ -568,6 +706,30 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Décrivez votre tournoi..."
+                  rows={4}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Gains</label>
+                <textarea
+                  className={styles.textarea}
+                  name="prizes"
+                  value={form.prizes}
+                  onChange={handleChange}
+                  placeholder="Décrivez les gains du tournoi (ex: 1er place - Skin légendaire, 2ème place - Skin épique, 3ème place - Pack de cosmétiques)..."
+                  rows={4}
+                />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Règles</label>
+                <textarea
+                  className={styles.textarea}
+                  name="rules"
+                  value={form.rules}
+                  onChange={handleChange}
+                  placeholder="Décrivez les règles du tournoi..."
                   rows={4}
                 />
               </div>
@@ -667,16 +829,19 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
           {step === 3 && (
             <div className={styles.stepContent}>
               <h2 className={styles.stepTitle}>Date et heure</h2>
-              <p className={styles.stepSubtitle}>Choisissez la date de début de votre tournoi (optionnel)</p>
+              <p className={styles.stepSubtitle}>Choisissez la date de début de votre tournoi</p>
 
               <div className={styles.formGroup}>
-                <label className={styles.label}>Date de début</label>
+                <label className={styles.label}>
+                  Date de début <span className={styles.required}>*</span>
+                </label>
                 <input
                   className={styles.input}
                   type="datetime-local"
                   name="startDate"
                   value={form.startDate}
                   onChange={handleChange}
+                  required
                 />
               </div>
             </div>
@@ -813,46 +978,14 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
               </div>
 
               {/* Aperçu de la card en premier */}
-              {form.name && selectedGameName && (
+              {previewTournament && (
                 <div className={styles.summaryCardPreview}>
                   <div className={styles.summaryCardPreviewHeader}>
                     <span className={styles.summaryCardPreviewIcon}>👁️</span>
                     <h3 className={styles.summaryCardPreviewTitle}>Aperçu</h3>
                   </div>
                   <div className={styles.cardPreviewWrapper}>
-                    <TournamentCard
-                      tournament={{
-                        id: 'preview',
-                        name: form.name,
-                        description: form.description,
-                        game: selectedGameName,
-                        gameRef: {
-                          id: selectedGameId || '',
-                          name: selectedGameName,
-                          imageUrl: selectedGame?.image || null,
-                          logoUrl: gameLogo || null,
-                          posterUrl: gamePoster || null
-                        },
-                        posterUrl: posterPreview || null,
-                        logoUrl: logoPreview || null,
-                        startDate: form.startDate || null,
-                        endDate: null,
-                        createdAt: new Date().toISOString(),
-                        status: 'DRAFT',
-                        format: form.format,
-                        isTeamBased: form.isTeamBased === 'team',
-                        teamMinSize: form.teamMinSize ? parseInt(form.teamMinSize) : null,
-                        teamMaxSize: form.teamMaxSize ? parseInt(form.teamMaxSize) : null,
-                        organizer: session?.user ? {
-                          id: (session.user as any).id,
-                          pseudo: userPseudo || (session.user as any).name || 'Organisateur',
-                          avatarUrl: null
-                        } : null,
-                        _count: {
-                          registrations: 0
-                        }
-                      }}
-                    />
+                    <TournamentCard tournament={previewTournament} />
                   </div>
                 </div>
               )}
@@ -890,6 +1023,18 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
                       <div className={styles.summaryInfoRow}>
                         <span className={styles.summaryInfoLabel}>Description</span>
                         <p className={styles.summaryInfoDescription}>{form.description}</p>
+                      </div>
+                    )}
+                    {form.prizes && (
+                      <div className={styles.summaryInfoRow}>
+                        <span className={styles.summaryInfoLabel}>Gains</span>
+                        <p className={styles.summaryInfoDescription}>{form.prizes}</p>
+                      </div>
+                    )}
+                    {form.rules && (
+                      <div className={styles.summaryInfoRow}>
+                        <span className={styles.summaryInfoLabel}>Règles</span>
+                        <p className={styles.summaryInfoDescription}>{form.rules}</p>
                       </div>
                     )}
                     <div className={styles.summaryInfoRow}>

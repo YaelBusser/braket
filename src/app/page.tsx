@@ -13,7 +13,6 @@ export default function Home() {
 
   const carouselRef = useRef<HTMLDivElement>(null)
   const [currentIndex, setCurrentIndex] = useState(0)
-  const isScrollingRef = useRef(false)
 
   useEffect(() => {
     // Charger les tournois en tendance (tous ceux avec featuredPosition)
@@ -58,7 +57,7 @@ export default function Home() {
   }, [featuredTournaments.length])
 
   const scrollToIndex = (index: number) => {
-    if (!carouselRef.current || featuredTournaments.length === 0 || isScrollingRef.current) return
+    if (!carouselRef.current || featuredTournaments.length === 0) return
     
     const carousel = carouselRef.current
     const items = Array.from(carousel.children) as HTMLElement[]
@@ -67,28 +66,30 @@ export default function Home() {
     const item = items[index]
     if (!item) return
     
-    // Empêcher les clics multiples pendant le scroll
-    isScrollingRef.current = true
-    
     // Calculer la position de scroll pour aligner la carte à gauche (première position visible)
     const itemLeft = item.offsetLeft
     
+    // Annuler le scroll précédent en cours en passant directement à la position
+    // puis démarrer le nouveau scroll smooth
     carousel.scrollTo({
-      left: itemLeft,
-      behavior: 'smooth'
+      left: carousel.scrollLeft,
+      behavior: 'auto'
+    })
+    
+    // Démarrer le nouveau scroll immédiatement
+    requestAnimationFrame(() => {
+      carousel.scrollTo({
+        left: itemLeft,
+        behavior: 'smooth'
+      })
     })
     
     // Mettre à jour l'index immédiatement
     setCurrentIndex(index)
-    
-    // Réactiver les clics après le scroll
-    setTimeout(() => {
-      isScrollingRef.current = false
-    }, 500) // Durée du scroll smooth
   }
 
   const handlePrev = () => {
-    if (featuredTournaments.length === 0 || isScrollingRef.current) return
+    if (featuredTournaments.length === 0) return
     
     // Attendre que le scroll soit terminé et récupérer l'index actuel depuis le DOM
     const carousel = carouselRef.current
@@ -118,7 +119,7 @@ export default function Home() {
   }
 
   const handleNext = () => {
-    if (featuredTournaments.length === 0 || isScrollingRef.current) return
+    if (featuredTournaments.length === 0) return
     
     // Attendre que le scroll soit terminé et récupérer l'index actuel depuis le DOM
     const carousel = carouselRef.current
@@ -255,8 +256,7 @@ export default function Home() {
             <div className={styles.featuredSection}>
               <div className={styles.featuredHeader}>
                 <div className={styles.featuredBadge}>
-                  <span className={styles.badgeIcon}>🔥</span>
-                  <span>En tendance</span>
+                  <span>Tournois du moment</span>
                 </div>
               </div>
               

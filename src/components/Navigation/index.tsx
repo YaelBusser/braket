@@ -8,6 +8,7 @@ import { SearchBar } from '../ui'
 import { useAuthModal } from '../AuthModal/AuthModalContext'
 import { useCreateTournamentModal } from '../CreateTournamentModal/CreateTournamentModalContext'
 import UserMenu from '../UserMenu'
+import NotificationBell from '../NotificationBell'
 import styles from './index.module.scss'
 
 function Navigation() {
@@ -75,6 +76,9 @@ function Navigation() {
           
           <div className={styles.navLinks}>
             <Link href="/tournaments" className={styles.navLink} prefetch={true}>Rejoindre un tournoi</Link>
+            {mounted && session && (
+              <Link href="/teams" className={styles.navLink} prefetch={true}>Mes équipes</Link>
+            )}
           </div>
         </div>
         <div className={styles.menu}>
@@ -97,6 +101,7 @@ function Navigation() {
               Créer un tournoi
             </button>
           )}
+          {mounted && session && <NotificationBell />}
           {renderAuthSection}
         </div>
       </div>

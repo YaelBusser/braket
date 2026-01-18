@@ -9,18 +9,41 @@ export async function GET(_request: NextRequest) {
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
+    // Récupérer les tournois où l'utilisateur participe
+    // 1. Inscriptions individuelles (tournois solo)
+    const soloRegistrations = await prisma.tournamentRegistration.findMany({
+      where: {
+        userId,
+        teamId: null
+      },
+      select: {
+        tournamentId: true
+      }
+    })
+    const soloTournamentIds = soloRegistrations.map(r => r.tournamentId)
+
+    // 2. Inscriptions d'équipes (tournois en équipe) - vérifier que l'équipe est bien inscrite
+    const teamRegistrations = await prisma.tournamentRegistration.findMany({
+      where: {
+        teamId: { not: null },
+        team: {
+          members: { some: { userId } }
+        }
+      },
+      select: {
+        tournamentId: true
+      }
+    })
+    const teamTournamentIds = teamRegistrations.map(r => r.tournamentId)
+
+    // Combiner les IDs uniques
+    const allParticipatingIds = [...new Set([...soloTournamentIds, ...teamTournamentIds])]
+
     const participating = await prisma.tournament.findMany({
       where: {
         AND: [
-          {
-            OR: [
-              { registrations: { some: { userId } } },
-              { teams: { some: { members: { some: { userId } } } } }
-            ]
-          },
-          {
-            status: { not: 'COMPLETED' }
-          }
+          { id: { in: allParticipatingIds } },
+          { status: { not: 'COMPLETED' } }
         ]
       },
       select: {

@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, useRef, useCallback, Re
 import { useRouter, usePathname, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Tabs, ContentWithTabs, TournamentCard } from '../../../components/ui'
+import TeamCard from '../../../components/ui/TeamCard'
 import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
@@ -148,15 +149,35 @@ function OverviewContent() {
 }
 
 function TeamsContent() {
+  const { userTeams, loadingData } = useProfileData()
+
   return (
     <div className={styles.teamsTab}>
       <div className={styles.tabHeader}>
         <h3>Équipes</h3>
       </div>
       
-      <div className={styles.emptyState}>
-        <p>Aucune équipe rejointe</p>
-      </div>
+      {loadingData ? (
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Chargement...</p>
+        </div>
+      ) : !userTeams || userTeams.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>Aucune équipe rejointe</p>
+        </div>
+      ) : (
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+          gap: '1.5rem',
+          width: '100%'
+        }}>
+          {userTeams.map((team: any) => (
+            <TeamCard key={team.id} team={team} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -198,7 +219,7 @@ function ProfileLayout({ children }: { children: ReactNode }) {
         return tab as TabKey
       }
     }
-    return 'tournaments'
+    return 'overview'
   }, [pathname])
 
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
@@ -209,7 +230,7 @@ function ProfileLayout({ children }: { children: ReactNode }) {
         return tab as TabKey
       }
     }
-    return 'tournaments'
+    return 'overview'
   })
 
   // Synchroniser l'onglet avec l'URL
@@ -218,10 +239,10 @@ function ProfileLayout({ children }: { children: ReactNode }) {
     setActiveTab(tab)
   }, [pathname, getActiveTabFromPath])
 
-  // Rediriger /profile/[id] vers /profile/[id]/tournaments
+  // Rediriger /profile/[id] vers /profile/[id]/overview
   useEffect(() => {
     if (pathname === `/profile/${userId}` && userId) {
-      router.replace(`/profile/${userId}/tournaments`)
+      router.replace(`/profile/${userId}/overview`)
     }
   }, [pathname, userId, router])
 
@@ -254,11 +275,12 @@ function ProfileLayout({ children }: { children: ReactNode }) {
 
     setLoadingData(true)
     try {
-      const [userRes, tournamentsRes, statsRes, participationsRes] = await Promise.all([
+      const [userRes, tournamentsRes, statsRes, participationsRes, teamsRes] = await Promise.all([
         fetch(`/api/users/${userId}`),
         fetch(`/api/users/${userId}/tournaments`),
         fetch(`/api/users/${userId}/stats`),
-        fetch(`/api/users/${userId}/participations`)
+        fetch(`/api/users/${userId}/participations`),
+        fetch(`/api/users/${userId}/teams`)
       ])
 
       if (userRes.ok) {
@@ -282,6 +304,11 @@ function ProfileLayout({ children }: { children: ReactNode }) {
       if (participationsRes.ok) {
         const data = await participationsRes.json()
         setUserRegistrations(data.participating || [])
+      }
+
+      if (teamsRes.ok) {
+        const teamsData = await teamsRes.json()
+        setUserTeams(Array.isArray(teamsData) ? teamsData : [])
       }
 
       loadedUserIdRef.current = userId
@@ -375,9 +402,9 @@ function ProfileLayout({ children }: { children: ReactNode }) {
           {/* Navigation par onglets */}
           <Tabs
             tabs={[
+              { key: 'overview', label: 'Aperçu' },
               { key: 'participations', label: 'Tournois rejoints' },
               { key: 'tournaments', label: 'Tournois créés' },
-              { key: 'overview', label: 'Aperçu' },
               { key: 'teams', label: 'Équipes' }
             ]}
             activeTab={activeTab}

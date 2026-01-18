@@ -6,6 +6,8 @@ import Footer from "../components/Footer";
 import { NotificationProvider } from "../components/providers/notification-provider";
 import { AuthModalProvider } from "../components/AuthModal/AuthModalContext";
 import { CreateTournamentModalProvider } from "../components/CreateTournamentModal/CreateTournamentModalContext";
+import { TeamSelectionModalProvider } from "../components/TeamSelectionModal/TeamSelectionModalContext";
+import { CreateTeamModalProvider } from "../components/CreateTeamModal/CreateTeamModalContext";
 import { ThemeProvider } from "../components/providers/theme-provider";
 import Sidebar from "../components/Sidebar";
 import { Funnel_Display, Red_Hat_Display } from "next/font/google";
@@ -50,16 +52,20 @@ export default function RootLayout({
             <NotificationProvider>
               <AuthModalProvider>
                 <CreateTournamentModalProvider>
-                  <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                    <Sidebar />
-                    <Navigation />
-                    <div className="mainContentWrapper">
-                      <main style={{ flex: 1 }}>
-                        {children}
-                      </main>
-                      <Footer />
-                    </div>
-                  </div>
+                  <TeamSelectionModalProvider>
+                    <CreateTeamModalProvider>
+                      <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                        <Sidebar />
+                        <Navigation />
+                        <div className="mainContentWrapper">
+                          <main style={{ flex: 1 }}>
+                            {children}
+                          </main>
+                          <Footer />
+                        </div>
+                      </div>
+                    </CreateTeamModalProvider>
+                  </TeamSelectionModalProvider>
                 </CreateTournamentModalProvider>
               </AuthModalProvider>
             </NotificationProvider>

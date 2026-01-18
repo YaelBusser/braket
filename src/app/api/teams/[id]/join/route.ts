@@ -55,11 +55,8 @@ export async function POST(
       return NextResponse.json({ message: 'Rejoindre impossible: tournoi terminé' }, { status: 400 })
     }
 
-    // exiger inscription préalable au tournoi
-    const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId: tournament.id, userId } } })
-    if (!reg) {
-      return NextResponse.json({ message: 'Inscrivez-vous au tournoi avant de rejoindre une équipe' }, { status: 403 })
-    }
+    // Pour les tournois en équipe, on permet de rejoindre une équipe sans inscription préalable
+    // L'inscription se fera après, et nécessitera d'être dans une équipe
 
     // équipe complète ?
     if (tournament.teamMaxSize && team.members.length >= tournament.teamMaxSize) {
@@ -77,6 +74,21 @@ export async function POST(
     }
 
     const member = await prisma.teamMember.create({ data: { teamId: team.id, userId } })
+    
+    // Pour les tournois en équipe, s'assurer que l'équipe est inscrite au tournoi
+    // (pas besoin d'inscrire individuellement chaque membre)
+    if (tournament.isTeamBased) {
+      try {
+        await prisma.tournamentRegistration.upsert({
+          where: { tournamentId_teamId: { tournamentId: tournament.id, teamId: team.id } },
+          create: { tournamentId: tournament.id, teamId: team.id },
+          update: {}
+        })
+      } catch (error) {
+        console.error('Error auto-registering team to tournament:', error)
+      }
+    }
+    
     return NextResponse.json({ member }, { status: 201 })
   } catch (error) {
     console.error('Join team error:', error)

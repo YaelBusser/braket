@@ -25,31 +25,43 @@ function Sidebar() {
   const [isPending, startTransition] = useTransition()
   const { data: session } = useSession()
 
+  // Fonction pour charger les données
+  const loadTournaments = async () => {
+    try {
+      // Ne pas utiliser le cache pour avoir les données à jour
+      const res = await fetch('/api/profile/tournaments', { 
+        cache: 'no-store'
+      })
+      if (!res.ok) return
+      const data = await res.json()
+      // Utiliser startTransition pour ne pas bloquer le rendu
+      startTransition(() => {
+        setParticipating(data.participating || [])
+        setCreated(data.created || [])
+      })
+    } catch {}
+  }
+
   // Charger les données de manière non-bloquante après le premier rendu
   useEffect(() => {
-    // Utiliser requestIdleCallback si disponible, sinon setTimeout
-    const load = async () => {
-      try {
-        // Utiliser un cache pour éviter les requêtes répétées
-        const res = await fetch('/api/profile/tournaments', { 
-          cache: 'default',
-          next: { revalidate: 30 } // Revalider toutes les 30 secondes
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        // Utiliser startTransition pour ne pas bloquer le rendu
-        startTransition(() => {
-          setParticipating(data.participating || [])
-          setCreated(data.created || [])
-        })
-      } catch {}
-    }
-    
     // Charger après un court délai pour ne pas bloquer la navigation
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      requestIdleCallback(load, { timeout: 2000 })
+      requestIdleCallback(() => loadTournaments(), { timeout: 2000 })
     } else {
-      setTimeout(load, 100)
+      setTimeout(loadTournaments, 100)
+    }
+
+    // Écouter les événements de rafraîchissement
+    const handleRefresh = () => {
+      loadTournaments()
+    }
+
+    window.addEventListener('tournament-registration-changed', handleRefresh)
+    window.addEventListener('tournament-unregistration-changed', handleRefresh)
+
+    return () => {
+      window.removeEventListener('tournament-registration-changed', handleRefresh)
+      window.removeEventListener('tournament-unregistration-changed', handleRefresh)
     }
   }, [])
 

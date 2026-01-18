@@ -6,8 +6,10 @@ import { useState, useEffect } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import { useCreateTournamentModal } from '../../components/CreateTournamentModal/CreateTournamentModalContext'
+import { useCreateTeamModal } from '../../components/CreateTeamModal/CreateTeamModalContext'
 import SettingsIcon from '../../components/icons/SettingsIcon'
 import { Tabs, ContentWithTabs, TournamentCard } from '../../components/ui'
+import TeamCard from '../../components/ui/TeamCard'
 import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
@@ -18,6 +20,7 @@ function ProfilePage() {
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
   const { openCreateTournamentModal } = useCreateTournamentModal()
+  const { openCreateTeamModal } = useCreateTeamModal()
   const isAdmin = (session?.user as any)?.isAdmin === 1
   
   
@@ -29,7 +32,7 @@ function ProfilePage() {
   // Initialiser avec la valeur par défaut pour afficher immédiatement
   const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
   
-  const [activeTab, setActiveTab] = useState<TabKey>('tournaments')
+  const [activeTab, setActiveTab] = useState<TabKey>('overview')
   
   const handleTabChange = (key: string) => {
     const tabKey = key as TabKey
@@ -63,6 +66,17 @@ function ProfilePage() {
     if (session?.user) {
       loadUserData()
     }
+
+    // Écouter les événements de création d'équipe
+    const handleTeamCreated = () => {
+      loadUserData()
+    }
+
+    window.addEventListener('team-created', handleTeamCreated)
+
+    return () => {
+      window.removeEventListener('team-created', handleTeamCreated)
+    }
   }, [session])
 
 
@@ -94,9 +108,12 @@ function ProfilePage() {
         setUserStats(stats)
       }
 
-      // TODO: Charger les équipes et inscriptions
-      // const teamsRes = await fetch('/api/teams?mine=true')
-      // const registrationsRes = await fetch('/api/registrations?mine=true')
+      // Charger les équipes
+      const teamsRes = await fetch('/api/teams?mine=true')
+      if (teamsRes.ok) {
+        const teamsData = await teamsRes.json()
+        setUserTeams(Array.isArray(teamsData) ? teamsData : [])
+      }
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error)
     } finally {
@@ -171,9 +188,9 @@ function ProfilePage() {
           {/* Navigation par onglets */}
           <Tabs
             tabs={[
+              { key: 'overview', label: 'Aperçu' },
               { key: 'participations', label: 'Tournois rejoints' },
               { key: 'tournaments', label: 'Tournois créés' },
-              { key: 'overview', label: 'Aperçu' },
               { key: 'teams', label: 'Équipes' }
             ]}
             activeTab={activeTab}
@@ -273,14 +290,41 @@ function ProfilePage() {
             <div className={styles.teamsTab}>
               <div className={styles.tabHeader}>
                 <h3>Mes équipes</h3>
-                <button className={styles.createBtn}>
+                <button 
+                  className={styles.createBtn}
+                  onClick={openCreateTeamModal}
+                >
                   Créer une équipe
                 </button>
               </div>
               
-              <div className={styles.emptyState}>
-                <p>Aucune équipe rejointe</p>
-              </div>
+              {loadingData ? (
+                <div className={styles.loading}>
+                  <div className={styles.spinner}></div>
+                  <p>Chargement...</p>
+                </div>
+              ) : !userTeams || userTeams.length === 0 ? (
+                <div className={styles.emptyState}>
+                  <p>Aucune équipe rejointe</p>
+                  <button 
+                    className={styles.createBtn}
+                    onClick={openCreateTeamModal}
+                  >
+                    Créer ma première équipe
+                  </button>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '1.5rem',
+                  width: '100%'
+                }}>
+                  {userTeams.map((team: any) => (
+                    <TeamCard key={team.id} team={team} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

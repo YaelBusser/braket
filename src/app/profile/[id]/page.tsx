@@ -8,10 +8,10 @@ function PublicProfilePage() {
   const params = useParams()
   const userId = params.id as string
 
-  // Rediriger vers tournaments par défaut
+  // Rediriger vers overview par défaut
   useEffect(() => {
     if (userId) {
-      router.replace(`/profile/${userId}/tournaments`)
+      router.replace(`/profile/${userId}/overview`)
     }
   }, [userId, router])
 

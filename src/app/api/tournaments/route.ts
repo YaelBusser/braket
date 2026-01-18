@@ -26,11 +26,15 @@ export async function POST(request: NextRequest) {
     let posterUrl: string | undefined
     let logoUrl: string | undefined
     let registrationDeadline: string | undefined
+    let prizes: string | undefined
+    let rules: string | undefined
 
     if (contentType.includes('multipart/form-data')) {
       const form = await request.formData()
       name = (form.get('name') as string) || undefined
       description = (form.get('description') as string) || undefined
+      prizes = (form.get('prizes') as string) || undefined
+      rules = (form.get('rules') as string) || undefined
       game = (form.get('game') as string) || undefined
       gameId = (form.get('gameId') as string) || undefined
       format = (form.get('format') as string) || 'SINGLE_ELIMINATION'
@@ -107,6 +111,8 @@ export async function POST(request: NextRequest) {
       const body = await request.json()
       name = body?.name
       description = body?.description
+      prizes = body?.prizes
+      rules = body?.rules
       game = body?.game
       gameId = body?.gameId
       format = body?.format || 'SINGLE_ELIMINATION'
@@ -133,6 +139,10 @@ export async function POST(request: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ message: 'Nom requis' }, { status: 400 })
+    }
+
+    if (!startDate) {
+      return NextResponse.json({ message: 'Date de début requise' }, { status: 400 })
     }
 
     // Vérifier que l'utilisateur existe (évite P2003 si session périmée)
@@ -205,6 +215,8 @@ export async function POST(request: NextRequest) {
         data: {
         name: name!,
         description: description || null,
+        prizes: prizes || null,
+        rules: rules || null,
         game: game || null,
         gameId: gameId || null,
         format: safeFormat,

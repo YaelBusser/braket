@@ -34,8 +34,12 @@
   z-index: vars.$z-modal;
   padding: vars.$spacing-8 vars.$spacing-4;
   animation: fadeIn 0.2s ease-out;
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; // Empêche le scroll de se propager au body
+  will-change: scroll-position;
+  transform: translateZ(0); // Force GPU acceleration
 
   &.modalOverlayClosing {
     animation: fadeOut 0.3s ease-in;
@@ -52,7 +56,9 @@
   margin: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 140, 0.1);
   animation: slideUp 0.3s ease-out;
-  overflow: hidden;
+  overflow: visible; // Permet le scroll dans le modalBody
+  will-change: transform, opacity;
+  transform: translateZ(0); // Force GPU acceleration
 
   &.modalContentClosing {
     animation: slideDown 0.3s ease-in;
@@ -162,6 +168,9 @@
 
 .modalBody {
   padding: 0 vars.$spacing-6 vars.$spacing-6;
+  // Assure que le contenu peut scroller de manière fluide
+  min-height: 0;
+  overflow: visible;
 }
 
 .modalTitle {
@@ -289,6 +298,9 @@
 }
 
 .label {
+  .required {
+    color: vars.$lt-error;
+  }
   font-size: vars.$font-size-sm;
   font-weight: vars.$font-weight-semibold;
   color: vars.$lt-text-primary;
@@ -515,14 +527,16 @@
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: all vars.$transition-fast;
+  transition: transform vars.$transition-fast, border-color vars.$transition-fast, box-shadow vars.$transition-fast;
   border-radius: vars.$radius-md;
   overflow: hidden;
   border: 2px solid transparent;
   background: rgba(255, 255, 255, 0.03);
+  will-change: transform;
+  transform: translateZ(0); // Force GPU acceleration
 
   &:hover {
-    transform: translateY(-2px);
+    transform: translate3d(0, -2px, 0);
     border-color: vars.$lt-border;
   }
 
@@ -1216,11 +1230,11 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translate3d(0, 20px, 0) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
 }
 
@@ -1236,11 +1250,11 @@
 @keyframes slideDown {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate3d(0, 0, 0) scale(1);
   }
   to {
     opacity: 0;
-    transform: translateY(20px) scale(0.95);
+    transform: translate3d(0, 20px, 0) scale(0.95);
   }
 }
 

@@ -49,7 +49,23 @@ export async function GET(
         } : {}),
         // Charger les inscriptions seulement si demandé
         ...(includeRegistrations ? {
-          registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+          registrations: { 
+            include: { 
+              user: { select: { id: true, pseudo: true, avatarUrl: true } },
+              team: { 
+                select: { 
+                  id: true, 
+                  name: true, 
+                  avatarUrl: true,
+                  members: {
+                    include: {
+                      user: { select: { id: true, pseudo: true, avatarUrl: true } }
+                    }
+                  }
+                } 
+              }
+            } 
+          },
         } : {}),
       },
     })

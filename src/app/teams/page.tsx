@@ -5,8 +5,11 @@ import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
-import { PageContent } from '../../components/ui'
+import { useCreateTeamModal } from '../../components/CreateTeamModal/CreateTeamModalContext'
+import { ContentWithTabs } from '../../components/ui'
+import TeamCard from '../../components/ui/TeamCard'
 import styles from './page.module.scss'
+import profileStyles from '../profile/page.module.scss'
 
 interface Team {
   id: string
@@ -34,13 +37,23 @@ export default function TeamsPage() {
   const router = useRouter()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
+  const { openCreateTeamModal } = useCreateTeamModal()
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'my-teams' | 'all-teams'>('my-teams')
+  const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
 
   const loadTeams = useCallback(async () => {
     setLoading(true)
     try {
+      // Charger la bannière en priorité
+      const profileRes = await fetch('/api/profile')
+      if (profileRes.ok) {
+        const profile = await profileRes.json()
+        if (profile.user?.bannerUrl) {
+          setBannerUrl(profile.user.bannerUrl)
+        }
+      }
+
       const res = await fetch('/api/teams?mine=true')
       if (res.ok) {
         const data = await res.json()
@@ -66,6 +79,17 @@ export default function TeamsPage() {
     if (session?.user) {
       loadTeams()
     }
+
+    // Écouter les événements de création d'équipe
+    const handleTeamCreated = () => {
+      loadTeams()
+    }
+
+    window.addEventListener('team-created', handleTeamCreated)
+
+    return () => {
+      window.removeEventListener('team-created', handleTeamCreated)
+    }
   }, [session, status, router, openAuthModal, loadTeams])
 
   if (status === 'loading' || loading) {
@@ -82,122 +106,95 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className={styles.teamsPage}>
-      {/* Header */}
-      <div className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>Équipes</h1>
-          <p className={styles.subtitle}>Gérez vos équipes et participez aux tournois</p>
+    <div className={profileStyles.profilePage}>
+      {/* Header avec avatar et infos */}
+      <div 
+        className={profileStyles.profileHeader}
+        style={{
+          backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className={profileStyles.headerContent}>
+          <div className={profileStyles.avatarWrapper}>
+            <div className={profileStyles.avatarContainer}>
+              {session?.user?.image ? (
+                <img src={session.user.image} alt="Avatar" className={profileStyles.avatar} />
+              ) : (
+                <div className={profileStyles.avatarPlaceholder}>
+                  {session?.user?.name?.charAt(0) || 'U'}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className={profileStyles.userInfo}>
+            <div className={profileStyles.userLabel}>MES ÉQUIPES</div>
+            <h1 className={profileStyles.username}>
+              {session?.user?.name || 'Utilisateur'}
+            </h1>
+            <div className={profileStyles.userMeta}>
+              <span className={profileStyles.status}>
+                <span className={profileStyles.statusDot}></span>
+                En ligne
+              </span>
+              <span className={profileStyles.separator}>•</span>
+              <span className={profileStyles.registrationDate}>
+                {teams.length} équipe{teams.length > 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className={styles.tabNavigation}>
-        <button
-          className={`${styles.tab} ${activeTab === 'my-teams' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('my-teams')}
-        >
-          Mes équipes
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'all-teams' ? styles.activeTab : ''}`}
-          onClick={() => setActiveTab('all-teams')}
-        >
-          Toutes les équipes
-        </button>
-      </div>
-
-      {/* Content */}
-      <PageContent withPadding={false}>
-        <div className={styles.content}>
-        {activeTab === 'my-teams' && (
-          <div className={styles.myTeamsTab}>
-            <div className={styles.tabHeader}>
-              <h2>Mes équipes</h2>
-              <button 
-                className={styles.createBtn}
-                onClick={() => router.push('/teams/create')}
-              >
-                Créer une équipe
-              </button>
-            </div>
-
-            {teams.length === 0 ? (
-              <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>👥</div>
-                <h3>Aucune équipe</h3>
-                <p>Vous n&apos;avez pas encore rejoint d&apos;équipe</p>
+      <ContentWithTabs style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        {/* Contenu principal */}
+        <div className={profileStyles.tabContent}>
+          {(
+            <div className={profileStyles.teamsTab}>
+              <div className={profileStyles.tabHeader}>
+                <h3>Mes équipes</h3>
                 <button 
-                  className={styles.createBtn}
-                  onClick={() => router.push('/teams/create')}
+                  className={profileStyles.createBtn}
+                  onClick={openCreateTeamModal}
                 >
-                  Créer ma première équipe
+                  Créer une équipe
                 </button>
               </div>
-            ) : (
-              <div className={styles.teamsGrid}>
-                {teams.map((team) => (
-                  <div 
-                    key={team.id} 
-                    className={styles.teamCard}
-                    onClick={() => router.push(`/teams/${team.id}`)}
+              
+              {loading ? (
+                <div className={profileStyles.loading}>
+                  <div className={profileStyles.spinner}></div>
+                  <p>Chargement...</p>
+                </div>
+              ) : !teams || teams.length === 0 ? (
+                <div className={profileStyles.emptyState}>
+                  <p>Aucune équipe rejointe</p>
+                  <button 
+                    className={profileStyles.createBtn}
+                    onClick={openCreateTeamModal}
                   >
-                    <div className={styles.teamIcon}>
-                      <span>👥</span>
-                    </div>
-                    <div className={styles.teamInfo}>
-                      <h3>{team.name}</h3>
-                      <p className={styles.tournamentName}>{team.tournament.name}</p>
-                      <p className={styles.gameName}>{team.tournament.game}</p>
-                    </div>
-                    <div className={styles.teamStats}>
-                      <div className={styles.memberCount}>
-                        {team.members.length} membre{team.members.length > 1 ? 's' : ''}
-                      </div>
-                      <div className={styles.tournamentStatus}>
-                        <span className={`${styles.status} ${styles[team.tournament.status?.toLowerCase()]}`}>
-                          {team.tournament.status === 'REG_OPEN' ? 'Inscriptions ouvertes' :
-                           team.tournament.status === 'IN_PROGRESS' ? 'En cours' :
-                           team.tournament.status === 'COMPLETED' ? 'Terminé' : 'Brouillon'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'all-teams' && (
-          <div className={styles.allTeamsTab}>
-            <div className={styles.tabHeader}>
-              <h2>Toutes les équipes</h2>
-              <div className={styles.filters}>
-                <select className={styles.filterSelect}>
-                  <option value="">Tous les jeux</option>
-                  <option value="Counter-Strike 2">Counter-Strike 2</option>
-                  <option value="Valorant">Valorant</option>
-                  <option value="League of Legends">League of Legends</option>
-                </select>
-                <select className={styles.filterSelect}>
-                  <option value="">Tous les statuts</option>
-                  <option value="REG_OPEN">Inscriptions ouvertes</option>
-                  <option value="IN_PROGRESS">En cours</option>
-                  <option value="COMPLETED">Terminé</option>
-                </select>
-              </div>
+                    Créer ma première équipe
+                  </button>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+                  gap: '1.5rem',
+                  width: '100%'
+                }}>
+                  {teams.map((team: any) => (
+                    <TeamCard key={team.id} team={team} />
+                  ))}
+                </div>
+              )}
             </div>
-
-            <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>🔍</div>
-              <h3>Recherche d&apos;équipes</h3>
-              <p>Cette fonctionnalité sera bientôt disponible</p>
-            </div>
-          </div>
-        )}
+          )}
         </div>
-      </PageContent>
+      </ContentWithTabs>
     </div>
   )
 }

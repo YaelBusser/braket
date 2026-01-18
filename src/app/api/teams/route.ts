@@ -9,38 +9,105 @@ export async function POST(request: NextRequest) {
     const userId = (session?.user as any)?.id as string | undefined
     if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
 
-    const { tournamentId, name, game, description, gameId } = await request.json()
+    const contentType = request.headers.get('content-type') || ''
+    let tournamentId: string | undefined
+    let name: string | undefined
+    let game: string | undefined
+    let description: string | undefined
+    let gameId: string | undefined
+    let avatarUrl: string | undefined
+
+    if (contentType.includes('multipart/form-data')) {
+      const formData = await request.formData()
+      tournamentId = formData.get('tournamentId') as string | undefined
+      name = formData.get('name') as string | undefined
+      game = formData.get('game') as string | undefined
+      description = formData.get('description') as string | undefined
+      gameId = formData.get('gameId') as string | undefined
+      const avatarFile = formData.get('avatar') as File | null
+
+      if (avatarFile && typeof avatarFile === 'object') {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/webp']
+        if (!allowedTypes.includes(avatarFile.type)) {
+          return NextResponse.json({ message: 'Type de fichier non pris en charge' }, { status: 400 })
+        }
+
+        const maxSize = 5 * 1024 * 1024 // 5MB
+        if ((avatarFile as any).size && (avatarFile as any).size > maxSize) {
+          return NextResponse.json({ message: 'Fichier trop volumineux (max 5MB)' }, { status: 400 })
+        }
+
+        const fs = await import('fs')
+        const fsp = await import('fs/promises')
+        const path = await import('path')
+
+        const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'teams')
+        if (!fs.existsSync(uploadDir)) {
+          await fsp.mkdir(uploadDir, { recursive: true })
+        }
+
+        const originalName = (avatarFile as any).name || 'avatar'
+        const ext = path.extname(originalName) || (avatarFile.type === 'image/png' ? '.png' : avatarFile.type === 'image/webp' ? '.webp' : '.jpg')
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${ext}`
+        const filePath = path.join(uploadDir, fileName)
+
+        const arrayBuffer = await avatarFile.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        await fsp.writeFile(filePath, buffer)
+
+        avatarUrl = `/uploads/teams/${fileName}`
+      }
+    } else {
+      const body = await request.json()
+      tournamentId = body.tournamentId
+      name = body.name
+      game = body.game
+      description = body.description
+      gameId = body.gameId
+    }
     
     // Si c'est une création d'équipe indépendante (pas liée à un tournoi)
-    if (!tournamentId && game) {
-      if (!name || !game) {
-        return NextResponse.json({ message: 'Nom et jeu requis' }, { status: 400 })
+    if (!tournamentId) {
+      if (!name) {
+        return NextResponse.json({ message: 'Le nom de l\'équipe est requis' }, { status: 400 })
       }
 
-      // Vérifier que l'utilisateur n'a pas déjà une équipe pour ce jeu
-      const existingTeam = await prisma.team.findFirst({
-        where: {
-          game: game,
-          members: {
-            some: { userId }
+      // Si un jeu est spécifié, vérifier qu'il n'y a pas déjà une équipe pour ce jeu
+      if (game) {
+        const existingTeam = await prisma.team.findFirst({
+          where: {
+            game: game,
+            members: {
+              some: { userId }
+            }
           }
+        })
+
+        if (existingTeam) {
+          return NextResponse.json({ message: 'Vous avez déjà une équipe pour ce jeu' }, { status: 400 })
         }
-      })
-
-      if (existingTeam) {
-        return NextResponse.json({ message: 'Vous avez déjà une équipe pour ce jeu' }, { status: 400 })
       }
 
+      const teamDataIndep: any = {
+        name,
+        description,
+        members: {
+          create: { userId, isCaptain: true }
+        }
+      }
+      
+      if (game) {
+        teamDataIndep.game = game
+      }
+      if (gameId) {
+        teamDataIndep.gameId = gameId.toString()
+      }
+      if (avatarUrl) {
+        teamDataIndep.avatarUrl = avatarUrl
+      }
+      
       const team = await prisma.team.create({
-        data: {
-          name,
-          game,
-          description,
-          gameId: gameId?.toString(),
-          members: {
-            create: { userId, isCaptain: true }
-          }
-        },
+        data: teamDataIndep,
         include: {
           members: {
             include: {
@@ -60,8 +127,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Logique existante pour les équipes de tournoi
-    if (!tournamentId || !name) {
-      return NextResponse.json({ message: 'Champs requis manquants' }, { status: 400 })
+    if (!name) {
+      return NextResponse.json({ message: 'Le nom de l\'équipe est requis' }, { status: 400 })
     }
 
     // vérifier tournoi
@@ -99,11 +166,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "L\'organisateur ne peut pas créer d\'équipe" }, { status: 403 })
     }
 
-    // exiger inscription préalable au tournoi
-    const reg = await prisma.tournamentRegistration.findUnique({ where: { tournamentId_userId: { tournamentId, userId } } })
-    if (!reg) {
-      return NextResponse.json({ message: 'Inscrivez-vous au tournoi avant de créer une équipe' }, { status: 403 })
-    }
+    // Pour les tournois en équipe, on permet de créer une équipe sans inscription préalable
+    // L'inscription se fera après, et nécessitera d'être dans une équipe
 
     // un utilisateur ne peut appartenir qu'à UNE équipe pour ce tournoi
     const alreadyInTournament = await prisma.teamMember.findFirst({
@@ -114,15 +178,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Vous faites déjà partie d\'une équipe de ce tournoi' }, { status: 400 })
     }
 
-    const team = await prisma.team.create({
-      data: {
-        name,
-        tournamentId,
-        members: {
-          create: { userId }
-        }
+    const teamData: any = {
+      name,
+      tournamentId,
+      members: {
+        create: { userId, isCaptain: true }
       }
+    }
+    if (avatarUrl) {
+      teamData.avatarUrl = avatarUrl
+    }
+    const team = await prisma.team.create({
+      data: teamData
     })
+
+    // Ne plus auto-inscrire l'équipe - le capitaine doit sélectionner les membres participants
+    // L'inscription se fera via /api/tournaments/[id]/register/team
 
     return NextResponse.json({ team }, { status: 201 })
   } catch (error) {
@@ -134,8 +205,49 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const mine = searchParams.get('mine')
     const q = searchParams.get('q') || ''
     
+    // Si on demande les équipes de l'utilisateur connecté
+    if (mine === 'true') {
+      const session = await getServerSession(authOptions)
+      const userId = (session?.user as any)?.id as string | undefined
+      if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
+
+      const teams = await prisma.team.findMany({
+        where: {
+          members: {
+            some: { userId }
+          }
+        },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  pseudo: true,
+                  avatarUrl: true
+                }
+              }
+            }
+          },
+          tournament: {
+            select: {
+              id: true,
+              name: true,
+              game: true,
+              status: true
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return NextResponse.json(teams)
+    }
+    
+    // Recherche par nom (logique existante)
     if (!q.trim() || q.trim().length < 2) {
       return NextResponse.json({ teams: [] })
     }

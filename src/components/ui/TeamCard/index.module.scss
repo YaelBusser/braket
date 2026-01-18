@@ -1,0 +1,415 @@
+@use '../../../styles/variables.module' as vars;
+
+/* --- TEAM CARD (Design similaire à TournamentCard) --- */
+.teamCard {
+  display: block;
+  background: transparent;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+/* Section image (ratio 368x207) */
+.cardImage {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; /* 207/368 = 56.25% */
+  overflow: hidden;
+  background: transparent;
+  border-radius: 10px;
+}
+
+.posterImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.teamCard:hover .posterImage {
+  transform: scale(1.08);
+  filter: brightness(1.1);
+}
+
+.placeholderImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, vars.$lt-accent-purple, vars.$lt-accent-blue);
+  transition: transform 0.3s ease;
+}
+
+.teamCard:hover .placeholderImage {
+  transform: scale(1.05);
+}
+
+.teamIcon {
+  font-size: 4rem;
+  opacity: 0.6;
+}
+
+/* Section contenu - en dessous de l'image */
+.cardContent {
+  position: relative;
+  background: transparent;
+  display: flex;
+  align-items: flex-start;
+  gap: vars.$spacing-2;
+  margin-top: 8px;
+}
+
+/* Zone de texte alignée */
+.textContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0rem;
+}
+
+/* Date en haut */
+.dateRow {
+  margin: 0;
+  line-height: 1.2;
+  display: flex;
+}
+
+.dateText {
+  color: vars.$text-secondary;
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+/* Logo équipe à gauche */
+.teamLogo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid vars.$border-dark;
+  background: vars.$bg-dark-tertiary;
+  flex-shrink: 0;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.teamLogoPlaceholder {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, vars.$lt-accent-purple, vars.$lt-accent-blue);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  border: 2px solid vars.$border-dark;
+  flex-shrink: 0;
+}
+
+/* Titre de l'équipe */
+.teamTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: vars.$text-primary;
+  margin: 0;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Tags : Jeu et Tournoi */
+.tagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-1;
+  margin: 0;
+  margin-top: 4px;
+}
+
+.gameTag,
+.tournamentTag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: vars.$bg-dark-tertiary;
+  border: 1px solid vars.$border-dark;
+  border-radius: 4px;
+  color: vars.$text-primary;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tournamentTag {
+  background: rgba(255, 0, 140, 0.2);
+  border: 1px solid rgba(255, 0, 140, 0.4);
+  color: vars.$primary-600;
+}
+
+/* Détails de l'équipe */
+.teamDetails {
+  color: vars.$text-secondary;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: vars.$spacing-1;
+  margin: 0;
+  margin-top: 4px;
+}
+
+.membersInfo {
+  color: vars.$text-secondary;
+  font-weight: 500;
+}
+
+/* Skeleton styles */
+.skeleton {
+  pointer-events: none;
+  cursor: default;
+}
+
+.skeletonImagePlaceholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: vars.$bg-dark-secondary;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonTeamLogo {
+  width: 100%;
+  height: 100%;
+  background: vars.$bg-dark-tertiary;
+  border-radius: 50%;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonDate {
+  height: 14px;
+  width: 60%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonTitle {
+  height: 24px;
+  width: 85%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+.skeletonDetails {
+  height: 16px;
+  width: 70%;
+  border-radius: vars.$radius-base;
+  background: vars.$bg-dark-tertiary;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.1),
+      transparent
+    );
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 768px) {
+  .teamCard {
+    max-width: 100%;
+  }
+  
+  .cardImage {
+    padding-bottom: 56.25%;
+  }
+  
+  .cardContent {
+    gap: vars.$spacing-2;
+  }
+  
+  .textContent {
+    gap: 0.125rem;
+  }
+  
+  .dateText {
+    font-size: 0.7rem;
+  }
+  
+  .teamTitle {
+    font-size: 1.1rem;
+  }
+  
+  .teamDetails {
+    font-size: 0.7rem;
+  }
+
+  .tagsRow {
+    gap: 4px;
+  }
+
+  .gameTag,
+  .tournamentTag {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+  }
+  
+  .teamLogo,
+  .teamLogoPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardContent {
+    gap: vars.$spacing-2;
+  }
+  
+  .teamTitle {
+    font-size: 1.1rem;
+  }
+  
+  .dateText {
+    font-size: 0.75rem;
+  }
+  
+  .teamDetails {
+    font-size: 0.8rem;
+  }
+
+  .tagsRow {
+    gap: 4px;
+  }
+
+  .gameTag,
+  .tournamentTag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+  
+  .teamLogo,
+  .teamLogoPlaceholder {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+}

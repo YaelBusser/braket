@@ -5,6 +5,7 @@ import { useNotification } from '../../../components/providers/notification-prov
 import { useSession } from 'next-auth/react'
 import { useParams } from 'next/navigation'
 import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
+import { useTeamSelectionModal } from '../../../components/TeamSelectionModal/TeamSelectionModalContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
@@ -35,6 +36,7 @@ function TournamentView() {
   const { data: session } = useSession()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
+  const { openTeamSelectionModal } = useTeamSelectionModal()
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const id = params?.id as string
@@ -47,9 +49,10 @@ function TournamentView() {
   const [registrations, setRegistrations] = useState<any[]>([])
   const [hasTeam, setHasTeam] = useState(false)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
-  const [isLastMember, setIsLastMember] = useState(false)
-  const [tab, setTab] = useState<'overview'|'bracket'|'matches'|'players'|'results'>('overview')
+  const [tab, setTab] = useState<'overview'|'bracket'|'players'|'results'>('overview')
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
+  const [showUnregisterModal, setShowUnregisterModal] = useState(false)
+  const [myTeam, setMyTeam] = useState<any>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -99,33 +102,34 @@ function TournamentView() {
       setIsRegistered(false)
       setHasTeam(false)
       setMyTeamId(null)
-      setIsLastMember(false)
       return
     }
 
     // Vérifier l'inscription
     if (tournament?.registrations) {
-      setIsRegistered(tournament.registrations.some((r: any) => r.userId === uid))
+      if (tournament.isTeamBased) {
+        // Pour les tournois en équipe, vérifier si l'équipe de l'utilisateur est inscrite
+        const userTeamId = teams.find(t => t.members?.some((m: any) => m.user?.id === uid))?.id
+        setIsRegistered(userTeamId ? tournament.registrations.some((r: any) => r.teamId === userTeamId) : false)
+      } else {
+        // Pour les tournois solo, vérifier l'inscription individuelle
+        setIsRegistered(tournament.registrations.some((r: any) => r.userId === uid))
+      }
     }
 
     // Vérifier l'équipe
     let found: string | null = null
+    let foundTeam: any = null
     for (const t of teams) {
       if (t.members?.some((m: any) => m.user?.id === uid)) {
         found = t.id
+        foundTeam = t
         break
       }
     }
     setHasTeam(!!found)
     setMyTeamId(found)
-
-    // Vérifier si dernier membre
-    if (found) {
-      const team = teams.find(t => t.id === found)
-      setIsLastMember((team?.members?.length || 0) <= 1)
-    } else {
-      setIsLastMember(false)
-    }
+    setMyTeam(foundTeam)
   }, [tournament?.registrations, teams, session])
 
   // Compte à rebours
@@ -169,7 +173,16 @@ function TournamentView() {
       setTeams(prev => [...prev, { ...data.team, members: [{ user: { id: (session?.user as any)?.id, pseudo: session?.user?.name, avatarUrl: session?.user?.image } }] }])
       setTeamName('')
       setHasTeam(true)
-      notify({ type: 'success', message: '🎉 Équipe créée avec succès ! Vous êtes maintenant membre de l\'équipe.' })
+      setMyTeamId(data.team.id)
+      setIsRegistered(true)
+      // Rafraîchir les inscriptions
+      const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+      const regData = await regRes.json()
+      if (regData.tournament?.registrations) {
+        setRegistrations(regData.tournament.registrations)
+        setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+      }
+      notify({ type: 'success', message: '🎉 Équipe créée ! Vous êtes automatiquement inscrit au tournoi.' })
     }
   }
 
@@ -181,7 +194,73 @@ function TournamentView() {
       setTeams(prev => prev.map(t => t.id === teamId ? { ...t, members: [...t.members, { user: { id: (session?.user as any)?.id, pseudo: session?.user?.name, avatarUrl: session?.user?.image } }] } : t))
       setHasTeam(true)
       setMyTeamId(teamId)
-      notify({ type: 'success', message: '🤝 Bienvenue dans l\'équipe ! Vous êtes maintenant membre.' })
+      setIsRegistered(true)
+      // Rafraîchir les inscriptions
+      const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+      const regData = await regRes.json()
+      if (regData.tournament?.registrations) {
+        setRegistrations(regData.tournament.registrations)
+        setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+      }
+      notify({ type: 'success', message: '🤝 Bienvenue dans l\'équipe ! Vous êtes automatiquement inscrit au tournoi.' })
+    }
+  }
+
+  // Fonction pour recharger les données après inscription d'équipe
+  const refreshAfterTeamRegistration = async () => {
+    const uid = (session?.user as any)?.id
+    if (!uid) return
+
+    try {
+      // Recharger les équipes et les inscriptions en parallèle
+      const [teamsRes, regRes] = await Promise.all([
+        fetch(`/api/teams/${id}`),
+        fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+      ])
+      
+      const teamsData = await teamsRes.json()
+      const regData = await regRes.json()
+      
+      if (teamsData.teams) {
+        setTeams(teamsData.teams)
+        
+        // Trouver l'équipe de l'utilisateur
+        const userTeam = teamsData.teams.find((t: any) => 
+          t.members?.some((m: any) => m.user?.id === uid)
+        )
+        
+        if (userTeam) {
+          setHasTeam(true)
+          setMyTeamId(userTeam.id)
+          setMyTeam(userTeam)
+        }
+      }
+
+      if (regData.tournament?.registrations) {
+        setRegistrations(regData.tournament.registrations)
+        setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+        
+        // Vérifier si l'utilisateur est maintenant inscrit
+        if (tournament?.isTeamBased) {
+          const userTeamId = teamsData.teams?.find((t: any) => 
+            t.members?.some((m: any) => m.user?.id === uid)
+          )?.id
+          if (userTeamId) {
+            const isTeamRegistered = regData.tournament.registrations.some((r: any) => r.teamId === userTeamId)
+            setIsRegistered(isTeamRegistered)
+          } else {
+            setIsRegistered(false)
+          }
+        } else {
+          const isUserRegistered = regData.tournament.registrations.some((r: any) => r.userId === uid)
+          setIsRegistered(isUserRegistered)
+        }
+      }
+
+      // Déclencher un événement pour rafraîchir la sidebar
+      window.dispatchEvent(new CustomEvent('tournament-registration-changed'))
+    } catch (error) {
+      console.error('Erreur lors du rafraîchissement:', error)
     }
   }
 
@@ -211,7 +290,11 @@ function TournamentView() {
   }
 
   const isOrganizer = (session?.user as any)?.id === tournament.organizerId
-  const registeredCount = tournament._count?.registrations || 0
+  // Pour les tournois en équipe, compter uniquement les membres des équipes inscrites
+  // Pour les tournois solo, compter toutes les inscriptions
+  const registeredCount = tournament?.isTeamBased 
+    ? teams.reduce((total, team) => total + (team.members?.length || 0), 0)
+    : (tournament?._count?.registrations || 0)
   const status = tournament.status as string | undefined
   const regClosed = status !== 'REG_OPEN' || (tournament.registrationDeadline && new Date(tournament.registrationDeadline) < new Date())
 
@@ -298,8 +381,41 @@ function TournamentView() {
                 <span>{getDateDisplay()}</span>
               </div>
               
-              {status === 'REG_OPEN' && (
-                <span className={styles.statusTag}>Ouverte</span>
+              {status && (
+                <span 
+                  className={styles.statusTag}
+                  style={{
+                    background: status === 'REG_OPEN' 
+                      ? 'rgba(255, 0, 140, 0.2)' 
+                      : status === 'IN_PROGRESS'
+                      ? 'rgba(103, 72, 255, 0.2)'
+                      : status === 'COMPLETED'
+                      ? 'rgba(107, 114, 128, 0.2)'
+                      : 'rgba(55, 65, 81, 0.2)',
+                    color: status === 'REG_OPEN'
+                      ? '#ff008c'
+                      : status === 'IN_PROGRESS'
+                      ? '#6748ff'
+                      : status === 'COMPLETED'
+                      ? '#9ca3af'
+                      : '#6b7280',
+                    border: `1px solid ${status === 'REG_OPEN' 
+                      ? 'rgba(255, 0, 140, 0.4)' 
+                      : status === 'IN_PROGRESS'
+                      ? 'rgba(103, 72, 255, 0.4)'
+                      : status === 'COMPLETED'
+                      ? 'rgba(107, 114, 128, 0.4)'
+                      : 'rgba(55, 65, 81, 0.4)'}`
+                  }}
+                >
+                  {status === 'REG_OPEN' 
+                    ? 'Ouvert' 
+                    : status === 'IN_PROGRESS'
+                    ? 'En cours'
+                    : status === 'COMPLETED'
+                    ? 'Terminé'
+                    : 'Brouillon'}
+                </span>
               )}
             </div>
             
@@ -331,34 +447,81 @@ function TournamentView() {
                 </div>
               )}
               
-              {!isOrganizer && (
+              {!isOrganizer && !tournament.isTeamBased && (
                 <button
-                  className={styles.joinButton}
-                  disabled={regClosed || (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants)}
-                  onClick={() => {
-                    if (!session?.user) {
-                      try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
-                      openAuthModal('login')
-                      return
+                    className={styles.joinButton}
+                    disabled={
+                      !isRegistered && (
+                        regClosed || 
+                        (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants)
+                      )
                     }
-                    if (isRegistered) return
-                    fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
-                      .then(async (r) => {
-                        const d = await r.json().catch(() => ({}))
-                        if (r.ok) { 
-                          setIsRegistered(true)
-                          setRegistrations(prev => [...prev, { userId: (session?.user as any).id, user: { pseudo: session?.user?.name, avatarUrl: session?.user?.image } }])
-                          notify({ type: 'success', message: '🎯 Inscription réussie ! Bienvenue dans le tournoi.' })
-                        } else {
-                          notify({ type: 'error', message: d.message || '❌ Inscription impossible. Vérifiez les conditions du tournoi.' })
-                        }
-                      })
-                  }}
-                >
-                  {isRegistered ? 'Inscrit' : regClosed ? 'Inscriptions fermées' : 
-                   (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants ? 'Complet' : 
-                    'Rejoindre le tournoi')}
-                </button>
+                    onClick={() => {
+                      if (!session?.user) {
+                        try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
+                        openAuthModal('login')
+                        return
+                      }
+                      if (isRegistered) {
+                        // Ouvrir la modale de confirmation
+                        setShowUnregisterModal(true)
+                        return
+                      }
+                      // Inscription individuelle pour tournois solo
+                      fetch(`/api/tournaments/${id}/register`, { method: 'POST' })
+                        .then(async (r) => {
+                          const d = await r.json().catch(() => ({}))
+                          if (r.ok) { 
+                            setIsRegistered(true)
+                            // Recharger les inscriptions depuis le serveur pour avoir les données à jour
+                            const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+                            const regData = await regRes.json()
+                            if (regData.tournament?.registrations) {
+                              setRegistrations(regData.tournament.registrations)
+                              setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+                            }
+                            notify({ type: 'success', message: '🎯 Inscription réussie ! Bienvenue dans le tournoi.' })
+                            
+                            // Déclencher un événement pour rafraîchir la sidebar
+                            window.dispatchEvent(new CustomEvent('tournament-registration-changed'))
+                          } else {
+                            notify({ type: 'error', message: d.message || '❌ Inscription impossible. Vérifiez les conditions du tournoi.' })
+                          }
+                        })
+                    }}
+                  >
+                    {isRegistered ? 'Se désinscrire' : regClosed ? 'Inscriptions fermées' : 
+                     (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants ? 'Complet' : 
+                      'Rejoindre le tournoi')}
+                  </button>
+              )}
+              
+              {!isOrganizer && tournament.isTeamBased && !isRegistered && (
+                <button
+                    className={styles.joinButton}
+                    disabled={regClosed}
+                    onClick={() => {
+                      if (!session?.user) {
+                        try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
+                        openAuthModal('login')
+                        return
+                      }
+                      openTeamSelectionModal(id, tournament, refreshAfterTeamRegistration)
+                    }}
+                  >
+                    {regClosed ? 'Inscriptions fermées' : 'Inscrire une équipe'}
+                  </button>
+              )}
+              
+              {!isOrganizer && tournament.isTeamBased && isRegistered && (
+                <button
+                    className={styles.joinButton}
+                    onClick={() => {
+                      setShowUnregisterModal(true)
+                    }}
+                  >
+                    Se désinscrire
+                  </button>
               )}
             </div>
           </div>
@@ -372,8 +535,7 @@ function TournamentView() {
           tabs={[
             { key: 'overview', label: 'Aperçu' },
             { key: 'bracket', label: 'Bracket' },
-            { key: 'matches', label: 'Matchs' },
-            { key: 'players', label: 'Joueurs' },
+            { key: 'players', label: 'Equipes' },
             { key: 'results', label: 'Résultats' }
           ]}
           activeTab={tab}
@@ -558,9 +720,11 @@ function TournamentView() {
                             fontWeight: '500'
                           }}>
                             {tournament.teamMinSize && tournament.teamMaxSize 
-                              ? `${tournament.teamMinSize}vs${tournament.teamMaxSize - tournament.teamMinSize}${tournament.teamMaxSize > tournament.teamMinSize ? ` + ${tournament.teamMaxSize - tournament.teamMinSize} remplaçant${tournament.teamMaxSize - tournament.teamMinSize > 1 ? 's' : ''}` : ''}`
+                              ? tournament.teamMinSize === tournament.teamMaxSize
+                                ? `${tournament.teamMinSize}v${tournament.teamMaxSize}`
+                                : `${tournament.teamMinSize}v${tournament.teamMinSize} + ${tournament.teamMaxSize - tournament.teamMinSize} remplaçant${tournament.teamMaxSize - tournament.teamMinSize > 1 ? 's' : ''}`
                               : tournament.teamMaxSize 
-                                ? `${tournament.teamMaxSize}vs${tournament.teamMaxSize}`
+                                ? `${tournament.teamMaxSize}v${tournament.teamMaxSize}`
                                 : 'Variable'}
                           </div>
                         </div>
@@ -677,74 +841,136 @@ function TournamentView() {
                     </div>
                   </div>
                   
-                  {/* Avatars des équipes */}
+                  {/* Avatars des équipes avec meilleure présentation */}
                   {teams.length > 0 && (
                     <div style={{ 
                       display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      flexWrap: 'wrap'
+                      flexDirection: 'column',
+                      gap: '1rem'
                     }}>
-                      {teams.slice(0, 8).map((team, idx) => (
-                        <div key={team.id} style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          background: '#374151',
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        <div style={{
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '2px solid #1f2937',
-                          marginLeft: idx > 0 ? '-8px' : '0',
-                          overflow: 'hidden'
+                          marginLeft: '-8px'
                         }}>
-                          {team.members?.[0]?.user?.avatarUrl ? (
-                            <img 
-                              src={team.members[0].user.avatarUrl} 
-                              alt={team.name}
+                          {teams.slice(0, 10).map((team, idx) => (
+                            <div 
+                              key={team.id} 
                               style={{
-                width: '100%',
-                                height: '100%',
-                                objectFit: 'cover'
+                                width: '48px',
+                                height: '48px',
+                                borderRadius: '50%',
+                                background: team.avatarUrl ? 'transparent' : '#374151',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                border: team.id === myTeamId ? '3px solid #ff008c' : '2px solid #1f2937',
+                                marginLeft: idx > 0 ? '-12px' : '0',
+                                overflow: 'hidden',
+                                position: 'relative',
+                                zIndex: teams.length - idx,
+                                cursor: team.id === myTeamId ? 'pointer' : 'default',
+                                transition: 'all 0.2s ease'
                               }}
-                            />
-                          ) : (
-                            <span style={{ 
-                              color: '#fff', 
+                              onClick={() => {
+                                if (team.id === myTeamId) {
+                                  window.location.href = `/teams/${team.id}`
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                if (team.id === myTeamId) {
+                                  e.currentTarget.style.transform = 'scale(1.1)'
+                                  e.currentTarget.style.zIndex = '100'
+                                }
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'scale(1)'
+                                e.currentTarget.style.zIndex = String(teams.length - idx)
+                              }}
+                              title={team.name}
+                            >
+                              {team.avatarUrl ? (
+                                <img 
+                                  src={team.avatarUrl} 
+                                  alt={team.name}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                />
+                              ) : team.members?.[0]?.user?.avatarUrl ? (
+                                <img 
+                                  src={team.members[0].user.avatarUrl} 
+                                  alt={team.name}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                  }}
+                                />
+                              ) : (
+                                <span style={{ 
+                                  color: '#fff', 
+                                  fontSize: '1rem',
+                                  fontWeight: '700'
+                                }}>
+                                  {(team.name || 'T').charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                          {teams.length > 10 && (
+                            <div style={{
+                              width: '48px',
+                              height: '48px',
+                              borderRadius: '50%',
+                              background: '#374151',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              border: '2px solid #1f2937',
+                              marginLeft: '-12px',
+                              color: '#9ca3af',
                               fontSize: '0.875rem',
-                              fontWeight: '600'
+                              fontWeight: '600',
+                              position: 'relative',
+                              zIndex: 0
                             }}>
-                              {(team.name || 'T').charAt(0).toUpperCase()}
-                            </span>
+                              +{teams.length - 10}
+                            </div>
                           )}
                         </div>
-                      ))}
-                      {teams.length > 8 && (
-                        <div style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          background: '#374151',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          border: '2px solid #1f2937',
-                          marginLeft: '-8px',
-                          color: '#9ca3af',
-                          fontSize: '0.75rem',
-                          fontWeight: '500'
-                        }}>
-                          +{teams.length - 8}
-                        </div>
-                      )}
+                      </div>
                       {teams.length > 0 && (
                         <div style={{ 
-                          color: '#9ca3af', 
-                          fontSize: '0.875rem',
-                          marginLeft: '0.5rem'
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '0.25rem'
                         }}>
-                          {teams.slice(0, 2).map(t => t.name).join(', ')}
-                          {teams.length > 2 && ` et ${teams.length - 2} autre${teams.length - 2 > 1 ? 's' : ''}`}
+                          <div style={{ 
+                            color: '#fff', 
+                            fontSize: '0.875rem',
+                            fontWeight: '500'
+                          }}>
+                            {teams.slice(0, 3).map(t => t.name).join(', ')}
+                            {teams.length > 3 && ` et ${teams.length - 3} autre${teams.length - 3 > 1 ? 's' : ''}`}
+                          </div>
+                          {myTeamId && (
+                            <div style={{ 
+                              color: '#ff008c', 
+                              fontSize: '0.75rem',
+                              fontWeight: '500'
+                            }}>
+                              Votre équipe est inscrite
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1120,55 +1346,6 @@ function TournamentView() {
 
         {tab === 'players' && (
           <div>
-            {/* Header avec compteur */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>
-                Taille: {teams.length} Équipes
-              </h2>
-            </div>
-
-            {/* Actions pour créer une équipe */}
-            {!isOrganizer && session?.user && isRegistered && !hasTeam && !regClosed && (
-              <div style={{
-                background: '#1f2937',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem',
-                border: '1px solid #374151'
-              }}>
-                <h3 style={{ margin: 0, color: '#fff', fontSize: '1.125rem', fontWeight: '600', marginBottom: '1rem' }}>Créer une équipe</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <input 
-                    style={{
-                      flex: 1,
-                      background: '#374151',
-                      border: '1px solid #4b5563',
-                      borderRadius: '8px',
-                      padding: '0.75rem',
-                      color: '#fff',
-                      fontSize: '0.875rem'
-                    }}
-                    placeholder="Nom de l'équipe" 
-                    value={teamName} 
-                    onChange={(e) => setTeamName(e.target.value)} 
-                  />
-                  <button 
-                    style={{
-                      background: '#ff008c',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '0.75rem 1.5rem',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                    onClick={handleCreateTeam}
-                  >Créer</button>
-                </div>
-              </div>
-            )}
-
             {/* Messages d'état */}
             {!isOrganizer && !session?.user && (
               <div style={{
@@ -1180,19 +1357,6 @@ function TournamentView() {
                 textAlign: 'center'
               }}>
                 <div style={{ color: '#9ca3af' }}>Connectez-vous pour créer ou rejoindre une équipe.</div>
-              </div>
-            )}
-
-            {!isOrganizer && session?.user && !isRegistered && (
-              <div style={{
-                background: '#1f2937',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem',
-                border: '1px solid #374151',
-                textAlign: 'center'
-              }}>
-                <div style={{ color: '#9ca3af' }}>Inscrivez-vous au tournoi pour créer ou rejoindre une équipe.</div>
               </div>
             )}
 
@@ -1233,19 +1397,6 @@ function TournamentView() {
               </div>
             )}
 
-            {hasTeam && (
-              <div style={{
-                background: '#1f2937',
-                borderRadius: '12px',
-                padding: '1.5rem',
-                marginBottom: '1.5rem',
-                border: '1px solid #374151',
-                textAlign: 'center'
-              }}>
-                <div style={{ color: '#9ca3af' }}>Vous faites déjà partie d'une équipe pour ce tournoi.</div>
-              </div>
-            )}
-
             {regClosed && (
               <div style={{
                 background: '#1f2937',
@@ -1259,159 +1410,125 @@ function TournamentView() {
               </div>
             )}
 
-            {hasTeam && isLastMember && (
-              <div style={{
-                background: 'rgba(245, 158, 11, 0.1)',
-                border: '1px solid rgba(245, 158, 11, 0.3)',
-                borderRadius: '12px',
-                padding: '1rem',
-                marginBottom: '1.5rem',
-                color: '#f59e0b'
-              }}>
-                ⚠️ Attention : vous êtes le dernier membre de votre équipe. Si vous quittez, l'équipe sera supprimée.
-              </div>
-            )}
-
-            {/* Liste des équipes */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
-              {teams.map(team => (
-                <div key={team.id} style={{
-                  background: '#1f2937',
-                  borderRadius: '12px',
-                  padding: '1.5rem',
-                  border: '1px solid #374151',
-                  transition: 'all 0.2s ease'
+            {/* En-tête avec statistiques */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '2rem',
+              flexWrap: 'wrap',
+              gap: '1rem'
+            }}>
+              <div>
+                <h2 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700', 
+                  color: '#fff', 
+                  margin: '0 0 0.5rem 0' 
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  Équipes inscrites
+                </h2>
+                <p style={{ color: '#9ca3af', margin: 0 }}>
+                  {teams.length} équipe{teams.length > 1 ? 's' : ''}
+                </p>
+              </div>
+            </div>
+
+            {/* Liste des équipes simplifiée */}
+            {teams.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '2rem 0'
+              }}>
+                <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>👥</div>
+                <p style={{ color: '#9ca3af', margin: '0.5rem 0' }}>Aucune équipe inscrite</p>
+                <p style={{ color: '#6b7280', fontSize: '0.875rem', margin: 0 }}>Soyez le premier à créer une équipe !</p>
+              </div>
+            ) : (
+              <div style={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem'
+              }}>
+                {teams.map(team => (
+                  <div 
+                    key={team.id} 
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s ease',
+                      cursor: team.id === myTeamId ? 'pointer' : 'default',
+                      background: team.id === myTeamId ? 'rgba(255, 0, 140, 0.08)' : 'transparent'
+                    }}
+                    onClick={() => {
+                      if (team.id === myTeamId) {
+                        window.location.href = `/teams/${team.id}`
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      if (team.id === myTeamId) {
+                        e.currentTarget.style.background = 'rgba(255, 0, 140, 0.12)'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = team.id === myTeamId ? 'rgba(255, 0, 140, 0.08)' : 'transparent'
+                    }}
+                  >
+                    {team.avatarUrl ? (
+                      <img 
+                        src={team.avatarUrl} 
+                        alt={team.name}
+                        style={{
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          objectFit: 'cover',
+                          border: team.id === myTeamId ? '2px solid #ff008c' : '1px solid #374151',
+                          flexShrink: 0
+                        }}
+                      />
+                    ) : (
                       <div style={{
                         width: '40px',
                         height: '40px',
-                        background: '#374151',
-                        borderRadius: '8px',
+                        borderRadius: '50%',
+                        background: team.id === myTeamId ? 'rgba(255, 0, 140, 0.2)' : '#374151',
+                        border: team.id === myTeamId ? '2px solid #ff008c' : '1px solid #374151',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#fff'
+                        fontSize: '1.25rem',
+                        flexShrink: 0
                       }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H16c-.8 0-1.54.37-2.01.99L12 11l-1.99-2.01A2.5 2.5 0 0 0 8 8H5.46c-.8 0-1.54.37-2.01.99L1 12.5V22h2v-6h2.5l2.5 7.5h2L8 16h2l2.5 7.5h2L15 16h2l2.5 7.5h2L20 16h2v6h2z"/>
-                        </svg>
+                        👥
                       </div>
-                      <div>
-                        <div style={{ color: '#fff', fontWeight: '600', fontSize: '1rem' }}>{team.name}</div>
-                        <div style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                          {team.members.length} membre(s)
-                          {tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize ? ' · Complet' : ''}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {team.id === myTeamId && (
-                      <span style={{
-                        background: '#ff008c',
-                        color: '#fff',
-                        borderRadius: '999px',
-                        padding: '0.25rem 0.75rem',
-                        fontSize: '0.75rem',
-                        fontWeight: '500'
-                      }}>Mon équipe</span>
                     )}
-                  </div>
-
-                  {/* Actions */}
-                  {!isOrganizer && session?.user && isRegistered && (
-                    <div style={{ marginBottom: '1rem' }}>
-                      {team.members?.some((m: any) => m.user?.id === (session?.user as any)?.id) ? (
-                        <button 
-                          style={{
-                            background: 'transparent',
-                            color: '#ef4444',
-                            border: '1px solid #ef4444',
-                            borderRadius: '8px',
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.875rem',
-                            cursor: 'pointer',
-                            width: '100%'
-                          }}
-                          onClick={handleLeaveTeam}
-                        >Quitter l'équipe</button>
-                      ) : (
-                        <button
-                          style={{
-                            background: hasTeam || (tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize) ? '#6b7280' : '#ff008c',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '8px',
-                            padding: '0.5rem 1rem',
-                            fontSize: '0.875rem',
-                            cursor: hasTeam || (tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize) ? 'not-allowed' : 'pointer',
-                            width: '100%'
-                          }}
-                          onClick={() => handleJoinTeam(team.id)}
-                          disabled={hasTeam || (tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize)}
-                        >
-                          {tournament?.teamMaxSize && team.members.length >= tournament.teamMaxSize ? 'Complet' : 'Rejoindre'}
-                        </button>
+                    
+                    <span style={{ 
+                      color: '#fff', 
+                      fontWeight: '500', 
+                      fontSize: '0.875rem',
+                      flex: 1
+                    }}>
+                      {team.name}
+                      {team.id === myTeamId && (
+                        <span style={{
+                          marginLeft: '0.5rem',
+                          color: '#ff008c',
+                          fontSize: '0.75rem',
+                          fontWeight: '600'
+                        }}>
+                          (Mon équipe)
+                        </span>
                       )}
-                    </div>
-                  )}
-
-                  {/* Membres */}
-                  {team.members.length > 0 && (
-                    <div>
-                      <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Membres</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                        {team.members.map((m: any, idx: number) => (
-                          <div key={idx} style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: '0.5rem',
-                            background: '#374151',
-                            borderRadius: '6px',
-                            padding: '0.25rem 0.5rem'
-                          }}>
-                            {m.user.avatarUrl ? (
-                              <img 
-                                src={m.user.avatarUrl} 
-                                alt="" 
-                                style={{ 
-                                  width: '20px', 
-                                  height: '20px', 
-                                  borderRadius: '50%', 
-                                  objectFit: 'cover' 
-                                }} 
-                              />
-                            ) : (
-                              <span style={{ 
-                                width: '20px', 
-                                height: '20px', 
-                                borderRadius: '50%', 
-                                background: '#6b7280', 
-                                display: 'inline-flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                fontSize: '0.75rem',
-                                color: '#fff'
-                              }}>
-                                {(m.user.pseudo || 'U').charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                            <span style={{ color: '#fff', fontSize: '0.75rem' }}>{m.user.pseudo}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {tab === 'matches' && (
-          <div>
-            <MatchesSection tournamentId={id} isOrganizer={isOrganizer} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -1439,6 +1556,100 @@ function TournamentView() {
 
         </div>
       </ContentWithTabs>
+
+      {/* Modale de confirmation de désinscription */}
+      {showUnregisterModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowUnregisterModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>Confirmer la désinscription</h2>
+              <button className={styles.modalClose} onClick={() => setShowUnregisterModal(false)}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalBody}>
+              {myTeam ? (
+                <>
+                  <div className={styles.warningBox}>
+                    <p>
+                      Vous êtes sur le point de désinscrire <strong>toute votre équipe</strong> "{myTeam.name}" de ce tournoi.
+                    </p>
+                    <p>
+                      Tous les membres de l'équipe ({myTeam.members?.length || 0} membre{myTeam.members?.length > 1 ? 's' : ''}) seront désinscrits.
+                    </p>
+                    <p className={styles.warningText}>
+                      ⚠️ Cette action est irréversible. Vous pourrez vous réinscrire plus tard si le tournoi le permet.
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p>Êtes-vous sûr de vouloir vous désinscrire de ce tournoi ?</p>
+              )}
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                className={`${styles.modalButton} ${styles.modalButtonCancel}`}
+                onClick={() => setShowUnregisterModal(false)}
+              >
+                Annuler
+              </button>
+              <button
+                className={`${styles.modalButton} ${styles.modalButtonConfirm}`}
+                onClick={async () => {
+                  setShowUnregisterModal(false)
+                  const res = await fetch(`/api/tournaments/${id}/register`, { method: 'DELETE' })
+                  const data = await res.json().catch(() => ({}))
+                  
+                  if (res.ok) {
+                    const uid = (session?.user as any)?.id
+                    
+                    // Si toute l'équipe a été désinscrite
+                    if (data.unregisteredTeam && myTeam) {
+                      // Retirer l'inscription de l'équipe
+                      setRegistrations(prev => prev.filter(r => r.teamId !== myTeam.id))
+                      
+                      // Recharger les équipes pour mettre à jour l'affichage
+                      const teamsRes = await fetch(`/api/teams/${id}`)
+                      const teamsData = await teamsRes.json()
+                      if (teamsData.teams) {
+                        setTeams(teamsData.teams)
+                      }
+                      
+                      notify({ 
+                        type: 'success', 
+                        message: `✅ Toute l'équipe "${data.teamName}" a été désinscrite (${data.unregisteredCount} membre${data.unregisteredCount > 1 ? 's' : ''}).` 
+                      })
+                    } else {
+                      // Désinscription individuelle (tournois solo)
+                      setRegistrations(prev => prev.filter(r => r.userId !== uid))
+                      notify({ type: 'success', message: '✅ Désinscription réussie. Vous pouvez vous réinscrire si vous le souhaitez.' })
+                    }
+                    
+                    setIsRegistered(false)
+                    
+                    // Recharger les données du tournoi
+                    const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+                    const regData = await regRes.json()
+                    if (regData.tournament?.registrations) {
+                      setRegistrations(regData.tournament.registrations)
+                      setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
+                    }
+
+                    // Déclencher un événement pour rafraîchir la sidebar
+                    window.dispatchEvent(new CustomEvent('tournament-unregistration-changed'))
+                  } else {
+                    notify({ type: 'error', message: data.message || '❌ Impossible de se désinscrire. Vérifiez les conditions du tournoi.' })
+                  }
+                }}
+              >
+                Confirmer la désinscription
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

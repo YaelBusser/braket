@@ -1,0 +1,233 @@
+@use '../../styles/variables.module' as vars;
+
+// Enlever le background de sélection de texte partout dans la modale
+.modalContent {
+  * {
+    &::selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-moz-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-webkit-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(12, 0, 22, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: vars.$z-modal;
+  padding: vars.$spacing-8 vars.$spacing-4;
+  animation: fadeIn 0.2s ease-out;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  will-change: scroll-position;
+  transform: translateZ(0);
+
+  &.modalOverlayClosing {
+    animation: fadeOut 0.3s ease-in;
+  }
+}
+
+.modalContent {
+  position: relative;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 140, 0.1);
+  animation: slideUp 0.3s ease-out;
+  overflow: hidden;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+
+  &.modalContentClosing {
+    animation: slideDown 0.3s ease-in;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: vars.$spacing-4;
+  right: vars.$spacing-4;
+  background: transparent;
+  border: none;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-3xl;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: vars.$radius-full;
+  transition: all vars.$transition-fast;
+  z-index: 20;
+  outline: none;
+  box-shadow: none;
+  transform-origin: center center;
+  padding: 0;
+  margin: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    margin: auto;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    transform: rotate(90deg);
+  }
+
+  &:active {
+    transform: rotate(90deg) scale(0.95);
+  }
+}
+
+.modalHeader {
+  padding: vars.$spacing-6 vars.$spacing-6 vars.$spacing-4;
+  border-bottom: 1px solid vars.$lt-border;
+
+  h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: vars.$lt-text-secondary;
+}
+
+.modalBody {
+  padding: vars.$spacing-6;
+}
+
+.createMode {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-2;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: vars.$lt-text-primary;
+  }
+
+  input {
+    padding: vars.$spacing-3 vars.$spacing-4;
+    background: vars.$lt-dark-tertiary;
+    border: 1px solid vars.$lt-border;
+    border-radius: vars.$radius-sm;
+    color: vars.$lt-text-primary;
+    font-size: 1rem;
+    transition: all vars.$transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: vars.$primary-600;
+      box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.1);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.submitButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$primary-600;
+  color: #fff;
+  border: none;
+  border-radius: vars.$radius-sm;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  margin-top: vars.$spacing-2;
+
+  &:hover:not(:disabled) {
+    background: vars.$primary-700;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+}

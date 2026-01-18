@@ -8,23 +8,26 @@ datasource db {
 }
 
 model User {
-  id            String                   @id @default(cuid())
-  email         String                   @unique
-  passwordHash  String?
-  pseudo        String
-  avatarUrl     String?
-  bannerUrl     String?
-  createdAt     DateTime                 @default(now())
-  updatedAt     DateTime                 @updatedAt
-  name          String?
-  emailVerified DateTime?
-  isAdmin       Boolean                  @default(false)
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  teamMembers   TeamMember[]
-  registrations TournamentRegistration[]
-  tournaments   Tournament[]             @relation("OrganizerTournaments")
+  id                  String                   @id @default(cuid())
+  email               String                   @unique
+  passwordHash        String?
+  pseudo              String
+  avatarUrl           String?
+  bannerUrl           String?
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  name                String?
+  emailVerified       DateTime?
+  isAdmin             Boolean                  @default(false)
+  image               String?
+  accounts            Account[]
+  sessions            Session[]
+  teamMembers         TeamMember[]
+  teamInvitations     TeamInvitation[]         @relation("InvitedUser")
+  sentTeamInvitations TeamInvitation[]         @relation("InvitedBy")
+  registrations       TournamentRegistration[]
+  tournaments         Tournament[]             @relation("OrganizerTournaments")
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -49,7 +52,9 @@ model Tournament {
   endDate              DateTime?
   registrationDeadline DateTime?
   status               TournamentStatus         @default(REG_OPEN)
-  featuredPosition     Int?                     // Position en tendance (1 = plus important, 2-4 = autres)
+  featuredPosition     Int? // Position en tendance (1 = plus important, 2-4 = autres)
+  prizes               String?                  @db.Text
+  rules                String?                  @db.Text
   organizerId          String
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
@@ -79,36 +84,59 @@ model Game {
 }
 
 model Team {
-  id           String       @id @default(cuid())
-  name         String
-  tournamentId String?
-  game         String?
-  gameId       String?
-  description  String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  matchesA     Match[]      @relation("TeamA")
-  matchesB     Match[]      @relation("TeamB")
-  wins         Match[]      @relation("WinnerTeam")
-  members      TeamMember[]
-  tournament   Tournament?  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  id            String                   @id @default(cuid())
+  name          String
+  tournamentId  String?
+  game          String?
+  gameId        String?
+  description   String?
+  avatarUrl     String?
+  bannerUrl     String?
+  createdAt     DateTime                 @default(now())
+  updatedAt     DateTime                 @updatedAt
+  matchesA      Match[]                  @relation("TeamA")
+  matchesB      Match[]                  @relation("TeamB")
+  wins          Match[]                  @relation("WinnerTeam")
+  members       TeamMember[]
+  invitations   TeamInvitation[]
+  tournament    Tournament?              @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  registrations TournamentRegistration[]
 
   @@unique([tournamentId, name])
   @@map("teams")
 }
 
 model TeamMember {
-  id        String   @id @default(cuid())
-  teamId    String
-  userId    String
-  isCaptain Boolean  @default(false)
-  createdAt DateTime @default(now())
-  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                     String                      @id @default(cuid())
+  teamId                 String
+  userId                 String
+  isCaptain              Boolean                     @default(false)
+  createdAt              DateTime                    @default(now())
+  team                   Team                        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user                   User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tournamentParticipants TeamTournamentParticipant[]
 
   @@unique([teamId, userId])
   @@index([userId], map: "team_members_userId_fkey")
   @@map("team_members")
+}
+
+model TeamInvitation {
+  id          String           @id @default(cuid())
+  teamId      String
+  userId      String
+  invitedById String
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user        User             @relation("InvitedUser", fields: [userId], references: [id], onDelete: Cascade)
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@index([userId], map: "team_invitations_userId_fkey")
+  @@index([teamId], map: "team_invitations_teamId_fkey")
+  @@map("team_invitations")
 }
 
 model Match {
@@ -135,16 +163,33 @@ model Match {
 }
 
 model TournamentRegistration {
-  id           String     @id @default(cuid())
+  id           String                      @id @default(cuid())
   tournamentId String
-  userId       String
-  createdAt    DateTime   @default(now())
-  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String? // Optionnel pour les tournois en équipe
+  teamId       String? // Pour les tournois en équipe
+  createdAt    DateTime                    @default(now())
+  tournament   Tournament                  @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user         User?                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team         Team?                       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  participants TeamTournamentParticipant[]
 
-  @@unique([tournamentId, userId])
+  @@unique([tournamentId, userId], name: "tournament_registrations_tournamentId_userId_key")
+  @@unique([tournamentId, teamId], name: "tournament_registrations_tournamentId_teamId_key")
   @@index([userId], map: "tournament_registrations_userId_fkey")
+  @@index([teamId], map: "tournament_registrations_teamId_fkey")
   @@map("tournament_registrations")
+}
+
+model TeamTournamentParticipant {
+  id             String                 @id @default(cuid())
+  registrationId String
+  teamMemberId   String
+  createdAt      DateTime               @default(now())
+  registration   TournamentRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  teamMember     TeamMember             @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+
+  @@unique([registrationId, teamMemberId])
+  @@map("team_tournament_participants")
 }
 
 model Account {
@@ -209,4 +254,26 @@ enum TournamentStatus {
   REG_OPEN
   IN_PROGRESS
   COMPLETED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // 'tournament_start', 'match_scheduled', 'team_invite', etc.
+  title     String
+  message   String   @db.Text
+  link      String? // URL vers la ressource concernée
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "notifications_userId_fkey")
+  @@index([userId, read], map: "notifications_userId_read_idx")
+  @@map("notifications")
 }
