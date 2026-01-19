@@ -121,6 +121,7 @@ export async function DELETE(
             id: true,
             status: true,
             registrationDeadline: true,
+            startDate: true,
             endDate: true,
             isTeamBased: true
           }
@@ -155,14 +156,19 @@ export async function DELETE(
       // Si c'est le dernier membre, on peut quitter (l'équipe sera supprimée)
     }
 
-    // Interdire de quitter après démarrage
+    // Interdire de quitter si le tournoi est en cours ou a commencé
     if (tournament.status !== 'REG_OPEN') {
-      return NextResponse.json({ message: 'Impossible de quitter une équipe après le démarrage' }, { status: 400 })
+      return NextResponse.json({ message: 'Impossible de quitter une équipe après le démarrage du tournoi' }, { status: 400 })
     }
 
     // Vérifier deadline d'inscription
     if (tournament.registrationDeadline && tournament.registrationDeadline < new Date()) {
       return NextResponse.json({ message: 'Impossible de quitter une équipe après la deadline d\'inscription' }, { status: 400 })
+    }
+
+    // Vérifier si le tournoi a commencé (même si le statut est encore REG_OPEN)
+    if (tournament.startDate && new Date(tournament.startDate) <= new Date()) {
+      return NextResponse.json({ message: 'Impossible de quitter une équipe une fois que le tournoi a commencé' }, { status: 400 })
     }
 
     await prisma.teamMember.delete({ where: { teamId_userId: { teamId: team.id, userId } } })

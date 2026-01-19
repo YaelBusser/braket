@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { memo } from 'react'
 import styles from './index.module.scss'
-import { formatRelativeTimeWithTZ } from '@/utils/dateUtils'
 
 interface TeamCardProps {
   team?: {
@@ -40,15 +39,11 @@ function TeamCard({ team, className = '', loading = false }: TeamCardProps) {
   if (loading || !team) {
     return (
       <div className={`${styles.teamCard} ${styles.skeleton} ${className}`}>
-        <div className={styles.cardImage}>
-          <div className={styles.skeletonImagePlaceholder}></div>
-        </div>
         <div className={styles.cardContent}>
           <div className={styles.teamLogoPlaceholder}>
             <div className={styles.skeletonTeamLogo}></div>
           </div>
           <div className={styles.textContent}>
-            <div className={styles.skeletonDate}></div>
             <div className={styles.skeletonTitle}></div>
             <div className={styles.skeletonDetails}></div>
           </div>
@@ -59,17 +54,6 @@ function TeamCard({ team, className = '', loading = false }: TeamCardProps) {
 
   const membersCount = team.members?.length || 0
   const captain = team.members?.find(m => m.isCaptain)
-  
-  // Image de fond : banner ou placeholder
-  const backgroundImage = team.bannerUrl
-
-  // Date relative
-  const getDateDisplay = () => {
-    if (team.createdAt) {
-      return formatRelativeTimeWithTZ(team.createdAt)
-    }
-    return 'Récemment créée'
-  }
 
   return (
     <div className={`${styles.teamCard} ${className}`} style={{ position: 'relative' }}>
@@ -78,25 +62,7 @@ function TeamCard({ team, className = '', loading = false }: TeamCardProps) {
         prefetch={true}
         style={{ textDecoration: 'none', color: 'inherit' }}
       >
-        {/* Section image */}
-        <div className={styles.cardImage}>
-          {backgroundImage ? (
-            <Image 
-              src={backgroundImage} 
-              alt={team.name}
-              fill
-              className={styles.posterImage}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              loading="lazy"
-            />
-          ) : (
-            <div className={styles.placeholderImage}>
-              <div className={styles.teamIcon}>👥</div>
-            </div>
-          )}
-        </div>
-        
-        {/* Section contenu en dessous de l'image */}
+        {/* Section contenu */}
         <div className={styles.cardContent}>
           {/* Logo équipe à gauche */}
           {team.avatarUrl ? (
@@ -117,11 +83,6 @@ function TeamCard({ team, className = '', loading = false }: TeamCardProps) {
           
           {/* Zone de texte alignée */}
           <div className={styles.textContent}>
-            {/* Date en haut */}
-            <div className={styles.dateRow}>
-              <span className={styles.dateText}>{getDateDisplay()}</span>
-            </div>
-            
             {/* Nom de l'équipe */}
             <h3 className={styles.teamTitle}>
               {team.name}

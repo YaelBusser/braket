@@ -341,8 +341,8 @@ function TeamManageContent() {
       if (res.ok) {
         notify({ type: 'success', message: 'Rôle de capitaine transféré avec succès' })
         setShowTransferCaptainModal(false)
-        // Après le transfert, permettre de quitter
-        handleLeaveTeam()
+        // Recharger les données de l'équipe pour mettre à jour l'interface
+        await loadTeam()
       } else {
         notify({ type: 'error', message: data.message || 'Erreur lors du transfert' })
       }

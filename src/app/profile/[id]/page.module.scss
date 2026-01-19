@@ -291,6 +291,13 @@
   gap: vars.$spacing-4;
 }
 
+.tournamentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: vars.$spacing-6;
+  width: 100%;
+}
+
 /* Teams Tab */
 .teamsTab {
   .tabHeader {

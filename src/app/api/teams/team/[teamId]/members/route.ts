@@ -75,19 +75,21 @@ export async function POST(
       }
     }
 
-    // Vérifier s'il y a déjà une invitation en attente
+    // Vérifier s'il y a déjà une invitation
     const existingInvitation = await prisma.teamInvitation.findUnique({
       where: { teamId_userId: { teamId, userId: invitedUserId } }
     })
-    if (existingInvitation && existingInvitation.status === 'PENDING') {
-      return NextResponse.json({ message: 'Une invitation est déjà en attente pour cet utilisateur' }, { status: 400 })
-    }
-
-    // Si l'invitation existe mais a été refusée, on peut en créer une nouvelle
-    if (existingInvitation && existingInvitation.status === 'REJECTED') {
-      await prisma.teamInvitation.delete({
-        where: { id: existingInvitation.id }
-      })
+    
+    if (existingInvitation) {
+      if (existingInvitation.status === 'PENDING') {
+        return NextResponse.json({ message: 'Une invitation est déjà en attente pour cet utilisateur' }, { status: 400 })
+      }
+      // Si l'invitation existe mais a été refusée ou acceptée, on la supprime pour en créer une nouvelle
+      if (existingInvitation.status === 'REJECTED' || existingInvitation.status === 'ACCEPTED') {
+        await prisma.teamInvitation.delete({
+          where: { id: existingInvitation.id }
+        })
+      }
     }
 
     // Créer l'invitation

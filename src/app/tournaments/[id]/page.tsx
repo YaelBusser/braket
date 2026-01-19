@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs, TournamentPageSkeleton } from '../../../components/ui'
+import { Tabs, ContentWithTabs, TournamentPageSkeleton, TeamCard } from '../../../components/ui'
 
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
@@ -1439,7 +1439,7 @@ function TournamentView() {
               </div>
             </div>
 
-            {/* Liste des équipes simplifiée */}
+            {/* Liste des équipes avec TeamCard */}
             {teams.length === 0 ? (
               <div style={{
                 textAlign: 'center',
@@ -1451,86 +1451,16 @@ function TournamentView() {
               </div>
             ) : (
               <div style={{ 
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.75rem'
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                gap: '1.5rem',
+                width: '100%'
               }}>
                 {teams.map(team => (
-                  <div 
-                    key={team.id} 
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      padding: '0.75rem',
-                      borderRadius: '8px',
-                      transition: 'all 0.2s ease',
-                      cursor: team.id === myTeamId ? 'pointer' : 'default',
-                      background: team.id === myTeamId ? 'rgba(255, 0, 140, 0.08)' : 'transparent'
-                    }}
-                    onClick={() => {
-                      if (team.id === myTeamId) {
-                        window.location.href = `/teams/${team.id}`
-                      }
-                    }}
-                    onMouseEnter={(e) => {
-                      if (team.id === myTeamId) {
-                        e.currentTarget.style.background = 'rgba(255, 0, 140, 0.12)'
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = team.id === myTeamId ? 'rgba(255, 0, 140, 0.08)' : 'transparent'
-                    }}
-                  >
-                    {team.avatarUrl ? (
-                      <img 
-                        src={team.avatarUrl} 
-                        alt={team.name}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: team.id === myTeamId ? '2px solid #ff008c' : '1px solid #374151',
-                          flexShrink: 0
-                        }}
-                      />
-                    ) : (
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '50%',
-                        background: team.id === myTeamId ? 'rgba(255, 0, 140, 0.2)' : '#374151',
-                        border: team.id === myTeamId ? '2px solid #ff008c' : '1px solid #374151',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '1.25rem',
-                        flexShrink: 0
-                      }}>
-                        👥
-                      </div>
-                    )}
-                    
-                    <span style={{ 
-                      color: '#fff', 
-                      fontWeight: '500', 
-                      fontSize: '0.875rem',
-                      flex: 1
-                    }}>
-                      {team.name}
-                      {team.id === myTeamId && (
-                        <span style={{
-                          marginLeft: '0.5rem',
-                          color: '#ff008c',
-                          fontSize: '0.75rem',
-                          fontWeight: '600'
-                        }}>
-                          (Mon équipe)
-                        </span>
-                      )}
-                    </span>
-                  </div>
+                  <TeamCard
+                    key={team.id}
+                    team={team}
+                  />
                 ))}
               </div>
             )}

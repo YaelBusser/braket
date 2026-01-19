@@ -65,14 +65,13 @@
   opacity: 0.6;
 }
 
-/* Section contenu - en dessous de l'image */
+/* Section contenu */
 .cardContent {
   position: relative;
   background: transparent;
   display: flex;
   align-items: flex-start;
   gap: vars.$spacing-2;
-  margin-top: 8px;
 }
 
 /* Zone de texte alignée */

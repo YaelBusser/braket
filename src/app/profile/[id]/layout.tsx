@@ -44,6 +44,8 @@ export function useProfileData() {
 // Composants de contenu pour chaque onglet
 function TournamentsContent() {
   const { userTournaments, loadingData } = useProfileData()
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id || null
 
   return (
     <div className={styles.tournamentsTab}>
@@ -53,22 +55,22 @@ function TournamentsContent() {
       
       <div className={styles.tournamentList}>
         {loadingData ? (
-          <div className={styles.loading}>Chargement...</div>
+          <div className={styles.tournamentsGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <TournamentCard key={index} loading={true} />
+            ))}
+          </div>
         ) : !userTournaments || !Array.isArray(userTournaments) || userTournaments.length === 0 ? (
           <div className={styles.emptyState}>
             <p>Aucun tournoi créé</p>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-            gap: '1.5rem',
-            width: '100%'
-          }}>
+          <div className={styles.tournamentsGrid}>
             {userTournaments.map((tournament) => (
               <TournamentCard
                 key={tournament.id}
                 tournament={tournament}
+                userId={userId}
               />
             ))}
           </div>
@@ -80,6 +82,8 @@ function TournamentsContent() {
 
 function ParticipationsContent() {
   const { userRegistrations, loadingData } = useProfileData()
+  const { data: session } = useSession()
+  const userId = (session?.user as any)?.id || null
 
   return (
     <div className={styles.registrationsTab}>
@@ -89,22 +93,22 @@ function ParticipationsContent() {
       
       <div className={styles.tournamentList}>
         {loadingData ? (
-          <div className={styles.loading}>Chargement...</div>
+          <div className={styles.tournamentsGrid}>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <TournamentCard key={index} loading={true} />
+            ))}
+          </div>
         ) : !userRegistrations || !Array.isArray(userRegistrations) || userRegistrations.length === 0 ? (
           <div className={styles.emptyState}>
             <p>Aucun tournoi rejoint</p>
           </div>
         ) : (
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
-            gap: '1.5rem',
-            width: '100%'
-          }}>
+          <div className={styles.tournamentsGrid}>
             {userRegistrations.map((tournament) => (
               <TournamentCard
                 key={tournament.id}
                 tournament={tournament}
+                userId={userId}
               />
             ))}
           </div>

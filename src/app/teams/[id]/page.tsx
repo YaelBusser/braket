@@ -294,21 +294,22 @@ function TeamView({ teamId }: { teamId: string }) {
 
   const handleJoinTeam = async () => {
     try {
-      const res = await fetch(`/api/teams/${teamId}/join`, {
+      const res = await fetch(`/api/teams/${teamId}/request-join`, {
         method: 'POST'
       })
 
       if (res.ok) {
-        notify({ message: 'Vous avez rejoint l\'équipe ! 🎉', type: 'success' })
+        const data = await res.json()
+        notify({ message: data.message || 'Votre demande a été envoyée au capitaine de l\'équipe', type: 'success' })
         closeJoinTeamModal()
         loadTeamData()
       } else {
         const error = await res.json()
-        notify({ message: error.message || 'Erreur lors de la participation à l\'équipe', type: 'error' })
+        notify({ message: error.message || 'Erreur lors de l\'envoi de la demande', type: 'error' })
       }
     } catch (error) {
       console.error('Erreur:', error)
-      notify({ message: 'Erreur lors de la participation à l\'équipe', type: 'error' })
+      notify({ message: 'Erreur lors de l\'envoi de la demande', type: 'error' })
     }
   }
 
@@ -398,7 +399,7 @@ function TeamView({ teamId }: { teamId: string }) {
                   variant="primary"
                   onClick={openJoinTeamModal}
                 >
-                  Rejoindre l'équipe
+                  Demander à rejoindre
                 </Button>
               )}
             </div>
@@ -503,8 +504,10 @@ function TeamView({ teamId }: { teamId: string }) {
                     </div>
                     <div className={styles.memberInfo}>
                       <h4>{member.user.name || member.user.pseudo}</h4>
-                      {member.isCaptain && (
+                      {member.isCaptain ? (
                         <span className={styles.captainBadgeText}>Capitaine</span>
+                      ) : (
+                        <span className={styles.memberBadgeText}>Membre</span>
                       )}
                     </div>
                   </Link>
@@ -694,12 +697,12 @@ function TeamView({ teamId }: { teamId: string }) {
         </div>
       </ContentWithTabs>
 
-      {/* Modale de rejoindre l'équipe */}
+      {/* Modale de demande pour rejoindre l'équipe */}
       {showJoinTeamModal && team && (
         <div className={styles.modalOverlay} onClick={closeJoinTeamModal}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>Rejoindre l'équipe</h2>
+              <h2>Demander à rejoindre l'équipe</h2>
               <button className={styles.modalClose} onClick={closeJoinTeamModal}>
                 ×
               </button>
@@ -734,6 +737,18 @@ function TeamView({ teamId }: { teamId: string }) {
               <div className={styles.invitationInvitedBy}>
                 <p><strong>Membres actuels :</strong> {team.members.length} membre{team.members.length > 1 ? 's' : ''}</p>
               </div>
+
+              <div style={{ 
+                marginTop: '1rem', 
+                padding: '1rem', 
+                background: 'rgba(255, 0, 140, 0.1)', 
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 0, 140, 0.2)'
+              }}>
+                <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.875rem' }}>
+                  Votre demande sera envoyée au capitaine de l'équipe. Vous serez notifié lorsque votre demande sera acceptée ou refusée.
+                </p>
+              </div>
             </div>
 
             <div className={styles.modalFooter}>
@@ -747,7 +762,7 @@ function TeamView({ teamId }: { teamId: string }) {
                 className={`${styles.modalButton} ${styles.modalButtonAccept}`}
                 onClick={handleJoinTeam}
               >
-                Rejoindre
+                Faire une demande
               </button>
             </div>
           </div>

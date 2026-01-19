@@ -393,6 +393,18 @@
   width: fit-content;
 }
 
+.memberBadgeText {
+  background: rgba(255, 255, 255, 0.1);
+  color: vars.$lt-text-secondary;
+  padding: vars.$spacing-1 vars.$spacing-2;
+  border-radius: vars.$radius-full;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-medium;
+  align-self: flex-start;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
 .memberInfo {
   flex: 1;
   display: flex;
