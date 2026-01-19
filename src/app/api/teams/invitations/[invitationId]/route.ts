@@ -26,11 +26,15 @@ export async function PATCH(
       include: {
         team: {
           include: {
-            tournament: {
-              select: {
-                id: true,
-                status: true,
-                teamMaxSize: true
+            registrations: {
+              include: {
+                tournament: {
+                  select: {
+                    id: true,
+                    status: true,
+                    teamMaxSize: true
+                  }
+                }
               }
             }
           }
@@ -69,8 +73,9 @@ export async function PATCH(
     }
 
     // Accepter l'invitation
-    // Vérifier que le tournoi est encore ouvert aux inscriptions
-    if (invitation.team.tournament && invitation.team.tournament.status !== 'REG_OPEN') {
+    // Vérifier que les tournois sont encore ouverts aux inscriptions
+    const activeRegistrations = invitation.team.registrations.filter(r => r.tournament.status === 'REG_OPEN')
+    if (activeRegistrations.length === 0 && invitation.team.registrations.length > 0) {
       await prisma.teamInvitation.update({
         where: { id: invitationId },
         data: { status: 'REJECTED' }
@@ -78,24 +83,34 @@ export async function PATCH(
       return NextResponse.json({ message: 'Impossible d\'accepter : le tournoi a déjà commencé' }, { status: 400 })
     }
 
-    // Vérifier la taille maximale de l'équipe
+    // Vérifier la taille maximale de l'équipe pour chaque tournoi actif
     const currentMembers = await prisma.teamMember.count({ where: { teamId: invitation.teamId } })
-    if (invitation.team.tournament?.teamMaxSize && currentMembers >= invitation.team.tournament.teamMaxSize) {
-      await prisma.teamInvitation.update({
-        where: { id: invitationId },
-        data: { status: 'REJECTED' }
-      })
-      return NextResponse.json({ message: 'Impossible d\'accepter : l\'équipe est complète' }, { status: 400 })
+    for (const reg of activeRegistrations) {
+      if (reg.tournament.teamMaxSize && currentMembers >= reg.tournament.teamMaxSize) {
+        await prisma.teamInvitation.update({
+          where: { id: invitationId },
+          data: { status: 'REJECTED' }
+        })
+        return NextResponse.json({ message: 'Impossible d\'accepter : l\'équipe est complète pour ce tournoi' }, { status: 400 })
+      }
     }
 
-    // Vérifier si l'utilisateur est déjà dans une autre équipe du même tournoi
-    if (invitation.team.tournament) {
-      const inOtherTeam = await prisma.teamMember.findFirst({
-        where: {
-          userId,
-          team: { tournamentId: invitation.team.tournament.id }
+    // Vérifier si l'utilisateur est déjà dans une autre équipe des mêmes tournois
+    if (activeRegistrations.length > 0) {
+      const tournamentIds = activeRegistrations.map(r => r.tournament.id)
+      const userTeams = await prisma.teamMember.findMany({
+        where: { userId },
+        include: {
+          team: {
+            include: {
+              registrations: {
+                where: { tournamentId: { in: tournamentIds } }
+              }
+            }
+          }
         }
       })
+      const inOtherTeam = userTeams.some(tm => tm.team.registrations.length > 0)
       if (inOtherTeam) {
         await prisma.teamInvitation.update({
           where: { id: invitationId },
@@ -116,12 +131,12 @@ export async function PATCH(
       data: { status: 'ACCEPTED' }
     })
 
-    // Pour les tournois en équipe, s'assurer que l'équipe est inscrite au tournoi
-    if (invitation.team.tournament && invitation.team.tournament.status === 'REG_OPEN') {
+    // Pour les tournois en équipe, s'assurer que l'équipe est inscrite aux tournois actifs
+    for (const reg of activeRegistrations) {
       try {
         await prisma.tournamentRegistration.upsert({
-          where: { tournamentId_teamId: { tournamentId: invitation.team.tournament.id, teamId: invitation.teamId } },
-          create: { tournamentId: invitation.team.tournament.id, teamId: invitation.teamId },
+          where: { tournamentId_teamId: { tournamentId: reg.tournament.id, teamId: invitation.teamId } },
+          create: { tournamentId: reg.tournament.id, teamId: invitation.teamId },
           update: {}
         })
       } catch (error) {

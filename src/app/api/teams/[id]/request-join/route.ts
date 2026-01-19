@@ -20,12 +20,16 @@ export async function POST(
       where: { id: teamId },
       include: {
         members: true,
-        tournament: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-            teamMaxSize: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                teamMaxSize: true
+              }
+            }
           }
         }
       }
@@ -41,24 +45,33 @@ export async function POST(
       return NextResponse.json({ message: 'Vous êtes déjà membre de cette équipe' }, { status: 400 })
     }
 
-    // Vérifier que le tournoi est encore ouvert aux inscriptions
-    if (team.tournament && team.tournament.status !== 'REG_OPEN') {
-      return NextResponse.json({ message: 'Impossible de faire une demande : le tournoi a déjà commencé' }, { status: 400 })
+    // Vérifier que les tournois sont encore ouverts aux inscriptions
+    const activeRegistrations = team.registrations.filter(r => r.tournament.status === 'REG_OPEN')
+    if (activeRegistrations.length > 0) {
+      // Vérifier la taille maximale pour chaque tournoi actif
+      for (const reg of activeRegistrations) {
+        if (reg.tournament.teamMaxSize && team.members.length >= reg.tournament.teamMaxSize) {
+          return NextResponse.json({ message: 'L\'équipe est complète pour ce tournoi' }, { status: 400 })
+        }
+      }
     }
 
-    // Vérifier la taille maximale
-    if (team.tournament?.teamMaxSize && team.members.length >= team.tournament.teamMaxSize) {
-      return NextResponse.json({ message: 'L\'équipe est complète' }, { status: 400 })
-    }
-
-    // Vérifier si l'utilisateur est déjà dans une autre équipe du même tournoi
-    if (team.tournament) {
-      const inOtherTeam = await prisma.teamMember.findFirst({
-        where: {
-          userId,
-          team: { tournamentId: team.tournament.id }
+    // Vérifier si l'utilisateur est déjà dans une autre équipe des mêmes tournois
+    if (activeRegistrations.length > 0) {
+      const tournamentIds = activeRegistrations.map(r => r.tournament.id)
+      const userTeams = await prisma.teamMember.findMany({
+        where: { userId },
+        include: {
+          team: {
+            include: {
+              registrations: {
+                where: { tournamentId: { in: tournamentIds } }
+              }
+            }
+          }
         }
       })
+      const inOtherTeam = userTeams.some(tm => tm.team.registrations.length > 0)
       if (inOtherTeam) {
         return NextResponse.json({ message: 'Vous faites déjà partie d\'une autre équipe de ce tournoi' }, { status: 400 })
       }
@@ -125,7 +138,7 @@ export async function POST(
           userId: captain.userId,
           type: 'team_invite',
           title: 'Demande pour rejoindre l\'équipe',
-          message: `${(session.user as any).name || (session.user as any).pseudo} souhaite rejoindre votre équipe "${team.name}"${team.tournament ? ` pour le tournoi "${team.tournament.name}"` : ''}`,
+          message: `${(session.user as any).name || (session.user as any).pseudo} souhaite rejoindre votre équipe "${team.name}"${activeRegistrations.length > 0 ? ` pour le tournoi "${activeRegistrations[0].tournament.name}"` : ''}`,
           link: `/teams/${teamId}/manage?fromNotification=true`
         }
       })

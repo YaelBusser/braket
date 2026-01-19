@@ -1,0 +1,268 @@
+@use '../../../styles/variables.module' as vars;
+
+// Enlever le background de sélection de texte partout dans la modale
+.modalContent {
+  * {
+    &::selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-moz-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+
+    &::-webkit-selection {
+      background: transparent !important;
+      color: inherit;
+    }
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(12, 0, 22, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: vars.$z-modal;
+  padding: vars.$spacing-8 vars.$spacing-4;
+  animation: fadeIn 0.2s ease-out;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  will-change: scroll-position;
+  transform: translateZ(0);
+
+  &.modalOverlayClosing {
+    animation: fadeOut 0.3s ease-in;
+  }
+}
+
+.modalContent {
+  position: relative;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  width: 100%;
+  max-width: 500px;
+  margin: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 0, 140, 0.1);
+  animation: slideUp 0.3s ease-out;
+  overflow: visible;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+
+  &.modalContentClosing {
+    animation: slideDown 0.3s ease-in;
+  }
+
+  &.modalContentSmall {
+    max-width: 400px;
+  }
+
+  &.modalContentMedium {
+    max-width: 500px;
+  }
+
+  &.modalContentLarge {
+    max-width: 700px;
+  }
+}
+
+.closeButton {
+  position: absolute;
+  top: vars.$spacing-4;
+  right: vars.$spacing-4;
+  background: transparent;
+  border: none;
+  color: vars.$lt-text-primary;
+  font-size: vars.$font-size-3xl;
+  line-height: 1;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: vars.$radius-full;
+  transition: all vars.$transition-fast;
+  z-index: 20;
+  outline: none;
+  box-shadow: none;
+  transform-origin: center center;
+  padding: 0;
+  margin: 0;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    display: block;
+    margin: auto;
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+    transform: rotate(90deg);
+  }
+}
+
+.modalHeader {
+  padding: vars.$spacing-6;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  margin: 0;
+}
+
+.modalBody {
+  padding: vars.$spacing-6;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: vars.$spacing-3;
+  padding: vars.$spacing-6;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.modalButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  border-radius: vars.$radius-md;
+  font-size: vars.$font-size-base;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+  border: none;
+  outline: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.modalButtonPrimary {
+  background: vars.$lt-accent-purple;
+  color: vars.$lt-text-primary;
+
+  &:hover:not(:disabled) {
+    background: vars.$primary-700;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.3);
+  }
+}
+
+.modalButtonDanger {
+  background: vars.$lt-error;
+  color: vars.$lt-text-primary;
+
+  &:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  }
+}
+
+.modalButtonCancel {
+  background: transparent;
+  color: vars.$lt-text-secondary;
+  border: 1px solid vars.$lt-border;
+
+  &:hover:not(:disabled) {
+    background: vars.$lt-dark-tertiary;
+    color: vars.$lt-text-primary;
+  }
+}
+
+.modalButtonSecondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: vars.$lt-text-primary;
+  border: 1px solid vars.$lt-border;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0) scale(0.95);
+  }
+}
+
+@media (max-width: vars.$breakpoint-sm) {
+  .modalContent {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .modalBody {
+    padding: vars.$spacing-4;
+  }
+
+  .modalHeader {
+    padding: vars.$spacing-4;
+  }
+
+  .modalFooter {
+    padding: vars.$spacing-4;
+  }
+}

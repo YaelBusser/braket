@@ -20,7 +20,6 @@ model User {
   emailVerified       DateTime?
   isAdmin             Boolean                  @default(false)
   image               String?
-  accounts            Account[]
   sessions            Session[]
   teamMembers         TeamMember[]
   teamInvitations     TeamInvitation[]         @relation("InvitedUser")
@@ -59,7 +58,6 @@ model Tournament {
   createdAt            DateTime                 @default(now())
   updatedAt            DateTime                 @updatedAt
   matches              Match[]
-  teams                Team[]
   registrations        TournamentRegistration[]
   gameRef              Game?                    @relation(fields: [gameId], references: [id])
   organizer            User                     @relation("OrganizerTournaments", fields: [organizerId], references: [id], onDelete: Cascade)
@@ -86,9 +84,6 @@ model Game {
 model Team {
   id            String                   @id @default(cuid())
   name          String
-  tournamentId  String?
-  game          String?
-  gameId        String?
   description   String?
   avatarUrl     String?
   bannerUrl     String?
@@ -99,10 +94,8 @@ model Team {
   wins          Match[]                  @relation("WinnerTeam")
   members       TeamMember[]
   invitations   TeamInvitation[]
-  tournament    Tournament?              @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   registrations TournamentRegistration[]
 
-  @@unique([tournamentId, name])
   @@map("teams")
 }
 
@@ -192,26 +185,6 @@ model TeamTournamentParticipant {
   @@map("team_tournament_participants")
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@index([userId], map: "accounts_userId_fkey")
-  @@map("accounts")
-}
-
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -221,15 +194,6 @@ model Session {
 
   @@index([userId], map: "sessions_userId_fkey")
   @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
 }
 
 enum TournamentFormat {

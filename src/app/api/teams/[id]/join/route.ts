@@ -16,25 +16,33 @@ export async function POST(
     const team = await prisma.team.findUnique({ 
       where: { id }, 
       include: { 
-        members: true, 
-        tournament: {
-          select: {
-            id: true,
-            status: true,
-            registrationDeadline: true,
-            endDate: true,
-            organizerId: true,
-            teamMinSize: true,
-            teamMaxSize: true,
-            isTeamBased: true
+        members: true,
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                status: true,
+                registrationDeadline: true,
+                endDate: true,
+                organizerId: true,
+                teamMinSize: true,
+                teamMaxSize: true,
+                isTeamBased: true
+              }
+            }
           }
         }
       } 
     })
     if (!team) return NextResponse.json({ message: 'Équipe introuvable' }, { status: 404 })
 
-    const tournament = team.tournament
-    if (!tournament) return NextResponse.json({ message: 'Tournoi introuvable' }, { status: 404 })
+    // Récupérer le premier tournoi actif de l'équipe (ou le premier si aucun actif)
+    const activeRegistration = team.registrations.find(r => r.tournament.status === 'REG_OPEN') || team.registrations[0]
+    if (!activeRegistration) {
+      return NextResponse.json({ message: 'Cette équipe n\'est inscrite à aucun tournoi' }, { status: 400 })
+    }
+    const tournament = activeRegistration.tournament
 
     // l'organisateur ne peut pas rejoindre d'équipe
     if (tournament.organizerId === userId) {
@@ -69,7 +77,19 @@ export async function POST(
     if (already) return NextResponse.json({ message: 'Déjà membre' }, { status: 400 })
 
     // Empêcher de rejoindre plusieurs équipes du même tournoi
-    const alreadyInTournament = await prisma.teamMember.findFirst({ where: { userId, team: { tournamentId: tournament.id } } })
+    const userTeams = await prisma.teamMember.findMany({ 
+      where: { userId },
+      include: {
+        team: {
+          include: {
+            registrations: {
+              where: { tournamentId: tournament.id }
+            }
+          }
+        }
+      }
+    })
+    const alreadyInTournament = userTeams.some(tm => tm.team.registrations.length > 0)
     if (alreadyInTournament) {
       return NextResponse.json({ message: 'Vous faites déjà partie d\'une équipe de ce tournoi' }, { status: 400 })
     }
@@ -114,24 +134,54 @@ export async function DELETE(
 
     const { id } = await params
     const team = await prisma.team.findUnique({ 
-      where: { id }, 
-      include: { 
-        tournament: {
-          select: {
-            id: true,
-            status: true,
-            registrationDeadline: true,
-            startDate: true,
-            endDate: true,
-            isTeamBased: true
+      where: { id },
+      include: {
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                status: true,
+                registrationDeadline: true,
+                startDate: true,
+                endDate: true,
+                isTeamBased: true
+              }
+            }
           }
         }
-      } 
+      }
     })
     if (!team) return NextResponse.json({ message: 'Équipe introuvable' }, { status: 404 })
 
-    const tournament = team.tournament
-    if (!tournament) return NextResponse.json({ message: 'Tournoi introuvable' }, { status: 404 })
+    // Récupérer tous les tournois actifs de l'équipe pour vérifier les restrictions
+    const activeRegistrations = team.registrations.filter(r => 
+      r.tournament.status === 'REG_OPEN' || 
+      (r.tournament.startDate && new Date(r.tournament.startDate) > new Date())
+    )
+    
+    // Si l'équipe est inscrite à des tournois actifs, vérifier les restrictions
+    if (activeRegistrations.length > 0) {
+      // Vérifier pour chaque tournoi actif
+      for (const reg of activeRegistrations) {
+        const tournament = reg.tournament
+        
+        // Interdire de quitter si le tournoi est en cours ou a commencé
+        if (tournament.status !== 'REG_OPEN') {
+          return NextResponse.json({ message: 'Impossible de quitter une équipe après le démarrage du tournoi' }, { status: 400 })
+        }
+
+        // Vérifier deadline d'inscription
+        if (tournament.registrationDeadline && tournament.registrationDeadline < new Date()) {
+          return NextResponse.json({ message: 'Impossible de quitter une équipe après la deadline d\'inscription' }, { status: 400 })
+        }
+
+        // Vérifier si le tournoi a commencé (même si le statut est encore REG_OPEN)
+        if (tournament.startDate && new Date(tournament.startDate) <= new Date()) {
+          return NextResponse.json({ message: 'Impossible de quitter une équipe une fois que le tournoi a commencé' }, { status: 400 })
+        }
+      }
+    }
 
     // Vérifier qu'il est membre
     const existing = await prisma.teamMember.findUnique({ where: { teamId_userId: { teamId: team.id, userId } } })
@@ -154,21 +204,6 @@ export async function DELETE(
         }, { status: 400 })
       }
       // Si c'est le dernier membre, on peut quitter (l'équipe sera supprimée)
-    }
-
-    // Interdire de quitter si le tournoi est en cours ou a commencé
-    if (tournament.status !== 'REG_OPEN') {
-      return NextResponse.json({ message: 'Impossible de quitter une équipe après le démarrage du tournoi' }, { status: 400 })
-    }
-
-    // Vérifier deadline d'inscription
-    if (tournament.registrationDeadline && tournament.registrationDeadline < new Date()) {
-      return NextResponse.json({ message: 'Impossible de quitter une équipe après la deadline d\'inscription' }, { status: 400 })
-    }
-
-    // Vérifier si le tournoi a commencé (même si le statut est encore REG_OPEN)
-    if (tournament.startDate && new Date(tournament.startDate) <= new Date()) {
-      return NextResponse.json({ message: 'Impossible de quitter une équipe une fois que le tournoi a commencé' }, { status: 400 })
     }
 
     await prisma.teamMember.delete({ where: { teamId_userId: { teamId: team.id, userId } } })

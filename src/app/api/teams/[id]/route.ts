@@ -31,12 +31,16 @@ export async function GET(
               { createdAt: 'asc' }
             ]
           },
-          tournament: {
-            select: {
-              id: true,
-              name: true,
-              game: true,
-              status: true
+          registrations: {
+            include: {
+              tournament: {
+                select: {
+                  id: true,
+                  name: true,
+                  game: true,
+                  status: true
+                }
+              }
             }
           }
         }
@@ -46,35 +50,32 @@ export async function GET(
     }
 
     // Sinon, lister les équipes du tournoi
-    // Ne retourner que les équipes inscrites au tournoi
-    const allTeams = await prisma.team.findMany({
-      where: { tournamentId: id },
-      include: {
-        members: { 
-          include: { 
-            user: { 
-              select: { id: true, pseudo: true, avatarUrl: true } 
-            } 
-          } 
-        }
-      },
-      orderBy: { createdAt: 'asc' }
-    })
-
-    // Récupérer toutes les inscriptions d'équipes du tournoi
+    // Ne retourner que les équipes inscrites au tournoi via TournamentRegistration
     const teamRegistrations = await prisma.tournamentRegistration.findMany({
       where: { 
         tournamentId: id,
         teamId: { not: null }
       },
-      select: { teamId: true }
+      include: {
+        team: {
+          include: {
+            members: { 
+              include: { 
+                user: { 
+                  select: { id: true, pseudo: true, avatarUrl: true } 
+                } 
+              } 
+            }
+          }
+        }
+      },
+      orderBy: { createdAt: 'asc' }
     })
-    const registeredTeamIds = new Set(teamRegistrations.map(r => r.teamId).filter(Boolean))
 
-    // Filtrer les équipes pour ne garder que celles inscrites
-    const teams = allTeams.filter(team => 
-      registeredTeamIds.has(team.id)
-    )
+    // Extraire les équipes depuis les registrations
+    const teams = teamRegistrations
+      .map(r => r.team)
+      .filter(Boolean)
 
     return NextResponse.json({ teams })
   } catch (error) {

@@ -73,6 +73,8 @@ function TeamCard({ team, className = '', loading = false }: TeamCardProps) {
                 width={50}
                 height={50}
                 loading="lazy"
+                className={styles.teamLogoImage}
+                style={{ objectFit: 'cover' }}
               />
             </div>
           ) : (

@@ -4,9 +4,11 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import styles from './page.module.scss'
 import { TournamentCard } from '@/components/ui'
+import { useAuthModal } from '@/components/AuthModal/AuthModalContext'
 
 export default function Home() {
   const { status, data: session } = useSession()
+  const { openAuthModal } = useAuthModal()
   const [featuredTournaments, setFeaturedTournaments] = useState<any[]>([])
   const [featuredLoading, setFeaturedLoading] = useState(true)
   const userId = (session?.user as any)?.id || null
@@ -243,9 +245,12 @@ export default function Home() {
                   Voir les tournois
                 </Link>
               ) : (
-                <Link href="/api/auth/signin" className={styles.heroCtaButton}>
+                <button 
+                  onClick={() => openAuthModal('login')}
+                  className={styles.heroCtaButton}
+                >
                   Rejoindre maintenant
-                </Link>
+                </button>
               )}
             </div>
           </div>

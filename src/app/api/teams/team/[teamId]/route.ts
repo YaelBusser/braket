@@ -28,14 +28,33 @@ export async function GET(
             { createdAt: 'asc' }
           ]
         },
-        tournament: {
-          select: {
-            id: true,
-            name: true,
-            game: true,
-            status: true,
-            startDate: true,
-            endDate: true
+        registrations: {
+          include: {
+            tournament: {
+              include: {
+                gameRef: {
+                  select: {
+                    id: true,
+                    name: true,
+                    imageUrl: true,
+                    logoUrl: true,
+                    posterUrl: true
+                  }
+                },
+                organizer: {
+                  select: {
+                    id: true,
+                    pseudo: true,
+                    avatarUrl: true
+                  }
+                },
+                _count: {
+                  select: {
+                    registrations: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -244,10 +263,14 @@ export async function DELETE(
         members: {
           where: { userId, isCaptain: true }
         },
-        tournament: {
-          select: {
-            id: true,
-            status: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                status: true
+              }
+            }
           }
         }
       }
@@ -258,8 +281,9 @@ export async function DELETE(
       return NextResponse.json({ message: 'Seul le chef peut supprimer l\'équipe' }, { status: 403 })
     }
 
-    // Vérifier que le tournoi n'a pas commencé
-    if (team.tournament && team.tournament.status !== 'REG_OPEN') {
+    // Vérifier que les tournois n'ont pas commencé
+    const activeRegistrations = team.registrations.filter(r => r.tournament.status !== 'REG_OPEN')
+    if (activeRegistrations.length > 0) {
       return NextResponse.json({ message: 'Impossible de supprimer l\'équipe après le début du tournoi' }, { status: 400 })
     }
 

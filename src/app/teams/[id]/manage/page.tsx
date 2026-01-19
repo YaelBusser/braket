@@ -11,6 +11,7 @@ import styles from './page.module.scss'
 import { getCroppedImg } from '@/lib/image'
 import VisualsIcon from '../../../../components/icons/VisualsIcon'
 import SettingsIcon from '../../../../components/icons/SettingsIcon'
+import { Modal, type ModalButton } from '../../../../components/ui'
 
 interface Team {
   id: string
@@ -1189,130 +1190,90 @@ function TeamManageContent() {
         </div>
 
         {/* Modal de confirmation pour quitter l'équipe */}
-        {showLeaveTeamModal && (
-          <div className={styles.modalOverlay} onClick={() => setShowLeaveTeamModal(false)}>
-            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-              <div className={styles.modalHeader}>
-                <h2>{isCaptain ? 'Quitter l\'équipe' : 'Confirmer la sortie'}</h2>
-                <button className={styles.modalClose} onClick={() => setShowLeaveTeamModal(false)}>
-                  ×
-                </button>
-              </div>
-              
-              <div className={styles.modalBody}>
-                <p>
-                  {isCaptain 
-                    ? 'En tant que capitaine, vous devez transférer votre rôle à un autre membre avant de quitter l\'équipe.'
-                    : 'Êtes-vous sûr de vouloir quitter cette équipe ?'
-                  }
-                </p>
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button
-                  className={`${styles.modalButton} ${styles.modalButtonReject}`}
-                  onClick={() => setShowLeaveTeamModal(false)}
-                >
-                  Annuler
-                </button>
-                {isCaptain ? (
-                  <button
-                    className={`${styles.modalButton} ${styles.modalButtonAccept}`}
-                    onClick={() => {
-                      setShowLeaveTeamModal(false)
-                      setShowTransferCaptainModal(true)
-                    }}
-                  >
-                    Transférer le rôle
-                  </button>
-                ) : (
-                  <button
-                    className={`${styles.modalButton} ${styles.modalButtonDanger}`}
-                    onClick={handleLeaveTeam}
-                  >
-                    Quitter
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <Modal
+          isOpen={showLeaveTeamModal}
+          onClose={() => setShowLeaveTeamModal(false)}
+          title={isCaptain ? 'Quitter l\'équipe' : 'Confirmer la sortie'}
+          footer={[
+            { label: 'Annuler', onClick: () => setShowLeaveTeamModal(false), variant: 'cancel' },
+            ...(isCaptain 
+              ? [{ 
+                  label: 'Transférer le rôle', 
+                  onClick: () => {
+                    setShowLeaveTeamModal(false)
+                    setShowTransferCaptainModal(true)
+                  }, 
+                  variant: 'primary' as const
+                }]
+              : [{ 
+                  label: 'Quitter', 
+                  onClick: handleLeaveTeam, 
+                  variant: 'danger' as const
+                }]
+            )
+          ]}
+        >
+          <p>
+            {isCaptain 
+              ? 'En tant que capitaine, vous devez transférer votre rôle à un autre membre avant de quitter l\'équipe.'
+              : 'Êtes-vous sûr de vouloir quitter cette équipe ?'
+            }
+          </p>
+        </Modal>
 
         {/* Modal pour transférer le rôle de capitaine */}
-        {showTransferCaptainModal && team && (
-          <div 
-            className={styles.modalOverlay}
-            onClick={() => setShowTransferCaptainModal(false)}
+        {team && (
+          <Modal
+            isOpen={showTransferCaptainModal}
+            onClose={() => setShowTransferCaptainModal(false)}
+            title="Transférer le rôle de capitaine"
+            footer={[
+              { label: 'Annuler', onClick: () => setShowTransferCaptainModal(false), variant: 'cancel' }
+            ]}
           >
-            <div 
-              className={styles.modalContent}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className={styles.modalHeader}>
-                <h2>Transférer le rôle de capitaine</h2>
-                <button 
-                  className={styles.modalClose}
-                  onClick={() => setShowTransferCaptainModal(false)}
-                >
-                  ×
-                </button>
+            <p>
+              Sélectionnez un membre à qui transférer le rôle de capitaine avant de quitter l'équipe.
+            </p>
+            
+            {team.members.filter((m: any) => {
+              const userId = (session?.user as any)?.id
+              return m.user.id !== userId && !m.isCaptain
+            }).length === 0 ? (
+              <p className={styles.modalErrorMessage}>
+                Aucun autre membre disponible pour transférer le rôle.
+              </p>
+            ) : (
+              <div className={styles.modalMemberList}>
+                {team.members
+                  .filter((m: any) => {
+                    const userId = (session?.user as any)?.id
+                    return m.user.id !== userId && !m.isCaptain
+                  })
+                  .map((member: any) => (
+                    <button
+                      key={member.id}
+                      className={styles.modalMemberButton}
+                      onClick={() => handleTransferCaptain(member.user.id)}
+                    >
+                      {member.user.avatarUrl ? (
+                        <img 
+                          src={member.user.avatarUrl} 
+                          alt={member.user.pseudo}
+                          className={styles.modalMemberAvatar}
+                        />
+                      ) : (
+                        <div className={styles.modalMemberAvatarPlaceholder}>
+                          {member.user.pseudo?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className={styles.modalMemberName}>
+                        {member.user.pseudo}
+                      </div>
+                    </button>
+                  ))}
               </div>
-              
-              <div className={styles.modalBody}>
-                <p>
-                  Sélectionnez un membre à qui transférer le rôle de capitaine avant de quitter l'équipe.
-                </p>
-                
-                {team.members.filter((m: any) => {
-                  const userId = (session?.user as any)?.id
-                  return m.user.id !== userId && !m.isCaptain
-                }).length === 0 ? (
-                  <p className={styles.modalErrorMessage}>
-                    Aucun autre membre disponible pour transférer le rôle.
-                  </p>
-                ) : (
-                  <div className={styles.modalMemberList}>
-                    {team.members
-                      .filter((m: any) => {
-                        const userId = (session?.user as any)?.id
-                        return m.user.id !== userId && !m.isCaptain
-                      })
-                      .map((member: any) => (
-                        <button
-                          key={member.id}
-                          className={styles.modalMemberButton}
-                          onClick={() => handleTransferCaptain(member.user.id)}
-                        >
-                          {member.user.avatarUrl ? (
-                            <img 
-                              src={member.user.avatarUrl} 
-                              alt={member.user.pseudo}
-                              className={styles.modalMemberAvatar}
-                            />
-                          ) : (
-                            <div className={styles.modalMemberAvatarPlaceholder}>
-                              {member.user.pseudo?.charAt(0).toUpperCase()}
-                            </div>
-                          )}
-                          <div className={styles.modalMemberName}>
-                            {member.user.pseudo}
-                          </div>
-                        </button>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              <div className={styles.modalFooter}>
-                <button
-                  className={`${styles.modalButton} ${styles.modalButtonReject}`}
-                  onClick={() => setShowTransferCaptainModal(false)}
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          </div>
+            )}
+          </Modal>
         )}
       </div>
     </ClientPageWrapper>

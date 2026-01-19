@@ -16,7 +16,6 @@ export async function GET(
     const { searchParams } = new URL(request.url)
     
     // Paramètres pour charger les détails à la demande
-    const includeTeams = searchParams.get('includeTeams') === 'true'
     const includeMatches = searchParams.get('includeMatches') === 'true'
     const includeRegistrations = searchParams.get('includeRegistrations') === 'true'
     
@@ -29,18 +28,9 @@ export async function GET(
         _count: { 
           select: { 
             registrations: true,
-            teams: true,
             matches: true
           } 
         },
-        // Charger les équipes seulement si demandé
-        ...(includeTeams ? {
-          teams: {
-            include: {
-              members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
-            },
-          },
-        } : {}),
         // Charger les matchs seulement si demandé
         ...(includeMatches ? {
           matches: {
@@ -509,9 +499,16 @@ export async function DELETE(
     }
 
     await prisma.match.deleteMany({ where: { tournamentId: id } })
-    const teams = await prisma.team.findMany({ where: { tournamentId: id } })
-    await prisma.teamMember.deleteMany({ where: { teamId: { in: teams.map(t => t.id) } } })
-    await prisma.team.deleteMany({ where: { tournamentId: id } })
+    // Récupérer les équipes inscrites à ce tournoi via les registrations
+    const registrations = await prisma.tournamentRegistration.findMany({
+      where: { tournamentId: id, teamId: { not: null } },
+      select: { teamId: true }
+    })
+    const teamIds = registrations.map(r => r.teamId).filter(Boolean) as string[]
+    if (teamIds.length > 0) {
+      await prisma.teamMember.deleteMany({ where: { teamId: { in: teamIds } } })
+      await prisma.team.deleteMany({ where: { id: { in: teamIds } } })
+    }
     await prisma.tournamentRegistration.deleteMany({ where: { tournamentId: id } })
     await prisma.tournament.delete({ where: { id } })
 

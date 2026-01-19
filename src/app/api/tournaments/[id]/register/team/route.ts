@@ -72,13 +72,8 @@ export async function POST(
       return NextResponse.json({ message: 'Certains membres sélectionnés n\'appartiennent pas à l\'équipe' }, { status: 400 })
     }
 
-    // Si l'équipe n'est pas encore liée à ce tournoi, la lier
-    if (team.tournamentId !== tournamentId) {
-      await prisma.team.update({
-        where: { id: teamId },
-        data: { tournamentId }
-      })
-    }
+    // S'assurer que l'équipe est inscrite au tournoi (via TournamentRegistration)
+    // Pas besoin de lier directement l'équipe au tournoi
 
     // Vérifier les contraintes de taille
     const participantCount = participantMemberIds.length

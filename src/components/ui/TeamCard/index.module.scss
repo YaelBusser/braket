@@ -107,11 +107,18 @@
   background: vars.$bg-dark-tertiary;
   flex-shrink: 0;
   
-  img {
+  img,
+  :global(img) {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
+}
+
+.teamLogoImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .teamLogoPlaceholder {

@@ -27,12 +27,16 @@ export async function POST(
         members: {
           where: { userId, isCaptain: true }
         },
-        tournament: {
-          select: {
-            id: true,
-            name: true,
-            status: true,
-            teamMaxSize: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                name: true,
+                status: true,
+                teamMaxSize: true
+              }
+            }
           }
         }
       }
@@ -43,15 +47,16 @@ export async function POST(
       return NextResponse.json({ message: 'Vous n\'êtes pas le chef de cette équipe' }, { status: 403 })
     }
 
-    // Vérifier que le tournoi est encore ouvert aux inscriptions
-    if (team.tournament && team.tournament.status !== 'REG_OPEN') {
-      return NextResponse.json({ message: 'Impossible d\'inviter après le début du tournoi' }, { status: 400 })
-    }
-
-    // Vérifier la taille maximale
-    const currentMembers = await prisma.teamMember.count({ where: { teamId } })
-    if (team.tournament?.teamMaxSize && currentMembers >= team.tournament.teamMaxSize) {
-      return NextResponse.json({ message: 'Équipe complète' }, { status: 400 })
+    // Vérifier que les tournois sont encore ouverts aux inscriptions
+    const activeRegistrations = team.registrations.filter(r => r.tournament.status === 'REG_OPEN')
+    if (activeRegistrations.length > 0) {
+      // Vérifier la taille maximale pour chaque tournoi actif
+      const currentMembers = await prisma.teamMember.count({ where: { teamId } })
+      for (const reg of activeRegistrations) {
+        if (reg.tournament.teamMaxSize && currentMembers >= reg.tournament.teamMaxSize) {
+          return NextResponse.json({ message: 'Équipe complète pour ce tournoi' }, { status: 400 })
+        }
+      }
     }
 
     // Vérifier si l'utilisateur est déjà membre
@@ -62,14 +67,22 @@ export async function POST(
       return NextResponse.json({ message: 'L\'utilisateur est déjà membre de l\'équipe' }, { status: 400 })
     }
 
-    // Vérifier si l'utilisateur est déjà dans une autre équipe du même tournoi
-    if (team.tournament) {
-      const inOtherTeam = await prisma.teamMember.findFirst({
-        where: {
-          userId: invitedUserId,
-          team: { tournamentId: team.tournament.id }
+    // Vérifier si l'utilisateur est déjà dans une autre équipe des mêmes tournois
+    if (activeRegistrations.length > 0) {
+      const tournamentIds = activeRegistrations.map(r => r.tournament.id)
+      const userTeams = await prisma.teamMember.findMany({
+        where: { userId: invitedUserId },
+        include: {
+          team: {
+            include: {
+              registrations: {
+                where: { tournamentId: { in: tournamentIds } }
+              }
+            }
+          }
         }
       })
+      const inOtherTeam = userTeams.some(tm => tm.team.registrations.length > 0)
       if (inOtherTeam) {
         return NextResponse.json({ message: 'L\'utilisateur fait déjà partie d\'une autre équipe de ce tournoi' }, { status: 400 })
       }
@@ -112,10 +125,14 @@ export async function POST(
           select: {
             id: true,
             name: true,
-            tournament: {
-              select: {
-                id: true,
-                name: true
+            registrations: {
+              include: {
+                tournament: {
+                  select: {
+                    id: true,
+                    name: true
+                  }
+                }
               }
             }
           }
@@ -130,7 +147,7 @@ export async function POST(
           userId: invitedUserId,
           type: 'team_invite',
           title: 'Invitation à rejoindre une équipe',
-          message: `Vous avez été invité à rejoindre l'équipe "${team.name}"${team.tournament ? ` pour le tournoi "${team.tournament.name}"` : ''}`,
+          message: `Vous avez été invité à rejoindre l'équipe "${team.name}"${activeRegistrations.length > 0 ? ` pour le tournoi "${activeRegistrations[0].tournament.name}"` : ''}`,
           link: `/teams/${teamId}?invitation=${invitation.id}`
         }
       })
@@ -170,10 +187,14 @@ export async function DELETE(
         members: {
           where: { userId, isCaptain: true }
         },
-        tournament: {
-          select: {
-            id: true,
-            status: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                status: true
+              }
+            }
           }
         }
       }
@@ -184,8 +205,9 @@ export async function DELETE(
       return NextResponse.json({ message: 'Vous n\'êtes pas le chef de cette équipe' }, { status: 403 })
     }
 
-    // Vérifier que le tournoi n'a pas commencé
-    if (team.tournament && team.tournament.status !== 'REG_OPEN') {
+    // Vérifier que les tournois n'ont pas commencé
+    const activeRegistrations = team.registrations.filter(r => r.tournament.status !== 'REG_OPEN')
+    if (activeRegistrations.length > 0) {
       return NextResponse.json({ message: 'Impossible de retirer un membre après le début du tournoi' }, { status: 400 })
     }
 

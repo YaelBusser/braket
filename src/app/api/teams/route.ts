@@ -12,18 +12,14 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || ''
     let tournamentId: string | undefined
     let name: string | undefined
-    let game: string | undefined
     let description: string | undefined
-    let gameId: string | undefined
     let avatarUrl: string | undefined
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
       tournamentId = formData.get('tournamentId') as string | undefined
       name = formData.get('name') as string | undefined
-      game = formData.get('game') as string | undefined
       description = formData.get('description') as string | undefined
-      gameId = formData.get('gameId') as string | undefined
       const avatarFile = formData.get('avatar') as File | null
 
       if (avatarFile && typeof avatarFile === 'object') {
@@ -61,31 +57,13 @@ export async function POST(request: NextRequest) {
       const body = await request.json()
       tournamentId = body.tournamentId
       name = body.name
-      game = body.game
       description = body.description
-      gameId = body.gameId
     }
     
     // Si c'est une création d'équipe indépendante (pas liée à un tournoi)
     if (!tournamentId) {
       if (!name) {
         return NextResponse.json({ message: 'Le nom de l\'équipe est requis' }, { status: 400 })
-      }
-
-      // Si un jeu est spécifié, vérifier qu'il n'y a pas déjà une équipe pour ce jeu
-      if (game) {
-        const existingTeam = await prisma.team.findFirst({
-          where: {
-            game: game,
-            members: {
-              some: { userId }
-            }
-          }
-        })
-
-        if (existingTeam) {
-          return NextResponse.json({ message: 'Vous avez déjà une équipe pour ce jeu' }, { status: 400 })
-        }
       }
 
       const teamDataIndep: any = {
@@ -96,12 +74,6 @@ export async function POST(request: NextRequest) {
         }
       }
       
-      if (game) {
-        teamDataIndep.game = game
-      }
-      if (gameId) {
-        teamDataIndep.gameId = gameId.toString()
-      }
       if (avatarUrl) {
         teamDataIndep.avatarUrl = avatarUrl
       }
@@ -170,17 +142,25 @@ export async function POST(request: NextRequest) {
     // L'inscription se fera après, et nécessitera d'être dans une équipe
 
     // un utilisateur ne peut appartenir qu'à UNE équipe pour ce tournoi
-    const alreadyInTournament = await prisma.teamMember.findFirst({
-      where: { userId, team: { tournamentId } },
-      include: { team: true }
+    const userTeams = await prisma.teamMember.findMany({
+      where: { userId },
+      include: {
+        team: {
+          include: {
+            registrations: {
+              where: { tournamentId }
+            }
+          }
+        }
+      }
     })
+    const alreadyInTournament = userTeams.some(tm => tm.team.registrations.length > 0)
     if (alreadyInTournament) {
       return NextResponse.json({ message: 'Vous faites déjà partie d\'une équipe de ce tournoi' }, { status: 400 })
     }
 
     const teamData: any = {
       name,
-      tournamentId,
       members: {
         create: { userId, isCaptain: true }
       }
@@ -232,12 +212,16 @@ export async function GET(request: NextRequest) {
               }
             }
           },
-          tournament: {
-            select: {
-              id: true,
-              name: true,
-              game: true,
-              status: true
+          registrations: {
+            include: {
+              tournament: {
+                select: {
+                  id: true,
+                  name: true,
+                  game: true,
+                  status: true
+                }
+              }
             }
           }
         },
@@ -247,15 +231,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(teams)
     }
     
-    // Recherche par nom (logique existante)
-    if (!q.trim() || q.trim().length < 2) {
-      return NextResponse.json({ teams: [] })
-    }
+    // Si recherche par nom
+    if (q.trim() && q.trim().length >= 2) {
 
+      const teams = await prisma.team.findMany({
+        where: {
+          name: { contains: q }
+        },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  pseudo: true,
+                  avatarUrl: true
+                }
+              }
+            }
+          },
+          registrations: {
+            include: {
+              tournament: {
+                select: {
+                  id: true,
+                  name: true,
+                  game: true
+                }
+              }
+            }
+          }
+        },
+        take: 20,
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return NextResponse.json({ teams })
+    }
+    
+    // Par défaut, retourner toutes les équipes (publique)
     const teams = await prisma.team.findMany({
-      where: {
-        name: { contains: q }
-      },
       include: {
         members: {
           include: {
@@ -268,15 +283,20 @@ export async function GET(request: NextRequest) {
             }
           }
         },
-        tournament: {
-          select: {
-            id: true,
-            name: true,
-            game: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                name: true,
+                game: true,
+                status: true
+              }
+            }
           }
         }
       },
-      take: 20,
+      take: 50,
       orderBy: { createdAt: 'desc' }
     })
 

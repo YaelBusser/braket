@@ -11,7 +11,7 @@ import { useRouter } from 'next/navigation'
 import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
-import { Tabs, ContentWithTabs, TournamentPageSkeleton, TeamCard } from '../../../components/ui'
+import { Tabs, ContentWithTabs, TournamentPageSkeleton, TeamCard, Modal, type ModalButton } from '../../../components/ui'
 
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
@@ -604,7 +604,7 @@ function TournamentView() {
                             style={{
                               width: '32px',
                               height: '32px',
-                              objectFit: 'contain'
+                              objectFit: 'cover'
                             }}
                           />
                         ) : (
@@ -1493,107 +1493,89 @@ function TournamentView() {
       </ContentWithTabs>
 
       {/* Modale de confirmation de désinscription */}
-      {showUnregisterModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowUnregisterModal(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>Confirmer la désinscription</h2>
-              <button className={styles.modalClose} onClick={() => setShowUnregisterModal(false)}>
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              {myTeam ? (
-                <>
-                  <div className={styles.warningBox}>
-                    <p>
-                      Vous êtes sur le point de désinscrire <strong>toute votre équipe</strong> "{myTeam.name}" de ce tournoi.
-                    </p>
-                    <p>
-                      Tous les membres de l'équipe ({myTeam.members?.length || 0} membre{myTeam.members?.length > 1 ? 's' : ''}) seront désinscrits.
-                    </p>
-                    <p className={styles.warningText}>
-                      ⚠️ Cette action est irréversible. Vous pourrez vous réinscrire plus tard si le tournoi le permet.
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <p>Êtes-vous sûr de vouloir vous désinscrire de ce tournoi ?</p>
-              )}
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonCancel}`}
-                onClick={() => setShowUnregisterModal(false)}
-              >
-                Annuler
-              </button>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonConfirm}`}
-                onClick={async () => {
-                  setShowUnregisterModal(false)
-                  const res = await fetch(`/api/tournaments/${id}/register`, { method: 'DELETE' })
-                  const data = await res.json().catch(() => ({}))
+      <Modal
+        isOpen={showUnregisterModal}
+        onClose={() => setShowUnregisterModal(false)}
+        title="Confirmer la désinscription"
+        footer={[
+          { label: 'Annuler', onClick: () => setShowUnregisterModal(false), variant: 'cancel' },
+          { 
+            label: 'Confirmer la désinscription', 
+            onClick: async () => {
+              setShowUnregisterModal(false)
+              const res = await fetch(`/api/tournaments/${id}/register`, { method: 'DELETE' })
+              const data = await res.json().catch(() => ({}))
+              
+              if (res.ok) {
+                const uid = (session?.user as any)?.id
+                
+                // Recharger les données du tournoi AVANT de mettre à jour l'état
+                const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+                const regData = await regRes.json()
+                
+                // Mettre à jour les registrations et le tournament en premier
+                if (regData.tournament) {
+                  const updatedRegistrations = regData.tournament.registrations || []
+                  setRegistrations(updatedRegistrations)
+                  setTournament((prev: any) => prev ? { ...prev, registrations: updatedRegistrations } : null)
                   
-                  if (res.ok) {
-                    const uid = (session?.user as any)?.id
-                    
-                    // Recharger les données du tournoi AVANT de mettre à jour l'état
-                    const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
-                    const regData = await regRes.json()
-                    
-                    // Mettre à jour les registrations et le tournament en premier
-                    if (regData.tournament) {
-                      const updatedRegistrations = regData.tournament.registrations || []
-                      setRegistrations(updatedRegistrations)
-                      setTournament((prev: any) => prev ? { ...prev, registrations: updatedRegistrations } : null)
-                      
-                      // Mettre à jour isRegistered basé sur les nouvelles données
-                      if (regData.tournament.isTeamBased) {
-                        // Pour les tournois en équipe, vérifier si l'équipe de l'utilisateur est inscrite
-                        const teamsRes = await fetch(`/api/teams/${id}`)
-                        const teamsData = await teamsRes.json()
-                        if (teamsData.teams) {
-                          setTeams(teamsData.teams)
-                          const userTeamId = teamsData.teams.find((t: any) => t.members?.some((m: any) => m.user?.id === uid))?.id
-                          setIsRegistered(userTeamId ? updatedRegistrations.some((r: any) => r.teamId === userTeamId) : false)
-                        } else {
-                          setIsRegistered(false)
-                        }
-                      } else {
-                        // Pour les tournois solo, vérifier l'inscription individuelle
-                        setIsRegistered(updatedRegistrations.some((r: any) => r.userId === uid))
-                      }
+                  // Mettre à jour isRegistered basé sur les nouvelles données
+                  if (regData.tournament.isTeamBased) {
+                    // Pour les tournois en équipe, vérifier si l'équipe de l'utilisateur est inscrite
+                    const teamsRes = await fetch(`/api/teams/${id}`)
+                    const teamsData = await teamsRes.json()
+                    if (teamsData.teams) {
+                      setTeams(teamsData.teams)
+                      const userTeamId = teamsData.teams.find((t: any) => t.members?.some((m: any) => m.user?.id === uid))?.id
+                      setIsRegistered(userTeamId ? updatedRegistrations.some((r: any) => r.teamId === userTeamId) : false)
                     } else {
                       setIsRegistered(false)
                     }
-                    
-                    // Si toute l'équipe a été désinscrite
-                    if (data.unregisteredTeam && myTeam) {
-                      notify({ 
-                        type: 'success', 
-                        message: `✅ Toute l'équipe "${data.teamName}" a été désinscrite (${data.unregisteredCount} membre${data.unregisteredCount > 1 ? 's' : ''}).` 
-                      })
-                    } else {
-                      // Désinscription individuelle (tournois solo)
-                      notify({ type: 'success', message: '✅ Désinscription réussie. Vous pouvez vous réinscrire si vous le souhaitez.' })
-                    }
-
-                    // Déclencher un événement pour rafraîchir la sidebar
-                    window.dispatchEvent(new CustomEvent('tournament-unregistration-changed'))
                   } else {
-                    notify({ type: 'error', message: data.message || '❌ Impossible de se désinscrire. Vérifiez les conditions du tournoi.' })
+                    // Pour les tournois solo, vérifier l'inscription individuelle
+                    setIsRegistered(updatedRegistrations.some((r: any) => r.userId === uid))
                   }
-                }}
-              >
-                Confirmer la désinscription
-              </button>
-            </div>
+                } else {
+                  setIsRegistered(false)
+                }
+                
+                // Si toute l'équipe a été désinscrite
+                if (data.unregisteredTeam && myTeam) {
+                  notify({ 
+                    type: 'success', 
+                    message: `✅ Toute l'équipe "${data.teamName}" a été désinscrite (${data.unregisteredCount} membre${data.unregisteredCount > 1 ? 's' : ''}).` 
+                  })
+                } else {
+                  // Désinscription individuelle (tournois solo)
+                  notify({ type: 'success', message: '✅ Désinscription réussie. Vous pouvez vous réinscrire si vous le souhaitez.' })
+                }
+
+                // Déclencher un événement pour rafraîchir la sidebar
+                window.dispatchEvent(new CustomEvent('tournament-unregistration-changed'))
+              } else {
+                notify({ type: 'error', message: data.message || '❌ Impossible de se désinscrire. Vérifiez les conditions du tournoi.' })
+              }
+            }, 
+            variant: 'danger' 
+          }
+        ]}
+      >
+        {myTeam ? (
+          <div className={styles.warningBox}>
+            <p>
+              Vous êtes sur le point de désinscrire <strong>toute votre équipe</strong> "{myTeam.name}" de ce tournoi.
+            </p>
+            <p>
+              Tous les membres de l'équipe ({myTeam.members?.length || 0} membre{myTeam.members?.length > 1 ? 's' : ''}) seront désinscrits.
+            </p>
+            <p className={styles.warningText}>
+              ⚠️ Cette action est irréversible. Vous pourrez vous réinscrire plus tard si le tournoi le permet.
+            </p>
           </div>
-        </div>
-      )}
+        ) : (
+          <p>Êtes-vous sûr de vouloir vous désinscrire de ce tournoi ?</p>
+        )}
+      </Modal>
     </div>
   )
 }

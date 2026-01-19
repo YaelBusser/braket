@@ -239,7 +239,7 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
         {/* Logo du jeu en haut à gauche */}
         <div className={styles.gameLogoOverlay}>
           {gameLogoUrl ? (
-            <Image src={gameLogoUrl} alt={gameName} width={40} height={40} loading="lazy" />
+            <Image src={gameLogoUrl} alt={gameName} width={40} height={40} loading="lazy" style={{ objectFit: 'cover' }} />
           ) : (
             <div className={styles.gameIconPlaceholder}>
               {getGameIcon()}

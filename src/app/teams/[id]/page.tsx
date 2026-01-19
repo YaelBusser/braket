@@ -7,7 +7,7 @@ import { useNotification } from '../../../components/providers/notification-prov
 import { useAuthModal } from '../../../components/AuthModal/AuthModalContext'
 import Button from '../../../components/ui/Button'
 import Link from 'next/link'
-import { Tabs, ContentWithTabs, TournamentCard } from '../../../components/ui'
+import { Tabs, ContentWithTabs, TournamentCard, Modal, type ModalButton } from '../../../components/ui'
 import SettingsIcon from '../../../components/icons/SettingsIcon'
 import styles from './page.module.scss'
 import profileStyles from '../../profile/page.module.scss'
@@ -110,20 +110,14 @@ function TeamView({ teamId }: { teamId: string }) {
   const [showJoinTeamModal, setShowJoinTeamModal] = useState(false)
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      try { localStorage.setItem('lt_returnTo', `/teams/${teamId}`) } catch {}
-      openAuthModal('login')
-      router.push('/')
-      return
-    }
     if (teamId) {
       loadTeamData()
     }
-  }, [teamId, status, router, openAuthModal])
+  }, [teamId])
 
-  // Vérifier si on arrive depuis une notification avec une invitation
+  // Vérifier si on arrive depuis une notification avec une invitation (seulement si connecté)
   useEffect(() => {
-    if (typeof window !== 'undefined' && team && myInvitations.length > 0 && !showInvitationModal) {
+    if (session?.user && typeof window !== 'undefined' && team && myInvitations.length > 0 && !showInvitationModal) {
       const urlParams = new URLSearchParams(window.location.search)
       const invitationId = urlParams.get('invitation')
       if (invitationId) {
@@ -136,7 +130,7 @@ function TeamView({ teamId }: { teamId: string }) {
         }
       }
     }
-  }, [team, myInvitations, teamId, showInvitationModal])
+  }, [session, team, myInvitations, teamId, showInvitationModal])
 
   const loadTeamData = async () => {
     setLoading(true)
@@ -323,10 +317,6 @@ function TeamView({ teamId }: { teamId: string }) {
     )
   }
 
-  if (status === 'unauthenticated') {
-    return null
-  }
-
   if (!team) {
     return (
       <div className={styles.error}>
@@ -376,7 +366,7 @@ function TeamView({ teamId }: { teamId: string }) {
                 style={{
                   padding: '20px',
                   background: '#1a1f2e',
-                  objectFit: 'contain'
+                  objectFit: 'cover'
                 }}
               />
             )}
@@ -394,12 +384,23 @@ function TeamView({ teamId }: { teamId: string }) {
             
             {/* Section droite avec bouton */}
             <div className={styles.bannerRight}>
-              {!isMember && (
+              {session?.user && !isMember && (
                 <Button 
                   variant="primary"
                   onClick={openJoinTeamModal}
                 >
                   Demander à rejoindre
+                </Button>
+              )}
+              {!session?.user && (
+                <Button 
+                  variant="primary"
+                  onClick={() => {
+                    try { localStorage.setItem('lt_returnTo', `/teams/${teamId}`) } catch {}
+                    openAuthModal('login')
+                  }}
+                >
+                  Se connecter pour rejoindre
                 </Button>
               )}
             </div>
@@ -698,156 +699,120 @@ function TeamView({ teamId }: { teamId: string }) {
       </ContentWithTabs>
 
       {/* Modale de demande pour rejoindre l'équipe */}
-      {showJoinTeamModal && team && (
-        <div className={styles.modalOverlay} onClick={closeJoinTeamModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>Demander à rejoindre l'équipe</h2>
-              <button className={styles.modalClose} onClick={closeJoinTeamModal}>
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.invitationTeamInfo}>
-                {team.avatarUrl ? (
-                  <img src={team.avatarUrl} alt={team.name} className={styles.invitationTeamAvatar} />
-                ) : (
-                  <div className={styles.invitationTeamAvatarPlaceholder}>
-                    👥
-                  </div>
-                )}
-                <div>
-                  <h3>{team.name}</h3>
-                  {team.tournaments && team.tournaments.length > 0 && (
-                    <p className={styles.invitationTeamTournament}>
-                      {team.tournaments.length} tournoi{team.tournaments.length > 1 ? 's' : ''}
-                    </p>
-                  )}
-                </div>
+      {team && (
+        <Modal
+          isOpen={showJoinTeamModal}
+          onClose={closeJoinTeamModal}
+          title="Demander à rejoindre l'équipe"
+          footer={[
+            { label: 'Annuler', onClick: closeJoinTeamModal, variant: 'cancel' },
+            { label: 'Faire une demande', onClick: handleJoinTeam, variant: 'primary' }
+          ]}
+        >
+          <div className={styles.invitationTeamInfo}>
+            {team.avatarUrl ? (
+              <img src={team.avatarUrl} alt={team.name} className={styles.invitationTeamAvatar} />
+            ) : (
+              <div className={styles.invitationTeamAvatarPlaceholder}>
+                👥
               </div>
-
-              {team.description && (
-                <div className={styles.invitationDescription}>
-                  <p><strong>Description de l'équipe :</strong></p>
-                  <p>{team.description}</p>
-                </div>
-              )}
-
-              <div className={styles.invitationInvitedBy}>
-                <p><strong>Membres actuels :</strong> {team.members.length} membre{team.members.length > 1 ? 's' : ''}</p>
-              </div>
-
-              <div style={{ 
-                marginTop: '1rem', 
-                padding: '1rem', 
-                background: 'rgba(255, 0, 140, 0.1)', 
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 0, 140, 0.2)'
-              }}>
-                <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.875rem' }}>
-                  Votre demande sera envoyée au capitaine de l'équipe. Vous serez notifié lorsque votre demande sera acceptée ou refusée.
+            )}
+            <div>
+              <h3>{team.name}</h3>
+              {team.tournaments && team.tournaments.length > 0 && (
+                <p className={styles.invitationTeamTournament}>
+                  {team.tournaments.length} tournoi{team.tournaments.length > 1 ? 's' : ''}
                 </p>
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonReject}`}
-                onClick={closeJoinTeamModal}
-              >
-                Annuler
-              </button>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonAccept}`}
-                onClick={handleJoinTeam}
-              >
-                Faire une demande
-              </button>
+              )}
             </div>
           </div>
-        </div>
+
+          {team.description && (
+            <div className={styles.invitationDescription}>
+              <p><strong>Description de l'équipe :</strong></p>
+              <p>{team.description}</p>
+            </div>
+          )}
+
+          <div className={styles.invitationInvitedBy}>
+            <p><strong>Membres actuels :</strong> {team.members.length} membre{team.members.length > 1 ? 's' : ''}</p>
+          </div>
+
+          <div style={{ 
+            marginTop: '1rem', 
+            padding: '1rem', 
+            background: 'rgba(255, 0, 140, 0.1)', 
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 0, 140, 0.2)'
+          }}>
+            <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.8)', fontSize: '0.875rem' }}>
+              Votre demande sera envoyée au capitaine de l'équipe. Vous serez notifié lorsque votre demande sera acceptée ou refusée.
+            </p>
+          </div>
+        </Modal>
       )}
 
       {/* Modale d'invitation */}
-      {showInvitationModal && selectedInvitation && (
-        <div className={styles.modalOverlay} onClick={closeInvitationModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>Invitation à rejoindre l'équipe</h2>
-              <button className={styles.modalClose} onClick={closeInvitationModal}>
-                ×
-              </button>
-            </div>
-            
-            <div className={styles.modalBody}>
-              <div className={styles.invitationTeamInfo}>
-                {team?.avatarUrl ? (
-                  <img src={team.avatarUrl} alt={team.name} className={styles.invitationTeamAvatar} />
-                ) : (
-                  <div className={styles.invitationTeamAvatarPlaceholder}>
-                    👥
-                  </div>
-                )}
-                <div>
-                  <h3>{team?.name}</h3>
-                  {team?.tournaments && team.tournaments.length > 0 && (
-                    <p className={styles.invitationTeamTournament}>
-                      {team.tournaments.length} tournoi{team.tournaments.length > 1 ? 's' : ''}
-                    </p>
-                  )}
-                </div>
+      {selectedInvitation && (
+        <Modal
+          isOpen={showInvitationModal}
+          onClose={closeInvitationModal}
+          title="Invitation à rejoindre l'équipe"
+          footer={[
+            { label: 'Refuser', onClick: () => handleRejectInvitation(selectedInvitation.id), variant: 'cancel' },
+            { label: 'Accepter', onClick: () => handleAcceptInvitation(selectedInvitation.id), variant: 'primary' }
+          ]}
+        >
+          <div className={styles.invitationTeamInfo}>
+            {team?.avatarUrl ? (
+              <img src={team.avatarUrl} alt={team.name} className={styles.invitationTeamAvatar} />
+            ) : (
+              <div className={styles.invitationTeamAvatarPlaceholder}>
+                👥
               </div>
-
-              <div className={styles.invitationInvitedBy}>
-                <p>Vous avez été invité par :</p>
-                <div className={styles.invitationInviterInfo}>
-                  {selectedInvitation.invitedBy.avatarUrl ? (
-                    <img 
-                      src={selectedInvitation.invitedBy.avatarUrl} 
-                      alt={selectedInvitation.invitedBy.pseudo} 
-                      className={styles.invitationInviterAvatar} 
-                    />
-                  ) : (
-                    <div className={styles.invitationInviterAvatarPlaceholder}>
-                      {selectedInvitation.invitedBy.pseudo.charAt(0)}
-                    </div>
-                  )}
-                  <span>{selectedInvitation.invitedBy.pseudo}</span>
-                </div>
-                <p className={styles.invitationDate}>
-                  Le {new Date(selectedInvitation.createdAt).toLocaleDateString('fr-FR', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                  })}
+            )}
+            <div>
+              <h3>{team?.name}</h3>
+              {team?.tournaments && team.tournaments.length > 0 && (
+                <p className={styles.invitationTeamTournament}>
+                  {team.tournaments.length} tournoi{team.tournaments.length > 1 ? 's' : ''}
                 </p>
-              </div>
-
-              {team?.description && (
-                <div className={styles.invitationDescription}>
-                  <p><strong>Description de l'équipe :</strong></p>
-                  <p>{team.description}</p>
-                </div>
               )}
             </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonReject}`}
-                onClick={() => handleRejectInvitation(selectedInvitation.id)}
-              >
-                Refuser
-              </button>
-              <button
-                className={`${styles.modalButton} ${styles.modalButtonAccept}`}
-                onClick={() => handleAcceptInvitation(selectedInvitation.id)}
-              >
-                Accepter
-              </button>
-            </div>
           </div>
-        </div>
+
+          <div className={styles.invitationInvitedBy}>
+            <p>Vous avez été invité par :</p>
+            <div className={styles.invitationInviterInfo}>
+              {selectedInvitation.invitedBy.avatarUrl ? (
+                <img 
+                  src={selectedInvitation.invitedBy.avatarUrl} 
+                  alt={selectedInvitation.invitedBy.pseudo} 
+                  className={styles.invitationInviterAvatar} 
+                />
+              ) : (
+                <div className={styles.invitationInviterAvatarPlaceholder}>
+                  {selectedInvitation.invitedBy.pseudo.charAt(0)}
+                </div>
+              )}
+              <span>{selectedInvitation.invitedBy.pseudo}</span>
+            </div>
+            <p className={styles.invitationDate}>
+              Le {new Date(selectedInvitation.createdAt).toLocaleDateString('fr-FR', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+              })}
+            </p>
+          </div>
+
+          {team?.description && (
+            <div className={styles.invitationDescription}>
+              <p><strong>Description de l'équipe :</strong></p>
+              <p>{team.description}</p>
+            </div>
+          )}
+        </Modal>
       )}
 
     </div>
