@@ -20,6 +20,7 @@ export interface BracketMatch {
 /**
  * Génère un arbre d'élimination directe pour un tournoi
  * Gère les BYE automatiquement pour les brackets incomplets
+ * Crée tous les rounds du bracket avec des équipes placeholder pour les matchs futurs
  */
 export async function generateSingleEliminationBracket(
   tournamentId: string,
@@ -29,7 +30,7 @@ export async function generateSingleEliminationBracket(
     throw new Error('Au moins 2 participants requis pour un tournoi')
   }
 
-  // Mélanger les participants (Fisher-Yates shuffle)
+  // Mélanger les participants (Fisher-Yates shuffle) pour un matchmaking aléatoire
   const shuffledEntrants = [...entrants]
   for (let i = shuffledEntrants.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
@@ -42,11 +43,32 @@ export async function generateSingleEliminationBracket(
     bracketSize *= 2
   }
 
+  const totalRounds = Math.ceil(Math.log2(bracketSize))
   const matchesPerRound1 = bracketSize / 2
   const byes = bracketSize - shuffledEntrants.length
   
   const matches: BracketMatch[] = []
   const immediateWinners: string[] = []
+
+  // Créer ou récupérer une équipe placeholder "À déterminer" globale pour les matchs non encore déterminés
+  let tbdTeam = await prisma.team.findUnique({
+    where: { id: 'tbd-global' }
+  })
+  
+  if (!tbdTeam) {
+    tbdTeam = await prisma.team.create({
+      data: {
+        id: 'tbd-global',
+        name: 'À déterminer'
+      }
+    })
+  } else if (tbdTeam.name === 'TBD (À déterminer)') {
+    // Mettre à jour le nom si l'ancien format existe
+    tbdTeam = await prisma.team.update({
+      where: { id: 'tbd-global' },
+      data: { name: 'À déterminer' }
+    })
+  }
 
   // Distribution des équipes avec gestion des BYE
   // Les BYE sont placés de manière à ce que les équipes passent directement au round 2
@@ -97,41 +119,109 @@ export async function generateSingleEliminationBracket(
     // Si les deux sont null, c'est un slot vide (ne devrait pas arriver)
   }
 
-  // Si des équipes ont des BYE, créer les matchs du round 2 avec ces équipes
-  if (immediateWinners.length > 0) {
-    // Les gagnants immédiats sont placés dans le round 2
-    // Ils attendent les gagnants des matchs du round 1
-    for (let i = 0; i < immediateWinners.length; i += 2) {
-      const teamA = immediateWinners[i]
-      const teamB = immediateWinners[i + 1]
-      
-      if (teamA && teamB) {
-        // Deux équipes avec BYE se rencontrent au round 2
+  // Créer tous les matchs des rounds suivants avec des équipes placeholder
+  // Les équipes seront mises à jour quand les matchs précédents seront terminés
+  for (let round = 2; round <= totalRounds; round++) {
+    const matchesInRound = bracketSize / Math.pow(2, round)
+    
+    for (let pos = 0; pos < matchesInRound; pos++) {
+      // Pour le round 2, gérer les BYE
+      if (round === 2 && immediateWinners.length > 0) {
+        const byeIndex = pos * 2
+        const teamA = immediateWinners[byeIndex]
+        const teamB = immediateWinners[byeIndex + 1]
+        
+        if (teamA && teamB) {
+          // Deux équipes avec BYE se rencontrent
+          const match = await prisma.match.create({
+            data: {
+              tournamentId,
+              round: 2,
+              teamAId: teamA,
+              teamBId: teamB,
+              status: 'PENDING'
+            }
+          })
+          
+          matches.push({
+            id: match.id,
+            round: 2,
+            position: pos,
+            teamAId: match.teamAId,
+            teamBId: match.teamBId,
+            winnerTeamId: undefined,
+            status: 'PENDING'
+          })
+        } else if (teamA) {
+          // Une seule équipe avec BYE, elle attend un gagnant du round 1
+          const match = await prisma.match.create({
+            data: {
+              tournamentId,
+              round: 2,
+              teamAId: teamA,
+              teamBId: tbdTeam.id, // Placeholder pour le gagnant du round 1
+              status: 'PENDING'
+            }
+          })
+          
+          matches.push({
+            id: match.id,
+            round: 2,
+            position: pos,
+            teamAId: match.teamAId,
+            teamBId: match.teamBId,
+            winnerTeamId: undefined,
+            status: 'PENDING'
+          })
+        } else {
+          // Pas d'équipe avec BYE à cette position, créer un match placeholder
+          const match = await prisma.match.create({
+            data: {
+              tournamentId,
+              round: 2,
+              teamAId: tbdTeam.id,
+              teamBId: tbdTeam.id,
+              status: 'PENDING'
+            }
+          })
+          
+          matches.push({
+            id: match.id,
+            round: 2,
+            position: pos,
+            teamAId: match.teamAId,
+            teamBId: match.teamBId,
+            winnerTeamId: undefined,
+            status: 'PENDING'
+          })
+        }
+      } else {
+        // Pour les rounds 3+, créer des matchs avec des placeholders
+        // Ces équipes seront mises à jour quand les matchs précédents seront terminés
         const match = await prisma.match.create({
           data: {
             tournamentId,
-            round: 2,
-            teamAId: teamA,
-            teamBId: teamB,
+            round,
+            teamAId: tbdTeam.id,
+            teamBId: tbdTeam.id,
             status: 'PENDING'
           }
         })
         
         matches.push({
           id: match.id,
-          round: 2,
-          position: Math.floor(i / 2),
+          round,
+          position: pos,
           teamAId: match.teamAId,
           teamBId: match.teamBId,
           winnerTeamId: undefined,
           status: 'PENDING'
         })
       }
-      // Si une seule équipe, elle attend un gagnant du round 1
     }
   }
 
-  console.log(`Bracket généré: ${matches.length} matchs créés, ${immediateWinners.length} BYE`)
+  console.log(`Bracket généré: ${matches.length} matchs créés (${totalRounds} rounds), ${immediateWinners.length} BYE`)
   
   return { matches, immediateWinners }
 }
@@ -163,8 +253,16 @@ export async function validateTournamentStart(tournamentId: string): Promise<{
   const tournament = await prisma.tournament.findUnique({
     where: { id: tournamentId },
     include: {
-      teams: { include: { members: true } },
-      registrations: { include: { user: true } }
+      registrations: { 
+        include: { 
+          user: true,
+          team: {
+            include: {
+              members: true
+            }
+          }
+        } 
+      }
     }
   })
 
@@ -172,8 +270,8 @@ export async function validateTournamentStart(tournamentId: string): Promise<{
     return { canStart: false, reason: 'Tournoi introuvable', participantCount: 0 }
   }
 
-  if (tournament.status !== 'REG_OPEN') {
-    return { canStart: false, reason: 'Inscriptions fermées', participantCount: 0 }
+  if (tournament.status !== 'REG_OPEN' && tournament.status !== 'REG_CLOSED') {
+    return { canStart: false, reason: 'Le tournoi a déjà commencé ou est terminé', participantCount: 0 }
   }
 
   // Note: on permet de démarrer même après la deadline, c'est juste un indicateur
@@ -182,14 +280,24 @@ export async function validateTournamentStart(tournamentId: string): Promise<{
 
   if (tournament.isTeamBased) {
     const minSize = tournament.teamMinSize || 1
-    const validTeams = tournament.teams.filter(team => team.members.length >= minSize)
+    // Récupérer les équipes inscrites via les registrations
+    const teamRegistrations = tournament.registrations.filter(reg => reg.teamId !== null)
+    const validTeams = teamRegistrations.filter(reg => 
+      reg.team && reg.team.members.length >= minSize
+    )
     participantCount = validTeams.length
   } else {
-    participantCount = tournament.registrations.length
+    participantCount = tournament.registrations.filter(reg => reg.userId !== null).length
   }
 
-  if (participantCount < 2) {
-    return { canStart: false, reason: 'Au moins 2 participants requis', participantCount }
+  // Vérifier le minimum requis (bracketMinTeams ou au moins 2)
+  const minTeams = tournament.bracketMinTeams || 2
+  if (participantCount < minTeams) {
+    return { 
+      canStart: false, 
+      reason: `Nombre de participants insuffisant (${participantCount}/${minTeams} minimum requis)`, 
+      participantCount 
+    }
   }
 
   // Vérifier le nombre max si défini

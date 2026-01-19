@@ -6,6 +6,7 @@ import styles from './MatchNode.module.scss'
 interface Team {
   id: string
   name: string
+  avatarUrl?: string | null
   logoUrl?: string
 }
 
@@ -36,11 +37,28 @@ function MatchNode({ data }: { data: MatchNodeData }) {
 
   const teamAName = isPlaceholder ? '?' : (match.teamA?.name || '?')
   const teamBName = isPlaceholder ? '?' : (match.teamB?.name || '?')
+  
+  // Normaliser le nom pour remplacer "TBD (À déterminer)" par "À déterminer"
+  const normalizeName = (name: string) => {
+    if (name.includes('TBD') || name === 'TBD (À déterminer)') {
+      return 'À déterminer'
+    }
+    return name
+  }
+  
+  const normalizedTeamAName = normalizeName(teamAName)
+  const normalizedTeamBName = normalizeName(teamBName)
 
   // Initiales pour le logo placeholder
   const getInitials = (name: string) => {
-    if (name === '?') return '?'
+    if (name === '?' || name === 'À déterminer') return '?'
     return name.slice(0, 2).toUpperCase()
+  }
+  
+  // Récupérer l'URL du logo (avatarUrl en priorité, puis logoUrl)
+  const getTeamLogoUrl = (team: Team | null | undefined): string | null => {
+    if (!team) return null
+    return team.avatarUrl || team.logoUrl || null
   }
 
   return (
@@ -58,9 +76,17 @@ function MatchNode({ data }: { data: MatchNodeData }) {
       {/* Team A */}
       <div className={`${styles.teamSide} ${styles.teamA} ${teamAWins ? styles.winner : ''} ${teamBWins ? styles.loser : ''}`}>
         <div className={styles.teamLogo}>
-          {getInitials(teamAName)}
+          {getTeamLogoUrl(match.teamA) ? (
+            <img 
+              src={getTeamLogoUrl(match.teamA) || ''} 
+              alt={normalizedTeamAName}
+              className={styles.teamLogoImg}
+            />
+          ) : (
+            getInitials(normalizedTeamAName)
+          )}
         </div>
-        <span className={styles.teamName}>{teamAName}</span>
+        <span className={styles.teamName}>{normalizedTeamAName}</span>
       </div>
       
       {/* VS Separator */}
@@ -71,9 +97,17 @@ function MatchNode({ data }: { data: MatchNodeData }) {
       {/* Team B */}
       <div className={`${styles.teamSide} ${styles.teamB} ${teamBWins ? styles.winner : ''} ${teamAWins ? styles.loser : ''}`}>
         <div className={styles.teamLogo}>
-          {getInitials(teamBName)}
+          {getTeamLogoUrl(match.teamB) ? (
+            <img 
+              src={getTeamLogoUrl(match.teamB) || ''} 
+              alt={normalizedTeamBName}
+              className={styles.teamLogoImg}
+            />
+          ) : (
+            getInitials(normalizedTeamBName)
+          )}
         </div>
-        <span className={styles.teamName}>{teamBName}</span>
+        <span className={styles.teamName}>{normalizedTeamBName}</span>
       </div>
       
       <Handle type="source" position={Position.Right} className={styles.handle} />

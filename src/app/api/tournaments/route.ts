@@ -6,6 +6,23 @@ import fs from 'fs'
 import { promises as fsp } from 'fs'
 import path from 'path'
 
+// Helper function pour parser un nombre de manière sûre
+function parseInteger(value: string | null | undefined): number | null {
+  if (!value || typeof value !== 'string') return null
+  const trimmed = value.trim()
+  if (trimmed === '') return null
+  // Utiliser une regex pour vérifier que c'est un nombre entier
+  if (!/^\d+$/.test(trimmed)) return null
+  // Conversion manuelle
+  let result = 0
+  for (let i = 0; i < trimmed.length; i++) {
+    const digit = trimmed.charCodeAt(i) - 48 // '0' = 48
+    if (digit < 0 || digit > 9) return null
+    result = result * 10 + digit
+  }
+  return result > 0 ? result : null
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -80,25 +97,66 @@ export async function POST(request: NextRequest) {
       const teamMinSizeValue = form.get('teamMinSize')
       const teamMaxSizeValue = form.get('teamMaxSize')
       const kindStr = form.get('kind') as string | null
+      
+      console.log('API - Received teamMinSize:', teamMinSizeValue, 'type:', typeof teamMinSizeValue)
+      console.log('API - Received teamMaxSize:', teamMaxSizeValue, 'type:', typeof teamMaxSizeValue)
+      console.log('API - isTeamBased:', isTeamBasedStr)
+      
       if (isTeamBasedStr) (global as any).__tmp_isTeamBased = isTeamBasedStr === 'true'
-      if (maxParticipantsStr) (global as any).__tmp_maxParticipants = globalThis.parseInt(maxParticipantsStr, 10)
+      if (maxParticipantsStr) {
+        const parsed = parseInteger(maxParticipantsStr)
+        (global as any).__tmp_maxParticipants = parsed !== null ? parsed : undefined
+      }
       // Parser teamMinSize et teamMaxSize (vérifier que c'est une string)
       const teamMinSizeStr = typeof teamMinSizeValue === 'string' ? teamMinSizeValue : null
       const teamMaxSizeStr = typeof teamMaxSizeValue === 'string' ? teamMaxSizeValue : null
-      if (teamMinSizeStr !== null && teamMinSizeStr.trim() !== '') {
+      
+      // Conversion directe pour teamMinSize
+      if (teamMinSizeStr && typeof teamMinSizeStr === 'string' && teamMinSizeStr.trim() !== '') {
         const trimmed = teamMinSizeStr.trim()
-        const parsed = globalThis.parseInt(trimmed, 10)
-        (global as any).__tmp_teamMinSize = !globalThis.isNaN(parsed) && parsed > 0 ? parsed : null
+        if (/^\d+$/.test(trimmed)) {
+          let result = 0
+          for (let i = 0; i < trimmed.length; i++) {
+            const digit = trimmed.charCodeAt(i) - 48
+            if (digit >= 0 && digit <= 9) {
+              result = result * 10 + digit
+            } else {
+              result = 0
+              break
+            }
+          }
+          (global as any).__tmp_teamMinSize = result > 0 ? result : null
+        } else {
+          (global as any).__tmp_teamMinSize = null
+        }
       } else {
         (global as any).__tmp_teamMinSize = null
       }
-      if (teamMaxSizeStr !== null && teamMaxSizeStr.trim() !== '') {
+      
+      // Conversion directe pour teamMaxSize
+      if (teamMaxSizeStr && typeof teamMaxSizeStr === 'string' && teamMaxSizeStr.trim() !== '') {
         const trimmed = teamMaxSizeStr.trim()
-        const parsed = globalThis.parseInt(trimmed, 10)
-        (global as any).__tmp_teamMaxSize = !globalThis.isNaN(parsed) && parsed > 0 ? parsed : null
+        if (/^\d+$/.test(trimmed)) {
+          let result = 0
+          for (let i = 0; i < trimmed.length; i++) {
+            const digit = trimmed.charCodeAt(i) - 48
+            if (digit >= 0 && digit <= 9) {
+              result = result * 10 + digit
+            } else {
+              result = 0
+              break
+            }
+          }
+          (global as any).__tmp_teamMaxSize = result > 0 ? result : null
+        } else {
+          (global as any).__tmp_teamMaxSize = null
+        }
       } else {
         (global as any).__tmp_teamMaxSize = null
       }
+      
+      console.log('API - Parsed teamMinSize:', (global as any).__tmp_teamMinSize, 'from:', teamMinSizeStr)
+      console.log('API - Parsed teamMaxSize:', (global as any).__tmp_teamMaxSize, 'from:', teamMaxSizeStr)
       if (kindStr) (global as any).__tmp_kind = kindStr
       
       // Debug logs
@@ -120,20 +178,19 @@ export async function POST(request: NextRequest) {
       startDate = body?.startDate
       endDate = body?.endDate
       ;(global as any).__tmp_isTeamBased = body?.isTeamBased === true
-      ;(global as any).__tmp_maxParticipants = body?.maxParticipants ? globalThis.parseInt(String(body.maxParticipants), 10) : undefined
+      if (body?.maxParticipants) {
+        const parsed = parseInteger(String(body.maxParticipants))
+        ;(global as any).__tmp_maxParticipants = parsed !== null ? parsed : undefined
+      } else {
+        ;(global as any).__tmp_maxParticipants = undefined
+      }
       // Parser teamMinSize et teamMaxSize même si vides (retournera null si vide ou invalide)
-      if (body?.teamMinSize !== undefined && body?.teamMinSize !== null && body?.teamMinSize !== '') {
-        const parsed = globalThis.parseInt(String(body.teamMinSize), 10)
-        ;(global as any).__tmp_teamMinSize = !globalThis.isNaN(parsed) ? parsed : null
-      } else {
-        ;(global as any).__tmp_teamMinSize = null
-      }
-      if (body?.teamMaxSize !== undefined && body?.teamMaxSize !== null && body?.teamMaxSize !== '') {
-        const parsed = globalThis.parseInt(String(body.teamMaxSize), 10)
-        ;(global as any).__tmp_teamMaxSize = !globalThis.isNaN(parsed) ? parsed : null
-      } else {
-        ;(global as any).__tmp_teamMaxSize = null
-      }
+      ;(global as any).__tmp_teamMinSize = body?.teamMinSize !== undefined && body?.teamMinSize !== null && body?.teamMinSize !== '' 
+        ? parseInteger(String(body.teamMinSize)) 
+        : null
+      ;(global as any).__tmp_teamMaxSize = body?.teamMaxSize !== undefined && body?.teamMaxSize !== null && body?.teamMaxSize !== '' 
+        ? parseInteger(String(body.teamMaxSize)) 
+        : null
       registrationDeadline = body?.registrationDeadline
     }
 
@@ -177,14 +234,14 @@ export async function POST(request: NextRequest) {
     const teamMinSize = (global as any).__tmp_teamMinSize
     const teamMaxSize = (global as any).__tmp_teamMaxSize
     if (teamMinSize !== undefined && teamMinSize !== null) {
-      if (globalThis.isNaN(teamMinSize) || teamMinSize < 1) {
+      if (typeof teamMinSize !== 'number' || teamMinSize < 1) {
         return NextResponse.json({ 
           message: 'La taille minimale d\'équipe doit être au moins 1' 
         }, { status: 400 })
       }
     }
     if (teamMaxSize !== undefined && teamMaxSize !== null) {
-      if (globalThis.isNaN(teamMaxSize) || teamMaxSize < 1) {
+      if (typeof teamMaxSize !== 'number' || teamMaxSize < 1) {
         return NextResponse.json({ 
           message: 'La taille maximale d\'équipe doit être au moins 1' 
         }, { status: 400 })
@@ -207,9 +264,11 @@ export async function POST(request: NextRequest) {
       }
       
       // Debug: vérifier les valeurs avant création
-      const teamMinSizeValue = (global as any).__tmp_teamMinSize !== undefined ? (global as any).__tmp_teamMinSize : null
-      const teamMaxSizeValue = (global as any).__tmp_teamMaxSize !== undefined ? (global as any).__tmp_teamMaxSize : null
-      console.log('Before tournament creation - teamMinSize:', teamMinSizeValue, 'teamMaxSize:', teamMaxSizeValue)
+      const teamMinSizeValue = (global as any).__tmp_teamMinSize
+      const teamMaxSizeValue = (global as any).__tmp_teamMaxSize
+      console.log('Before tournament creation - teamMinSize:', teamMinSizeValue, 'type:', typeof teamMinSizeValue)
+      console.log('Before tournament creation - teamMaxSize:', teamMaxSizeValue, 'type:', typeof teamMaxSizeValue)
+      console.log('Before tournament creation - isTeamBased:', (global as any).__tmp_isTeamBased)
       
       const tournament = await prisma.tournament.create({
         data: {
@@ -225,8 +284,8 @@ export async function POST(request: NextRequest) {
         logoUrl: logoUrl || null,
         isTeamBased: Boolean((global as any).__tmp_isTeamBased),
         maxParticipants: (global as any).__tmp_maxParticipants !== undefined ? (global as any).__tmp_maxParticipants : null,
-        teamMinSize: (global as any).__tmp_teamMinSize !== undefined ? (global as any).__tmp_teamMinSize : null,
-        teamMaxSize: (global as any).__tmp_teamMaxSize !== undefined ? (global as any).__tmp_teamMaxSize : null,
+        teamMinSize: teamMinSizeValue ?? null,
+        teamMaxSize: teamMaxSizeValue ?? null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,
         organizerId: userId,

@@ -15,7 +15,16 @@ export async function POST(
     const { id } = await params
     const tournament = await prisma.tournament.findUnique({
       where: { id },
-      select: { id: true, isTeamBased: true, maxParticipants: true, endDate: true, registrationDeadline: true, status: true }
+      select: { 
+        id: true, 
+        isTeamBased: true, 
+        maxParticipants: true, 
+        bracketMaxTeams: true,
+        bracketMinTeams: true,
+        endDate: true, 
+        registrationDeadline: true, 
+        status: true 
+      }
     })
     if (!tournament) return NextResponse.json({ message: 'Introuvable' }, { status: 404 })
 
@@ -53,6 +62,15 @@ export async function POST(
         userId: { not: null as any }
       } 
     })
+    
+    // Vérifier bracketMaxTeams (priorité sur maxParticipants)
+    if (tournament.bracketMaxTeams && count >= tournament.bracketMaxTeams) {
+      return NextResponse.json({ 
+        message: `Tournoi complet (${count}/${tournament.bracketMaxTeams} participants maximum)` 
+      }, { status: 400 })
+    }
+    
+    // Vérifier maxParticipants (si bracketMaxTeams n'est pas défini)
     if (tournament.maxParticipants && count >= tournament.maxParticipants) {
       return NextResponse.json({ message: 'Tournoi complet' }, { status: 400 })
     }
@@ -96,21 +114,43 @@ export async function DELETE(
     })
 
     // Trouver l'équipe de l'utilisateur pour ce tournoi
-    const userTeam = await prisma.teamMember.findFirst({
-      where: {
-        userId,
-        team: { tournamentId: id }
-      },
-      include: {
-        team: {
-          include: {
-            members: {
-              select: { userId: true, isCaptain: true }
+    // Pour les tournois en équipe, trouver l'inscription de l'équipe de l'utilisateur
+    let userTeam = null
+    if (tournamentWithType?.isTeamBased) {
+      // Trouver toutes les équipes dont l'utilisateur est membre
+      const userTeams = await prisma.teamMember.findMany({
+        where: { userId },
+        include: {
+          team: {
+            include: {
+              registrations: {
+                where: { tournamentId: id },
+                select: { id: true }
+              },
+              members: {
+                select: { userId: true, isCaptain: true }
+              }
             }
           }
         }
+      })
+
+      // Trouver l'équipe qui est inscrite à ce tournoi
+      const teamWithRegistration = userTeams.find((tm: any) => 
+        tm.team.registrations && tm.team.registrations.length > 0
+      )
+
+      if (teamWithRegistration) {
+        userTeam = {
+          team: {
+            id: teamWithRegistration.team.id,
+            name: teamWithRegistration.team.name,
+            members: teamWithRegistration.team.members
+          },
+          isCaptain: teamWithRegistration.isCaptain
+        }
       }
-    })
+    }
 
     // Vérifier que l'utilisateur est bien inscrit (pour tournois solo) ou que son équipe est inscrite (pour tournois en équipe)
     let registration = null

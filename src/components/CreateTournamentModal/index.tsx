@@ -382,10 +382,15 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       fd.append('isTeamBased', String(form.isTeamBased === 'team'))
       
       if (form.isTeamBased === 'team') {
-        // Toujours envoyer les valeurs, même si vides
+        // Vérifier que les valeurs sont définies si c'est un tournoi en équipe
+        if (!form.teamMinSize || !form.teamMaxSize) {
+          notify({ type: 'error', message: '❌ Veuillez sélectionner un format d\'équipe (2v2, 3v3, 4v4 ou 5v5)' })
+          setIsLoading(false)
+          return
+        }
         console.log('Modal - Sending teamMinSize:', form.teamMinSize, 'teamMaxSize:', form.teamMaxSize)
-        fd.append('teamMinSize', form.teamMinSize || '')
-        fd.append('teamMaxSize', form.teamMaxSize || '')
+        fd.append('teamMinSize', form.teamMinSize)
+        fd.append('teamMaxSize', form.teamMaxSize)
       }
       
       fd.append('startDate', form.startDate)

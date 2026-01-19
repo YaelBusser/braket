@@ -160,14 +160,28 @@ function TeamManageContent() {
               const invitationsData = await invitationsRes.json()
               const allInvitations = invitationsData.invitations || []
               // Séparer les invitations (envoyées par le capitaine) des demandes (faites par les utilisateurs)
-              const invitations = allInvitations.filter((inv: any) => inv.userId !== inv.invitedById)
-              const requests = allInvitations.filter((inv: any) => inv.userId === inv.invitedById)
+              // Invitation = le capitaine invite quelqu'un (invitedById = capitaine, userId = personne invitée)
+              // Demande = un utilisateur demande à rejoindre (userId === invitedById = l'utilisateur lui-même)
+              const invitations = allInvitations.filter((inv: any) => {
+                // Une invitation est envoyée par le capitaine si invitedById === userId (le capitaine actuel)
+                return inv.userId !== inv.invitedById && inv.invitedById === userId
+              })
+              const requests = allInvitations.filter((inv: any) => {
+                // Une demande est faite par l'utilisateur lui-même
+                return inv.userId === inv.invitedById
+              })
               setPendingInvitations(invitations)
               setPendingRequests(requests)
+            } else {
+              console.error('Failed to load invitations:', invitationsRes.status, await invitationsRes.text())
             }
           } catch (error) {
             console.error('Error loading invitations:', error)
           }
+        } else {
+          // Réinitialiser les listes si l'utilisateur n'est plus capitaine
+          setPendingInvitations([])
+          setPendingRequests([])
         }
       } else {
         notify({ type: 'error', message: 'Équipe introuvable' })
@@ -792,7 +806,7 @@ function TeamManageContent() {
                   ))}
                 </div>
 
-                {isCaptain && pendingInvitations.length > 0 && (
+                {isCaptain && (
                   <div style={{ marginTop: '2rem' }}>
                     <h4 style={{ 
                       color: '#fff', 
@@ -805,8 +819,9 @@ function TeamManageContent() {
                     }}>
                       Invitations en attente ({pendingInvitations.length})
                     </h4>
-                    <div className={styles.membersList}>
-                      {pendingInvitations.map((invitation: any) => (
+                    {pendingInvitations.length > 0 ? (
+                      <div className={styles.membersList}>
+                        {pendingInvitations.map((invitation: any) => (
                         <div key={invitation.id} className={styles.memberCard} style={{
                           borderColor: '#f59e0b',
                           background: 'rgba(245, 158, 11, 0.05)'
@@ -865,11 +880,22 @@ function TeamManageContent() {
                           </button>
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <p style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.875rem',
+                        fontStyle: 'italic',
+                        padding: '1rem',
+                        textAlign: 'center'
+                      }}>
+                        Aucune invitation en attente
+                      </p>
+                    )}
                   </div>
                 )}
 
-                {isCaptain && pendingRequests.length > 0 && (
+                {isCaptain && (
                   <div style={{ marginTop: '2rem' }}>
                     <h4 style={{ 
                       color: '#fff', 
@@ -882,8 +908,9 @@ function TeamManageContent() {
                     }}>
                       Demandes en attente ({pendingRequests.length})
                     </h4>
-                    <div className={styles.membersList}>
-                      {pendingRequests.map((request: any) => (
+                    {pendingRequests.length > 0 ? (
+                      <div className={styles.membersList}>
+                        {pendingRequests.map((request: any) => (
                         <div key={request.id} className={styles.memberCard} style={{
                           borderColor: '#3b82f6',
                           background: 'rgba(59, 130, 246, 0.05)'
@@ -940,7 +967,18 @@ function TeamManageContent() {
                           </div>
                         </div>
                       ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <p style={{ 
+                        color: '#9ca3af', 
+                        fontSize: '0.875rem',
+                        fontStyle: 'italic',
+                        padding: '1rem',
+                        textAlign: 'center'
+                      }}>
+                        Aucune demande en attente
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

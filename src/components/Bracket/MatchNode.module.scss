@@ -78,17 +78,29 @@ $accent-vs: #ff6b35;
 }
 
 .teamLogo {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   background: linear-gradient(135deg, #3d4654 0%, #2d3440 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: $text-primary;
   flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.teamLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .teamName {

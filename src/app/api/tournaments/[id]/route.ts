@@ -7,6 +7,123 @@ import fs from 'fs'
 import { promises as fsp } from 'fs'
 import path from 'path'
 
+// Fonction helper pour générer automatiquement le bracket si nécessaire
+async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolean> {
+  try {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: {
+        _count: { select: { matches: true } },
+        registrations: { 
+          include: { 
+            user: { select: { id: true, pseudo: true } },
+            team: {
+              include: {
+                members: {
+                  include: {
+                    user: { select: { id: true, pseudo: true } }
+                  }
+                }
+              }
+            }
+          } 
+        }
+      }
+    })
+
+    if (!tournament) return false
+
+    // Vérifier si le tournoi doit commencer automatiquement
+    const shouldAutoStart = 
+      (tournament.status === 'REG_OPEN' || tournament.status === 'REG_CLOSED') &&
+      tournament.startDate &&
+      tournament.startDate <= new Date() &&
+      tournament._count.matches === 0
+
+    if (!shouldAutoStart) return false
+
+    // Valider que le tournoi peut être démarré
+    const validation = await validateTournamentStart(tournamentId)
+    if (!validation.canStart) {
+      console.log(`Tournoi ${tournamentId} ne peut pas démarrer automatiquement: ${validation.reason}`)
+      return false
+    }
+
+    // Passer le tournoi en cours
+    await prisma.tournament.update({ 
+      where: { id: tournamentId }, 
+      data: { status: 'IN_PROGRESS' } as any 
+    })
+
+    // Générer le bracket
+    let entrants: Array<{ teamId: string; teamName: string; members: Array<{ userId: string; user: { pseudo: string } }> }> = []
+
+    if (tournament.isTeamBased) {
+      const minSize = tournament.teamMinSize || 1
+      // Récupérer les équipes inscrites via les registrations
+      const teamRegistrations = tournament.registrations.filter(reg => reg.teamId !== null && reg.team !== null)
+      const validTeams = teamRegistrations.filter(reg => 
+        reg.team && reg.team.members.length >= minSize
+      )
+      
+      // Supprimer les équipes insuffisantes
+      const invalidRegistrations = teamRegistrations.filter(reg => 
+        reg.team && reg.team.members.length < minSize
+      )
+      const toDelete = invalidRegistrations.map(reg => reg.teamId).filter(Boolean) as string[]
+      if (toDelete.length > 0) {
+        await prisma.teamMember.deleteMany({ where: { teamId: { in: toDelete } } })
+        await prisma.team.deleteMany({ where: { id: { in: toDelete } } })
+      }
+
+      entrants = validTeams.map((reg: any) => ({
+        teamId: reg.team.id,
+        teamName: reg.team.name,
+        members: reg.team.members.map((member: any) => ({
+          userId: member.userId,
+          user: { pseudo: member.user?.pseudo || 'Joueur' }
+        }))
+      }))
+    } else {
+      // Créer des équipes solo à partir des inscriptions
+      for (const registration of tournament.registrations) {
+        if (!registration.userId) continue
+        
+        const teamName = `Solo - ${registration.user?.pseudo || 'Joueur'}`
+        const soloTeam = await prisma.team.create({
+          data: { 
+            tournamentId: tournamentId, 
+            name: teamName, 
+            members: { 
+              create: { 
+                userId: registration.userId 
+              } 
+            } 
+          }
+        })
+        
+        entrants.push({
+          teamId: soloTeam.id,
+          teamName: soloTeam.name,
+          members: [{
+            userId: registration.userId,
+            user: { pseudo: registration.user?.pseudo || 'Joueur' }
+          }]
+        })
+      }
+    }
+
+    // Générer le bracket d'élimination directe
+    const { matches, immediateWinners } = await generateSingleEliminationBracket(tournamentId, entrants)
+    
+    console.log(`Tournoi ${tournamentId} démarré automatiquement: ${matches.length} matchs générés, ${immediateWinners.length} BYE`)
+    return true
+  } catch (error) {
+    console.error('Erreur lors du démarrage automatique du tournoi:', error)
+    return false
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,6 +131,9 @@ export async function GET(
   try {
     const { id } = await params
     const { searchParams } = new URL(request.url)
+    
+    // Vérifier et démarrer automatiquement le tournoi si nécessaire
+    await autoStartTournamentIfNeeded(id)
     
     // Paramètres pour charger les détails à la demande
     const includeMatches = searchParams.get('includeMatches') === 'true'
@@ -34,7 +154,8 @@ export async function GET(
         // Charger les matchs seulement si demandé
         ...(includeMatches ? {
           matches: {
-            include: { teamA: true, teamB: true, winnerTeam: true }
+            include: { teamA: true, teamB: true, winnerTeam: true },
+            orderBy: { round: 'asc' }
           },
         } : {}),
         // Charger les inscriptions seulement si demandé
@@ -219,16 +340,20 @@ export async function PATCH(
       },
       include: {
         organizer: { select: { id: true, pseudo: true, avatarUrl: true } },
-        teams: {
-          include: {
-            members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
-          },
-        },
         matches: {
           include: { teamA: true, teamB: true, winnerTeam: true }
         },
         _count: { select: { registrations: true } },
-        registrations: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+        registrations: { 
+          include: { 
+            user: { select: { id: true, pseudo: true, avatarUrl: true } },
+            team: {
+              include: {
+                members: { include: { user: { select: { id: true, pseudo: true, avatarUrl: true } } } },
+              }
+            }
+          } 
+        },
       },
     })
 
@@ -384,18 +509,18 @@ export async function PUT(
         const full = await prisma.tournament.findUnique({
           where: { id },
           include: {
-            teams: { 
-              include: { 
-                members: { 
-                  include: { 
-                    user: { select: { id: true, pseudo: true } } 
-                  } 
-                } 
-              } 
-            },
             registrations: { 
               include: { 
-                user: { select: { id: true, pseudo: true } } 
+                user: { select: { id: true, pseudo: true } },
+                team: {
+                  include: {
+                    members: {
+                      include: {
+                        user: { select: { id: true, pseudo: true } }
+                      }
+                    }
+                  }
+                }
               } 
             }
           }
@@ -406,19 +531,26 @@ export async function PUT(
 
           if ((full as any).isTeamBased) {
             const minSize = (full as any).teamMinSize || 1
-            const validTeams = (full as any).teams.filter((team: any) => team.members.length >= minSize)
+            // Récupérer les équipes inscrites via les registrations
+            const teamRegistrations = full.registrations.filter(reg => reg.teamId !== null && reg.team !== null)
+            const validTeams = teamRegistrations.filter(reg => 
+              reg.team && reg.team.members.length >= minSize
+            )
             
             // Supprimer les équipes insuffisantes
-            const toDelete = (full as any).teams.filter((team: any) => team.members.length < minSize).map((team: any) => team.id)
+            const invalidRegistrations = teamRegistrations.filter(reg => 
+              reg.team && reg.team.members.length < minSize
+            )
+            const toDelete = invalidRegistrations.map(reg => reg.teamId).filter(Boolean) as string[]
             if (toDelete.length > 0) {
               await prisma.teamMember.deleteMany({ where: { teamId: { in: toDelete } } })
               await prisma.team.deleteMany({ where: { id: { in: toDelete } } })
             }
 
-            entrants = validTeams.map((team: any) => ({
-              teamId: team.id,
-              teamName: team.name,
-              members: team.members.map((member: any) => ({
+            entrants = validTeams.map((reg: any) => ({
+              teamId: reg.team.id,
+              teamName: reg.team.name,
+              members: reg.team.members.map((member: any) => ({
                 userId: member.userId,
                 user: { pseudo: member.user?.pseudo || 'Joueur' }
               }))

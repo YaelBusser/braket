@@ -55,14 +55,7 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            avatarUrl: true,
-            tournament: {
-              select: {
-                id: true,
-                name: true,
-                game: true
-              }
-            }
+            avatarUrl: true
           }
         },
         user: {

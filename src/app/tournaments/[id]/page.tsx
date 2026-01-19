@@ -300,8 +300,20 @@ function TournamentView() {
   const registeredCount = tournament?.isTeamBased 
     ? teams.reduce((total, team) => total + (team.members?.length || 0), 0)
     : (tournament?._count?.registrations || 0)
+  
+  // Compter les équipes inscrites pour les tournois en équipe
+  const registeredTeamsCount = tournament?.isTeamBased
+    ? (tournament.registrations?.filter((r: any) => r.teamId).length || 0)
+    : 0
+  
   const status = tournament.status as string | undefined
   const regClosed = status !== 'REG_OPEN' || (tournament.registrationDeadline && new Date(tournament.registrationDeadline) < new Date())
+  
+  // Vérifier si le tournoi est complet
+  const isFull = tournament?.isTeamBased
+    ? (tournament.bracketMaxTeams && registeredTeamsCount >= tournament.bracketMaxTeams)
+    : (tournament.bracketMaxTeams && tournament._count?.registrations >= tournament.bracketMaxTeams) ||
+      (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants)
 
   // Format de la date pour l'affichage
   const getDateDisplay = () => {
@@ -458,6 +470,7 @@ function TournamentView() {
                     disabled={
                       !isRegistered && (
                         regClosed || 
+                        (tournament.bracketMaxTeams && tournament._count?.registrations >= tournament.bracketMaxTeams) ||
                         (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants)
                       )
                     }
@@ -496,15 +509,16 @@ function TournamentView() {
                     }}
                   >
                     {isRegistered ? 'Se désinscrire' : regClosed ? 'Inscriptions fermées' : 
-                     (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants ? 'Complet' : 
-                      'Rejoindre le tournoi')}
+                     (tournament.bracketMaxTeams && tournament._count?.registrations >= tournament.bracketMaxTeams ? 'Complet' : 
+                      (tournament.maxParticipants && tournament._count?.registrations >= tournament.maxParticipants ? 'Complet' : 
+                       'Rejoindre le tournoi'))}
                   </button>
               )}
               
               {!isOrganizer && tournament.isTeamBased && !isRegistered && (
                 <button
                     className={styles.joinButton}
-                    disabled={regClosed}
+                    disabled={regClosed || isFull}
                     onClick={() => {
                       if (!session?.user) {
                         try { localStorage.setItem('lt_returnTo', window.location.pathname) } catch {}
@@ -514,7 +528,9 @@ function TournamentView() {
                       openTeamSelectionModal(id, tournament, refreshAfterTeamRegistration)
                     }}
                   >
-                    {regClosed ? 'Inscriptions fermées' : 'Rejoindre le tournoi'}
+                    {regClosed ? 'Inscriptions fermées' : 
+                     (tournament.bracketMaxTeams && registeredTeamsCount >= tournament.bracketMaxTeams ? 'Complet' : 
+                      'Rejoindre le tournoi')}
                   </button>
               )}
               
@@ -841,7 +857,9 @@ function TournamentView() {
                         fontSize: '1.5rem',
                         fontWeight: '600'
                       }}>
-                        {tournament.maxParticipants || '∞'}
+                        {tournament.isTeamBased 
+                          ? (tournament.bracketMaxTeams || '∞')
+                          : (tournament.bracketMaxTeams || tournament.maxParticipants || '∞')}
                       </div>
                     </div>
                   </div>

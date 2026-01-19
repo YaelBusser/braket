@@ -28,6 +28,8 @@ export async function POST(
         isTeamBased: true,
         teamMinSize: true,
         teamMaxSize: true,
+        bracketMaxTeams: true,
+        bracketMinTeams: true,
         status: true,
         registrationDeadline: true,
         endDate: true
@@ -100,6 +102,31 @@ export async function POST(
 
     if (tournament.endDate && tournament.endDate < new Date()) {
       return NextResponse.json({ message: 'Tournoi terminé' }, { status: 400 })
+    }
+
+    // Vérifier le nombre d'équipes inscrites avant de permettre l'inscription
+    const registeredTeamsCount = await prisma.tournamentRegistration.count({
+      where: {
+        tournamentId,
+        teamId: { not: null as any }
+      }
+    })
+    
+    // Vérifier bracketMaxTeams (bloquer si le tournoi est plein)
+    if (tournament.bracketMaxTeams && registeredTeamsCount >= tournament.bracketMaxTeams) {
+      // Si l'équipe est déjà inscrite, permettre la mise à jour des participants
+      const existingRegistration = await prisma.tournamentRegistration.findFirst({
+        where: {
+          tournamentId,
+          teamId
+        }
+      })
+      
+      if (!existingRegistration) {
+        return NextResponse.json({ 
+          message: `Tournoi complet (${registeredTeamsCount}/${tournament.bracketMaxTeams} équipes maximum)` 
+        }, { status: 400 })
+      }
     }
 
     // Vérifier si l'équipe est déjà inscrite
