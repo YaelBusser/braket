@@ -109,6 +109,25 @@ export default function NotificationBell() {
     }
   }
 
+  const deleteNotification = async (notificationId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Empêcher le clic de déclencher handleNotificationClick
+    try {
+      const res = await fetch(`/api/notifications?notificationId=${notificationId}`, {
+        method: 'DELETE'
+      })
+      if (res.ok) {
+        setNotifications(prev => prev.filter(n => n.id !== notificationId))
+        // Mettre à jour le compteur si la notification était non lue
+        const deletedNotification = notifications.find(n => n.id === notificationId)
+        if (deletedNotification && !deletedNotification.read) {
+          setUnreadCount(prev => Math.max(0, prev - 1))
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error)
+    }
+  }
+
   if (!session?.user) return null
 
   return (
@@ -174,7 +193,16 @@ export default function NotificationBell() {
                       })}
                     </div>
                   </div>
-                  {!notification.read && <div className={styles.unreadDot} />}
+                  <div className={styles.notificationActions}>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={(e) => deleteNotification(notification.id, e)}
+                      aria-label="Supprimer la notification"
+                    >
+                      ×
+                    </button>
+                    {!notification.read && <div className={styles.unreadDot} />}
+                  </div>
                 </div>
               ))
             )}

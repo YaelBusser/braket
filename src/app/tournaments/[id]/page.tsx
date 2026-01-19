@@ -110,11 +110,16 @@ function TournamentView() {
       if (tournament.isTeamBased) {
         // Pour les tournois en équipe, vérifier si l'équipe de l'utilisateur est inscrite
         const userTeamId = teams.find(t => t.members?.some((m: any) => m.user?.id === uid))?.id
-        setIsRegistered(userTeamId ? tournament.registrations.some((r: any) => r.teamId === userTeamId) : false)
+        const isTeamRegistered = userTeamId ? tournament.registrations.some((r: any) => r.teamId === userTeamId) : false
+        setIsRegistered(isTeamRegistered)
       } else {
         // Pour les tournois solo, vérifier l'inscription individuelle
-        setIsRegistered(tournament.registrations.some((r: any) => r.userId === uid))
+        const isUserRegistered = tournament.registrations.some((r: any) => r.userId === uid)
+        setIsRegistered(isUserRegistered)
       }
+    } else {
+      // Si pas de registrations, l'utilisateur n'est pas inscrit
+      setIsRegistered(false)
     }
 
     // Vérifier l'équipe
@@ -509,7 +514,7 @@ function TournamentView() {
                       openTeamSelectionModal(id, tournament, refreshAfterTeamRegistration)
                     }}
                   >
-                    {regClosed ? 'Inscriptions fermées' : 'Inscrire une équipe'}
+                    {regClosed ? 'Inscriptions fermées' : 'Rejoindre le tournoi'}
                   </button>
               )}
               
@@ -1605,36 +1610,45 @@ function TournamentView() {
                   if (res.ok) {
                     const uid = (session?.user as any)?.id
                     
+                    // Recharger les données du tournoi AVANT de mettre à jour l'état
+                    const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
+                    const regData = await regRes.json()
+                    
+                    // Mettre à jour les registrations et le tournament en premier
+                    if (regData.tournament) {
+                      const updatedRegistrations = regData.tournament.registrations || []
+                      setRegistrations(updatedRegistrations)
+                      setTournament((prev: any) => prev ? { ...prev, registrations: updatedRegistrations } : null)
+                      
+                      // Mettre à jour isRegistered basé sur les nouvelles données
+                      if (regData.tournament.isTeamBased) {
+                        // Pour les tournois en équipe, vérifier si l'équipe de l'utilisateur est inscrite
+                        const teamsRes = await fetch(`/api/teams/${id}`)
+                        const teamsData = await teamsRes.json()
+                        if (teamsData.teams) {
+                          setTeams(teamsData.teams)
+                          const userTeamId = teamsData.teams.find((t: any) => t.members?.some((m: any) => m.user?.id === uid))?.id
+                          setIsRegistered(userTeamId ? updatedRegistrations.some((r: any) => r.teamId === userTeamId) : false)
+                        } else {
+                          setIsRegistered(false)
+                        }
+                      } else {
+                        // Pour les tournois solo, vérifier l'inscription individuelle
+                        setIsRegistered(updatedRegistrations.some((r: any) => r.userId === uid))
+                      }
+                    } else {
+                      setIsRegistered(false)
+                    }
+                    
                     // Si toute l'équipe a été désinscrite
                     if (data.unregisteredTeam && myTeam) {
-                      // Retirer l'inscription de l'équipe
-                      setRegistrations(prev => prev.filter(r => r.teamId !== myTeam.id))
-                      
-                      // Recharger les équipes pour mettre à jour l'affichage
-                      const teamsRes = await fetch(`/api/teams/${id}`)
-                      const teamsData = await teamsRes.json()
-                      if (teamsData.teams) {
-                        setTeams(teamsData.teams)
-                      }
-                      
                       notify({ 
                         type: 'success', 
                         message: `✅ Toute l'équipe "${data.teamName}" a été désinscrite (${data.unregisteredCount} membre${data.unregisteredCount > 1 ? 's' : ''}).` 
                       })
                     } else {
                       // Désinscription individuelle (tournois solo)
-                      setRegistrations(prev => prev.filter(r => r.userId !== uid))
                       notify({ type: 'success', message: '✅ Désinscription réussie. Vous pouvez vous réinscrire si vous le souhaitez.' })
-                    }
-                    
-                    setIsRegistered(false)
-                    
-                    // Recharger les données du tournoi
-                    const regRes = await fetch(`/api/tournaments/${id}?includeRegistrations=true`)
-                    const regData = await regRes.json()
-                    if (regData.tournament?.registrations) {
-                      setRegistrations(regData.tournament.registrations)
-                      setTournament((prev: any) => prev ? { ...prev, registrations: regData.tournament.registrations } : null)
                     }
 
                     // Déclencher un événement pour rafraîchir la sidebar

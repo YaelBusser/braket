@@ -120,6 +120,14 @@
   }
 }
 
+.notificationActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+  flex-shrink: 0;
+}
+
 .notificationContent {
   flex: 1;
   min-width: 0;
@@ -145,12 +153,34 @@
   color: rgba(255, 255, 255, 0.4);
 }
 
+.deleteButton {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+  }
+}
+
 .unreadDot {
   width: 8px;
   height: 8px;
   background: vars.$primary-600;
   border-radius: 50%;
-  margin-left: 0.75rem;
   margin-top: 0.5rem;
   flex-shrink: 0;
 }

@@ -63,3 +63,37 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ message: 'Erreur serveur' }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    const userId = (session?.user as any)?.id as string | undefined
+    if (!userId) return NextResponse.json({ message: 'Non autorisé' }, { status: 401 })
+
+    const { searchParams } = new URL(request.url)
+    const notificationId = searchParams.get('notificationId')
+
+    if (!notificationId) {
+      return NextResponse.json({ message: 'ID de notification requis' }, { status: 400 })
+    }
+
+    // Vérifier que la notification appartient à l'utilisateur
+    const notification = await prisma.notification.findUnique({
+      where: { id: notificationId }
+    })
+
+    if (!notification || notification.userId !== userId) {
+      return NextResponse.json({ message: 'Notification introuvable' }, { status: 404 })
+    }
+
+    // Supprimer la notification
+    await prisma.notification.delete({
+      where: { id: notificationId }
+    })
+
+    return NextResponse.json({ message: 'Notification supprimée' })
+  } catch (error) {
+    console.error('Delete notification error:', error)
+    return NextResponse.json({ message: 'Erreur serveur' }, { status: 500 })
+  }
+}

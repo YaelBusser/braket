@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
 import { useNotification } from '../providers/notification-provider'
 import { useRouter } from 'next/navigation'
+import SearchBar from '../ui/SearchBar'
 import styles from './index.module.scss'
 
 interface TeamSelectionModalProps {
@@ -18,16 +19,28 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
   const { data: session } = useSession()
   const { notify } = useNotification()
   const router = useRouter()
-  const [mode, setMode] = useState<'select' | 'create' | 'join' | 'selectMembers'>('select')
+  const [mode, setMode] = useState<'select' | 'create' | 'selectMembers'>('select')
   const [teamName, setTeamName] = useState('')
   const [teamAvatar, setTeamAvatar] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [teams, setTeams] = useState<any[]>([])
   const [captainTeams, setCaptainTeams] = useState<any[]>([])
   const [selectedTeam, setSelectedTeam] = useState<any>(null)
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
+  const [teamSearchQuery, setTeamSearchQuery] = useState('')
+
+  // Filtrer et limiter les équipes selon la recherche
+  const filteredTeams = useMemo(() => {
+    let filtered = captainTeams
+    if (teamSearchQuery.trim()) {
+      const query = teamSearchQuery.toLowerCase().trim()
+      filtered = captainTeams.filter(team => 
+        team.name.toLowerCase().includes(query)
+      )
+    }
+    return filtered.slice(0, 3) // Limiter à 3 équipes maximum
+  }, [captainTeams, teamSearchQuery])
 
   useEffect(() => {
     if (isOpen) {
@@ -38,7 +51,6 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
       setSelectedTeam(null)
       setSelectedMembers([])
       setIsClosing(false)
-      fetchTeams()
       fetchCaptainTeams()
     }
   }, [isOpen, tournamentId])
@@ -64,18 +76,6 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
         setAvatarPreview(reader.result as string)
       }
       reader.readAsDataURL(file)
-    }
-  }
-
-  const fetchTeams = async () => {
-    try {
-      const res = await fetch(`/api/teams/${tournamentId}`)
-      const data = await res.json()
-      if (res.ok) {
-        setTeams(data.teams || [])
-      }
-    } catch (error) {
-      console.error('Error fetching teams:', error)
     }
   }
 
@@ -201,25 +201,6 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
     }
   }
 
-  const handleJoinTeam = async (teamId: string) => {
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/teams/${teamId}/join`, { method: 'POST' })
-      const data = await res.json()
-      if (res.ok) {
-        notify({ type: 'success', message: '🤝 Bienvenue dans l\'équipe ! Vous êtes automatiquement inscrit au tournoi.' })
-        if (onTeamJoined) onTeamJoined()
-        handleClose()
-      } else {
-        notify({ type: 'error', message: data.message || '❌ Erreur lors de la jonction à l\'équipe' })
-      }
-    } catch (error) {
-      notify({ type: 'error', message: '❌ Erreur lors de la jonction à l\'équipe' })
-    } finally {
-      setLoading(false)
-    }
-  }
-
   if (!isOpen) return null
 
   return (
@@ -239,7 +220,7 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
         </button>
 
         <div className={styles.modalHeader}>
-          <h2>Inscrire une équipe au tournoi</h2>
+          <h2>Rejoindre le tournoi</h2>
           <p className={styles.subtitle}>
             {mode === 'selectMembers' 
               ? 'Sélectionnez les membres qui participeront au tournoi'
@@ -253,23 +234,60 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
               {captainTeams.length > 0 && (
                 <>
                   <h3 style={{ marginBottom: '1rem', fontSize: '1rem', fontWeight: 600 }}>Mes équipes</h3>
-                  <div className={styles.teamsList} style={{ marginBottom: '2rem' }}>
-                    {captainTeams.map(team => (
-                      <div key={team.id} className={styles.teamCard}>
-                        <div className={styles.teamInfo}>
-                          <h4>{team.name}</h4>
-                          <p>{team.members?.length || 0} membre{team.members?.length !== 1 ? 's' : ''}</p>
-                        </div>
-                        <button
-                          className={styles.joinTeamButton}
-                          onClick={() => handleSelectTeam(team)}
-                          disabled={loading}
-                        >
-                          Sélectionner
-                        </button>
-                      </div>
-                    ))}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <SearchBar
+                      placeholder="Rechercher une équipe..."
+                      onSearch={setTeamSearchQuery}
+                      autoSearchDelay={300}
+                      size="sm"
+                      variant="dark"
+                      hideButton={true}
+                    />
                   </div>
+                  {filteredTeams.length > 0 ? (
+                    <div className={styles.teamsList} style={{ marginBottom: '2rem' }}>
+                      {filteredTeams.map(team => (
+                        <div key={team.id} className={styles.teamCard}>
+                          <div className={styles.teamInfo}>
+                            <div className={styles.teamHeader}>
+                              {team.avatarUrl ? (
+                                <img 
+                                  src={team.avatarUrl} 
+                                  alt={team.name}
+                                  className={styles.teamLogo}
+                                />
+                              ) : (
+                                <div className={styles.teamLogoPlaceholder}>
+                                  {team.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <h4>{team.name}</h4>
+                            </div>
+                            <p>{team.members?.length || 0} membre{team.members?.length !== 1 ? 's' : ''}</p>
+                          </div>
+                          <button
+                            className={styles.joinTeamButton}
+                            onClick={() => handleSelectTeam(team)}
+                            disabled={loading}
+                          >
+                            Sélectionner
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      padding: '1rem', 
+                      textAlign: 'center', 
+                      color: '#9ca3af', 
+                      fontSize: '0.875rem',
+                      marginBottom: '2rem'
+                    }}>
+                      {teamSearchQuery.trim() 
+                        ? 'Aucune équipe trouvée' 
+                        : 'Aucune équipe disponible'}
+                    </div>
+                  )}
                   <div className={styles.divider}>
                     <span>ou</span>
                   </div>
@@ -286,21 +304,6 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
                 </div>
               </button>
 
-              <div className={styles.divider}>
-                <span>ou</span>
-              </div>
-
-              <button
-                className={styles.actionButton}
-                onClick={() => setMode('join')}
-                disabled={teams.length === 0}
-              >
-                <div className={styles.actionIcon}>👥</div>
-                <div className={styles.actionContent}>
-                  <h3>Rejoindre une équipe</h3>
-                  <p>{teams.length > 0 ? `Rejoignez l'une des ${teams.length} équipe${teams.length > 1 ? 's' : ''} existante${teams.length > 1 ? 's' : ''}` : 'Aucune équipe disponible pour le moment'}</p>
-                </div>
-              </button>
             </div>
           )}
 
@@ -529,46 +532,6 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
             </div>
           )}
 
-          {mode === 'join' && (
-            <div className={styles.joinMode}>
-              <button
-                className={styles.backButton}
-                onClick={() => setMode('select')}
-              >
-                ← Retour
-              </button>
-              <h3>Rejoindre une équipe</h3>
-              {teams.length === 0 ? (
-                <div className={styles.emptyState}>
-                  <p>Aucune équipe disponible pour le moment</p>
-                  <button
-                    className={styles.createInsteadButton}
-                    onClick={() => setMode('create')}
-                  >
-                    Créer une équipe à la place
-                  </button>
-                </div>
-              ) : (
-                <div className={styles.teamsList}>
-                  {teams.map(team => (
-                    <div key={team.id} className={styles.teamCard}>
-                      <div className={styles.teamInfo}>
-                        <h4>{team.name}</h4>
-                        <p>{team.members?.length || 0} membre{team.members?.length !== 1 ? 's' : ''}</p>
-                      </div>
-                      <button
-                        className={styles.joinTeamButton}
-                        onClick={() => handleJoinTeam(team.id)}
-                        disabled={loading}
-                      >
-                        {loading ? '...' : 'Rejoindre'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>

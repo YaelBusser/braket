@@ -42,13 +42,10 @@ export async function GET(
     })
     if (!team) return NextResponse.json({ message: 'Équipe introuvable' }, { status: 404 })
 
-    // Récupérer tous les tournois auxquels l'équipe participe (via les matches)
-    const matches = await prisma.match.findMany({
+    // Récupérer les tournois où l'équipe est inscrite (via TournamentRegistration)
+    const registrations = await prisma.tournamentRegistration.findMany({
       where: {
-        OR: [
-          { teamAId: teamId },
-          { teamBId: teamId }
-        ]
+        teamId: teamId
       },
       include: {
         tournament: {
@@ -76,48 +73,11 @@ export async function GET(
             }
           }
         }
-      },
-      distinct: ['tournamentId']
+      }
     })
 
-    // Extraire les tournois uniques
-    const tournaments = matches.map(m => m.tournament)
-    const uniqueTournaments = Array.from(
-      new Map(tournaments.map(t => [t.id, t])).values()
-    )
-
-    // Si l'équipe a un tournamentId direct (ancien système), récupérer le tournoi complet
-    if (team.tournament && !uniqueTournaments.find(t => t.id === team.tournament!.id)) {
-      const fullTournament = await prisma.tournament.findUnique({
-        where: { id: team.tournament.id },
-        include: {
-          gameRef: {
-            select: {
-              id: true,
-              name: true,
-              imageUrl: true,
-              logoUrl: true,
-              posterUrl: true
-            }
-          },
-          organizer: {
-            select: {
-              id: true,
-              pseudo: true,
-              avatarUrl: true
-            }
-          },
-          _count: {
-            select: {
-              registrations: true
-            }
-          }
-        }
-      })
-      if (fullTournament) {
-        uniqueTournaments.push(fullTournament)
-      }
-    }
+    // Extraire les tournois uniques depuis les inscriptions
+    const uniqueTournaments = registrations.map(r => r.tournament).filter(Boolean)
 
     return NextResponse.json({
       ...team,

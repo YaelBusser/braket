@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../../../../lib/auth'
 import { prisma } from '../../../../../../../lib/prisma'
 
-// POST: Inscrire une équipe avec les membres participants sélectionnés
+// POST: Rejoindre le tournoi avec les membres participants sélectionnés
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

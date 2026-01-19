@@ -100,7 +100,7 @@ function TeamView({ teamId }: { teamId: string }) {
     totalTournaments: 0
   })
   const [loading, setLoading] = useState(true)
-  const [tab, setTab] = useState<'overview' | 'members' | 'matches' | 'tournaments'>('overview')
+  const [tab, setTab] = useState<'overview' | 'members' | 'tournaments'>('overview')
   const [isMember, setIsMember] = useState(false)
   const [isCaptain, setIsCaptain] = useState(false)
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([])
@@ -192,6 +192,24 @@ function TeamView({ teamId }: { teamId: string }) {
       setLoading(false)
     }
   }
+
+  // Écouter les événements de désinscription/inscription pour recharger les données
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleTournamentRegistrationChange = () => {
+      // Recharger les données de l'équipe pour mettre à jour la liste des tournois
+      loadTeamData()
+    }
+
+    window.addEventListener('tournament-unregistration-changed', handleTournamentRegistrationChange)
+    window.addEventListener('tournament-registration-changed', handleTournamentRegistrationChange)
+
+    return () => {
+      window.removeEventListener('tournament-unregistration-changed', handleTournamentRegistrationChange)
+      window.removeEventListener('tournament-registration-changed', handleTournamentRegistrationChange)
+    }
+  }, [teamId])
 
   const openInvitationModal = (invitation: any) => {
     setSelectedInvitation(invitation)
@@ -294,6 +312,7 @@ function TeamView({ teamId }: { teamId: string }) {
     }
   }
 
+
   if (status === 'loading' || loading) {
     return (
       <div className={styles.loading}>
@@ -394,14 +413,13 @@ function TeamView({ teamId }: { teamId: string }) {
           tabs={[
             { key: 'overview', label: 'Vue d\'ensemble' },
             { key: 'members', label: 'Membres' },
-            { key: 'matches', label: 'Matchs' },
             { key: 'tournaments', label: 'Tournois' }
           ]}
           activeTab={tab}
           onTabChange={(key) => setTab(key as any)}
         >
-          {/* Bouton Paramètres pour le capitaine */}
-          {isCaptain && (
+          {/* Bouton Paramètres pour les membres */}
+          {isMember && (
             <Link
               href={`/teams/${teamId}/manage`}
               className={profileStyles.settingsButton}
@@ -463,7 +481,9 @@ function TeamView({ teamId }: { teamId: string }) {
               </div>
 
               <div className={styles.membersList}>
-                {team.members.map((member) => (
+                {team.members.map((member) => {
+                  const isCurrentUser = session?.user && (session.user as any).id === member.user.id
+                  return (
                   <Link 
                     key={member.id} 
                     href={`/profile/${member.user.id}`}
@@ -488,7 +508,8 @@ function TeamView({ teamId }: { teamId: string }) {
                       )}
                     </div>
                   </Link>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Invitations reçues par l'utilisateur */}
@@ -634,19 +655,6 @@ function TeamView({ teamId }: { teamId: string }) {
             </div>
           )}
 
-          {tab === 'matches' && (
-            <div className={styles.matchesTab}>
-              <div className={styles.tabHeader}>
-                <h3>Matchs de l'équipe</h3>
-              </div>
-
-              <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>⚔️</div>
-                <h3>Aucun match</h3>
-                <p>Cette équipe n'a pas encore joué de matchs</p>
-              </div>
-            </div>
-          )}
 
           {tab === 'tournaments' && (
             <div className={styles.tournamentsTab}>

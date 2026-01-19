@@ -25,7 +25,8 @@ export async function POST(
             endDate: true,
             organizerId: true,
             teamMinSize: true,
-            teamMaxSize: true
+            teamMaxSize: true,
+            isTeamBased: true
           }
         }
       } 
@@ -77,13 +78,19 @@ export async function POST(
     
     // Pour les tournois en équipe, s'assurer que l'équipe est inscrite au tournoi
     // (pas besoin d'inscrire individuellement chaque membre)
-    if (tournament.isTeamBased) {
+    if ((tournament as any).isTeamBased) {
       try {
-        await prisma.tournamentRegistration.upsert({
-          where: { tournamentId_teamId: { tournamentId: tournament.id, teamId: team.id } },
-          create: { tournamentId: tournament.id, teamId: team.id },
-          update: {}
+        const existingReg = await prisma.tournamentRegistration.findFirst({
+          where: { 
+            tournamentId: tournament.id, 
+            teamId: team.id 
+          } as any
         })
+        if (!existingReg) {
+          await prisma.tournamentRegistration.create({
+            data: { tournamentId: tournament.id, teamId: team.id } as any
+          } as any)
+        }
       } catch (error) {
         console.error('Error auto-registering team to tournament:', error)
       }
@@ -114,7 +121,8 @@ export async function DELETE(
             id: true,
             status: true,
             registrationDeadline: true,
-            endDate: true
+            endDate: true,
+            isTeamBased: true
           }
         }
       } 
@@ -127,6 +135,25 @@ export async function DELETE(
     // Vérifier qu'il est membre
     const existing = await prisma.teamMember.findUnique({ where: { teamId_userId: { teamId: team.id, userId } } })
     if (!existing) return NextResponse.json({ message: 'Vous ne faites pas partie de cette équipe' }, { status: 400 })
+
+    // Si l'utilisateur est capitaine, il doit transférer le rôle avant de quitter
+    if (existing.isCaptain) {
+      // Vérifier s'il y a d'autres membres dans l'équipe
+      const otherMembers = await prisma.teamMember.findMany({
+        where: {
+          teamId: team.id,
+          userId: { not: userId }
+        }
+      })
+      
+      if (otherMembers.length > 0) {
+        return NextResponse.json({ 
+          message: 'Vous ne pouvez pas quitter l\'équipe en tant que capitaine. Transférez d\'abord le rôle de capitaine à un autre membre.',
+          requiresTransfer: true
+        }, { status: 400 })
+      }
+      // Si c'est le dernier membre, on peut quitter (l'équipe sera supprimée)
+    }
 
     // Interdire de quitter après démarrage
     if (tournament.status !== 'REG_OPEN') {

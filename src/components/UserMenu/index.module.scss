@@ -68,6 +68,7 @@
   border-radius: vars.$radius-md;
   transition: all vars.$transition-fast;
   color: vars.$lt-text-primary;
+  white-space: nowrap;
 
   &:hover {
     background: vars.$lt-dark-secondary;
@@ -138,6 +139,55 @@
   z-index: vars.$z-dropdown;
   overflow: hidden;
   animation: slideDown 0.2s ease-out;
+
+  // Pour le mode mobile (forceOpen)
+  &.dropdownMobile {
+    position: static;
+    min-width: 100%;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    animation: none;
+    background: transparent;
+  }
+}
+
+.userMenuContainerMobile {
+  width: 100%;
+  
+  .dropdown {
+    position: static;
+    min-width: 100%;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    animation: none;
+    background: transparent;
+  }
+
+  .dropdownHeader {
+    display: none; // Masquer l'en-tête car on l'affiche déjà dans mobileUserHeader
+  }
+
+  .menuItems {
+    padding: 0;
+  }
+
+  .menuItem {
+    padding: vars.$spacing-3 vars.$spacing-4;
+    border-radius: vars.$radius-md;
+    font-size: vars.$font-size-base;
+    
+    &:hover {
+      background: vars.$lt-dark-tertiary;
+    }
+  }
+
+  .divider {
+    margin: vars.$spacing-2 0;
+  }
 }
 
 @keyframes slideDown {

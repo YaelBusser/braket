@@ -62,6 +62,8 @@ function TeamManageContent() {
   const [activeSection, setActiveSection] = useState<'overview' | 'members' | 'visuals' | 'settings'>('overview')
   const [isCaptain, setIsCaptain] = useState(false)
   const [isMember, setIsMember] = useState(false)
+  const [showTransferCaptainModal, setShowTransferCaptainModal] = useState(false)
+  const [showLeaveTeamModal, setShowLeaveTeamModal] = useState(false)
   
   // États pour les visuels
   const [selectedLogo, setSelectedLogo] = useState<File | null>(null)
@@ -82,12 +84,26 @@ function TeamManageContent() {
   const [teamName, setTeamName] = useState('')
   const [teamDescription, setTeamDescription] = useState('')
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([])
+  const [pendingRequests, setPendingRequests] = useState<any[]>([])
 
   useEffect(() => {
-    if (id) {
+    if (id && session?.user) {
       loadTeam()
     }
-  }, [id])
+  }, [id, session])
+
+  // Vérifier si on arrive depuis une notification avec une demande
+  useEffect(() => {
+    if (typeof window !== 'undefined' && team && pendingRequests.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search)
+      const fromNotification = urlParams.get('fromNotification')
+      if (fromNotification === 'true') {
+        setActiveSection('members')
+        // Nettoyer l'URL
+        window.history.replaceState({}, '', `/teams/${id}/manage`)
+      }
+    }
+  }, [team, pendingRequests, id])
 
   // Nettoyage des URLs lors du démontage
   useEffect(() => {
@@ -105,6 +121,8 @@ function TeamManageContent() {
   }, [logoPreviewUrl, bannerPreviewUrl, originalImageUrl])
 
   const loadTeam = async () => {
+    if (!session?.user) return
+    
     setLoading(true)
     try {
       const teamRes = await fetch(`/api/teams/team/${id}`)
@@ -112,12 +130,24 @@ function TeamManageContent() {
       if (teamRes.ok) {
         const data = await teamRes.json()
         setTeam(data)
-        const userId = (session?.user as any)?.id
+        const userId = (session.user as any)?.id
+        if (!userId) {
+          setIsMember(false)
+          setIsCaptain(false)
+          setLoading(false)
+          return
+        }
         const userIsMember = data.members.some((m: any) => m.user.id === userId)
         setIsMember(userIsMember)
         const captainMember = data.members.find((m: any) => m.isCaptain)
         const userIsCaptain = captainMember?.user.id === userId
         setIsCaptain(userIsCaptain)
+        
+        // Debug
+        console.log('Team manage - userId:', userId)
+        console.log('Team manage - userIsMember:', userIsMember)
+        console.log('Team manage - userIsCaptain:', userIsCaptain)
+        console.log('Team manage - members:', data.members.map((m: any) => ({ userId: m.user.id, isCaptain: m.isCaptain })))
         setTeamName(data.name || '')
         setTeamDescription(data.description || '')
 
@@ -127,7 +157,12 @@ function TeamManageContent() {
             const invitationsRes = await fetch(`/api/teams/invitations?teamId=${id}&status=PENDING`)
             if (invitationsRes.ok) {
               const invitationsData = await invitationsRes.json()
-              setPendingInvitations(invitationsData.invitations || [])
+              const allInvitations = invitationsData.invitations || []
+              // Séparer les invitations (envoyées par le capitaine) des demandes (faites par les utilisateurs)
+              const invitations = allInvitations.filter((inv: any) => inv.userId !== inv.invitedById)
+              const requests = allInvitations.filter((inv: any) => inv.userId === inv.invitedById)
+              setPendingInvitations(invitations)
+              setPendingRequests(requests)
             }
           } catch (error) {
             console.error('Error loading invitations:', error)
@@ -160,6 +195,45 @@ function TeamManageContent() {
       }
     } catch (error) {
       notify({ type: 'error', message: 'Erreur lors de l\'annulation' })
+    }
+  }
+
+  const handleAcceptRequest = async (invitationId: string) => {
+    try {
+      const res = await fetch(`/api/teams/invitations/${invitationId}/captain`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'accept' })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        notify({ type: 'success', message: 'Demande acceptée' })
+        loadTeam()
+      } else {
+        notify({ type: 'error', message: data.message || 'Erreur lors de l\'acceptation' })
+      }
+    } catch (error) {
+      notify({ type: 'error', message: 'Erreur lors de l\'acceptation' })
+    }
+  }
+
+  const handleRejectRequest = async (invitationId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return
+    try {
+      const res = await fetch(`/api/teams/invitations/${invitationId}/captain`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reject' })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        notify({ type: 'success', message: 'Demande refusée' })
+        loadTeam()
+      } else {
+        notify({ type: 'error', message: data.message || 'Erreur lors du refus' })
+      }
+    } catch (error) {
+      notify({ type: 'error', message: 'Erreur lors du refus' })
     }
   }
 
@@ -225,8 +299,37 @@ function TeamManageContent() {
     }
   }
 
+  const handleLeaveTeam = async () => {
+    try {
+      const res = await fetch(`/api/teams/${id}/join`, {
+        method: 'DELETE'
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        notify({ type: 'success', message: data.message || 'Vous avez quitté l\'équipe' })
+        setShowLeaveTeamModal(false)
+        if (data.teamDeleted) {
+          router.push('/teams')
+        } else {
+          router.push('/teams')
+        }
+      } else {
+        if (data.requiresTransfer) {
+          // Si le capitaine doit transférer le rôle, ouvrir le modal de transfert
+          setShowLeaveTeamModal(false)
+          setShowTransferCaptainModal(true)
+        } else {
+          notify({ type: 'error', message: data.message || 'Erreur lors de la sortie' })
+        }
+      }
+    } catch (error) {
+      console.error('Erreur:', error)
+      notify({ type: 'error', message: 'Erreur lors de la sortie' })
+    }
+  }
+
   const handleTransferCaptain = async (newCaptainUserId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir transférer le rôle de capitaine à ce joueur ?')) return
     try {
       const res = await fetch(`/api/teams/team/${id}/captain`, {
         method: 'PATCH',
@@ -234,32 +337,18 @@ function TeamManageContent() {
         body: JSON.stringify({ newCaptainUserId })
       })
       const data = await res.json()
+
       if (res.ok) {
         notify({ type: 'success', message: 'Rôle de capitaine transféré avec succès' })
-        loadTeam()
+        setShowTransferCaptainModal(false)
+        // Après le transfert, permettre de quitter
+        handleLeaveTeam()
       } else {
         notify({ type: 'error', message: data.message || 'Erreur lors du transfert' })
       }
     } catch (error) {
+      console.error('Erreur:', error)
       notify({ type: 'error', message: 'Erreur lors du transfert' })
-    }
-  }
-
-  const handleLeaveTeam = async () => {
-    if (!confirm('Êtes-vous sûr de vouloir quitter cette équipe ?')) return
-    try {
-      const res = await fetch(`/api/teams/${id}/join`, {
-        method: 'DELETE'
-      })
-      const data = await res.json()
-      if (res.ok) {
-        notify({ type: 'success', message: 'Vous avez quitté l\'équipe' })
-        router.push('/teams')
-      } else {
-        notify({ type: 'error', message: data.message || 'Erreur lors de la sortie' })
-      }
-    } catch (error) {
-      notify({ type: 'error', message: 'Erreur lors de la sortie' })
     }
   }
 
@@ -447,7 +536,7 @@ function TeamManageContent() {
     }
   }
 
-  if (loading) {
+  if (loading || !session) {
     return (
       <div className={styles.loading}>
         <div className={styles.spinner}></div>
@@ -465,7 +554,7 @@ function TeamManageContent() {
     )
   }
 
-  if (!isMember) {
+  if (!isMember && session?.user) {
     return (
       <div className={styles.error}>
         <h2>Accès refusé</h2>
@@ -604,16 +693,19 @@ function TeamManageContent() {
                   )}
                 </div>
 
-                {!isCaptain && (
-                  <div className={styles.contentSection} style={{ marginTop: '2rem' }}>
-                    <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
-                      Actions
-                    </h2>
-                    <button className={`${styles.actionButton} ${styles.danger}`} onClick={handleLeaveTeam}>
+                {/* Bouton Quitter l'équipe pour les non-capitaines */}
+                {isMember && !isCaptain && (
+                  <div className={styles.section} style={{ marginTop: '2rem' }}>
+                    <h3 className={styles.sectionTitle}>Actions</h3>
+                    <button 
+                      className={`${styles.actionButton} ${styles.danger}`} 
+                      onClick={() => setShowLeaveTeamModal(true)}
+                    >
                       Quitter l'équipe
                     </button>
                   </div>
                 )}
+
               </div>
             )}
 
@@ -770,6 +862,81 @@ function TeamManageContent() {
                           >
                             Annuler
                           </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {isCaptain && pendingRequests.length > 0 && (
+                  <div style={{ marginTop: '2rem' }}>
+                    <h4 style={{ 
+                      color: '#fff', 
+                      marginBottom: '0.75rem', 
+                      fontSize: '0.875rem', 
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      opacity: 0.7
+                    }}>
+                      Demandes en attente ({pendingRequests.length})
+                    </h4>
+                    <div className={styles.membersList}>
+                      {pendingRequests.map((request: any) => (
+                        <div key={request.id} className={styles.memberCard} style={{
+                          borderColor: '#3b82f6',
+                          background: 'rgba(59, 130, 246, 0.05)'
+                        }}>
+                          <div className={styles.memberInfo}>
+                            {request.user.avatarUrl ? (
+                              <img src={request.user.avatarUrl} alt={request.user.pseudo} className={styles.memberAvatar} />
+                            ) : (
+                              <div className={styles.memberAvatarPlaceholder}>
+                                {request.user.pseudo.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <div className={styles.memberName} style={{ fontSize: '0.875rem' }}>
+                                {request.user.pseudo}
+                                <span style={{
+                                  background: '#3b82f6',
+                                  color: '#fff',
+                                  padding: '0.125rem 0.375rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.625rem',
+                                  fontWeight: '500',
+                                  marginLeft: '0.5rem'
+                                }}>
+                                  Demande
+                                </span>
+                              </div>
+                              <div className={styles.memberDate} style={{ fontSize: '0.75rem' }}>
+                                Demande le {new Date(request.createdAt).toLocaleDateString('fr-FR')}
+                              </div>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => handleRejectRequest(request.id)}
+                              className={`${styles.actionButton} ${styles.secondary}`}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              Refuser
+                            </button>
+                            <button
+                              onClick={() => handleAcceptRequest(request.id)}
+                              className={`${styles.actionButton} ${styles.success}`}
+                              style={{
+                                padding: '0.375rem 0.75rem',
+                                fontSize: '0.75rem'
+                              }}
+                            >
+                              Accepter
+                            </button>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -974,48 +1141,179 @@ function TeamManageContent() {
               </div>
             )}
 
-            {activeSection === 'settings' && isCaptain && (
+            {activeSection === 'settings' && (
               <div className={styles.contentSection}>
                 <h1 className={styles.contentTitle}>Paramètres</h1>
                 
-                <div className={styles.section}>
-                  <h3 className={styles.sectionTitle}>Informations générales</h3>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Nom de l'équipe</label>
-                    <input
-                      type="text"
-                      value={teamName}
-                      onChange={(e) => setTeamName(e.target.value)}
-                      className={styles.formInput}
-                      placeholder="Nom de l'équipe"
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label className={styles.formLabel}>Description</label>
-                    <textarea
-                      value={teamDescription}
-                      onChange={(e) => setTeamDescription(e.target.value)}
-                      className={styles.formTextarea}
-                      placeholder="Description de l'équipe"
-                      rows={4}
-                    />
-                  </div>
-                  <button className={`${styles.actionButton} ${styles.primary}`} onClick={handleSaveSettings}>
-                    Sauvegarder
-                  </button>
-                </div>
+                {isCaptain && (
+                  <>
+                    <div className={styles.section}>
+                      <h3 className={styles.sectionTitle}>Informations générales</h3>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Nom de l'équipe</label>
+                        <input
+                          type="text"
+                          value={teamName}
+                          onChange={(e) => setTeamName(e.target.value)}
+                          className={styles.formInput}
+                          placeholder="Nom de l'équipe"
+                        />
+                      </div>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>Description</label>
+                        <textarea
+                          value={teamDescription}
+                          onChange={(e) => setTeamDescription(e.target.value)}
+                          className={styles.formTextarea}
+                          placeholder="Description de l'équipe"
+                          rows={4}
+                        />
+                      </div>
+                      <button className={`${styles.actionButton} ${styles.primary}`} onClick={handleSaveSettings}>
+                        Sauvegarder
+                      </button>
+                    </div>
 
-                <div className={styles.dangerZone}>
-                  <h3 className={styles.sectionTitle}>Zone de danger</h3>
-                  <p>La suppression de l'équipe est définitive. Tous les membres seront retirés.</p>
-                  <button className={`${styles.actionButton} ${styles.danger}`} onClick={handleDeleteTeam}>
-                    Supprimer l'équipe
-                  </button>
-                </div>
+                    <div className={styles.dangerZone}>
+                      <h3 className={styles.sectionTitle}>Zone de danger</h3>
+                      <p>La suppression de l'équipe est définitive. Tous les membres seront retirés.</p>
+                      <button className={`${styles.actionButton} ${styles.danger}`} onClick={handleDeleteTeam}>
+                        Supprimer l'équipe
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </main>
         </div>
+
+        {/* Modal de confirmation pour quitter l'équipe */}
+        {showLeaveTeamModal && (
+          <div className={styles.modalOverlay} onClick={() => setShowLeaveTeamModal(false)}>
+            <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h2>{isCaptain ? 'Quitter l\'équipe' : 'Confirmer la sortie'}</h2>
+                <button className={styles.modalClose} onClick={() => setShowLeaveTeamModal(false)}>
+                  ×
+                </button>
+              </div>
+              
+              <div className={styles.modalBody}>
+                <p>
+                  {isCaptain 
+                    ? 'En tant que capitaine, vous devez transférer votre rôle à un autre membre avant de quitter l\'équipe.'
+                    : 'Êtes-vous sûr de vouloir quitter cette équipe ?'
+                  }
+                </p>
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  className={`${styles.modalButton} ${styles.modalButtonReject}`}
+                  onClick={() => setShowLeaveTeamModal(false)}
+                >
+                  Annuler
+                </button>
+                {isCaptain ? (
+                  <button
+                    className={`${styles.modalButton} ${styles.modalButtonAccept}`}
+                    onClick={() => {
+                      setShowLeaveTeamModal(false)
+                      setShowTransferCaptainModal(true)
+                    }}
+                  >
+                    Transférer le rôle
+                  </button>
+                ) : (
+                  <button
+                    className={`${styles.modalButton} ${styles.modalButtonDanger}`}
+                    onClick={handleLeaveTeam}
+                  >
+                    Quitter
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal pour transférer le rôle de capitaine */}
+        {showTransferCaptainModal && team && (
+          <div 
+            className={styles.modalOverlay}
+            onClick={() => setShowTransferCaptainModal(false)}
+          >
+            <div 
+              className={styles.modalContent}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h2>Transférer le rôle de capitaine</h2>
+                <button 
+                  className={styles.modalClose}
+                  onClick={() => setShowTransferCaptainModal(false)}
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className={styles.modalBody}>
+                <p>
+                  Sélectionnez un membre à qui transférer le rôle de capitaine avant de quitter l'équipe.
+                </p>
+                
+                {team.members.filter((m: any) => {
+                  const userId = (session?.user as any)?.id
+                  return m.user.id !== userId && !m.isCaptain
+                }).length === 0 ? (
+                  <p className={styles.modalErrorMessage}>
+                    Aucun autre membre disponible pour transférer le rôle.
+                  </p>
+                ) : (
+                  <div className={styles.modalMemberList}>
+                    {team.members
+                      .filter((m: any) => {
+                        const userId = (session?.user as any)?.id
+                        return m.user.id !== userId && !m.isCaptain
+                      })
+                      .map((member: any) => (
+                        <button
+                          key={member.id}
+                          className={styles.modalMemberButton}
+                          onClick={() => handleTransferCaptain(member.user.id)}
+                        >
+                          {member.user.avatarUrl ? (
+                            <img 
+                              src={member.user.avatarUrl} 
+                              alt={member.user.pseudo}
+                              className={styles.modalMemberAvatar}
+                            />
+                          ) : (
+                            <div className={styles.modalMemberAvatarPlaceholder}>
+                              {member.user.pseudo?.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className={styles.modalMemberName}>
+                            {member.user.pseudo}
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.modalFooter}>
+                <button
+                  className={`${styles.modalButton} ${styles.modalButtonReject}`}
+                  onClick={() => setShowTransferCaptainModal(false)}
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </ClientPageWrapper>
   )

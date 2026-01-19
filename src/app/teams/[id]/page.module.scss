@@ -229,18 +229,7 @@
 }
 
 .statCard {
-  background: vars.$lt-dark-secondary;
-  border: 1px solid vars.$lt-border;
-  border-radius: vars.$radius-card;
-  padding: vars.$spacing-6;
   text-align: center;
-  transition: all vars.$transition-fast;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: vars.$shadow-hover;
-    border-color: vars.$lt-accent-purple;
-  }
 
   h3 {
     font-size: vars.$font-size-sm;
@@ -259,11 +248,6 @@
 }
 
 .teamInfo {
-  background: vars.$lt-dark-secondary;
-  border: 1px solid vars.$lt-border;
-  border-radius: vars.$radius-card;
-  padding: vars.$spacing-6;
-
   h3 {
     font-size: vars.$font-size-lg;
     color: vars.$lt-text-primary;
@@ -331,6 +315,12 @@
   }
 }
 
+.memberItemWrapper {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+}
+
 .memberItem {
   display: flex;
   align-items: center;
@@ -341,6 +331,7 @@
   transition: all vars.$transition-fast;
   border-radius: vars.$radius-md;
   cursor: pointer;
+  flex: 1;
 
   &:hover {
     background: rgba(255, 255, 255, 0.05);

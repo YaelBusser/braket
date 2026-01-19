@@ -727,17 +727,29 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  overflow: hidden; // Empêcher le débordement des boutons
+  
+  // Mobile : ajuster le padding pour les boutons
+  @media (max-width: vars.$breakpoint-sm) {
+    padding: 0;
+  }
 }
 
 .carouselContainer {
   position: relative;
   width: 100%;
-  overflow: visible;
+  overflow: hidden;
   padding: 0;
   margin: 0;
   box-sizing: border-box;
   // S'assurer qu'il n'y a aucun espace
   min-width: 0;
+  
+  // Mobile : permettre le scroll horizontal
+  @media (max-width: vars.$breakpoint-sm) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .carouselButton {
@@ -758,14 +770,14 @@
   transition: all 0.3s ease;
   z-index: 10;
   
-  // Bouton gauche : positionné en dehors à gauche
+  // Bouton gauche : positionné à l'intérieur à gauche
   &:first-of-type {
-    left: -64px; // -48px (largeur) - 16px (espace)
+    left: vars.$spacing-2;
   }
   
-  // Bouton droit : positionné en dehors à droite
+  // Bouton droit : positionné à l'intérieur à droite
   &:last-of-type {
-    right: -64px; // -48px (largeur) - 16px (espace)
+    right: vars.$spacing-2;
   }
   
   &:hover {
@@ -778,17 +790,22 @@
     transform: translateY(-50%) scale(0.95);
   }
   
-  @media (max-width: 768px) {
+  // Tablette
+  @media (max-width: vars.$breakpoint-lg) {
+    width: 44px;
+    height: 44px;
+  }
+  
+  // Mobile
+  @media (max-width: vars.$breakpoint-md) {
     width: 40px;
     height: 40px;
-    
-    &:first-of-type {
-      left: -56px;
-    }
-    
-    &:last-of-type {
-      right: -56px;
-    }
+  }
+  
+  // Petit mobile
+  @media (max-width: vars.$breakpoint-sm) {
+    width: 36px;
+    height: 36px;
   }
 }
 
@@ -815,30 +832,59 @@
     display: none;
   }
   
-  @media (max-width: 768px) {
+  // Tablette
+  @media (max-width: vars.$breakpoint-lg) {
     gap: vars.$spacing-3;
+  }
+  
+  // Mobile
+  @media (max-width: vars.$breakpoint-md) {
+    gap: vars.$spacing-3;
+    padding: vars.$spacing-3 0;
+  }
+  
+  // Petit mobile
+  @media (max-width: vars.$breakpoint-sm) {
+    gap: vars.$spacing-2;
+    padding: vars.$spacing-2 0;
   }
 }
 
 .carouselItem {
-  // Calcul précis : 3 cartes + 2 gaps = 100% de la largeur
-  // Chaque carte = (100% - 2 gaps) / 3
-  // On utilise flex-basis pour forcer la taille exacte
-  flex: 0 0 calc((100% - 2 * #{vars.$spacing-4}) / 3);
-  scroll-snap-align: start;
-  width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
-  min-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
-  max-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
   position: relative;
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  scroll-snap-align: start;
   
-  @media (max-width: 768px) {
-    flex: 0 0 calc((100% - 2 * #{vars.$spacing-3}) / 3);
-    width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
-    min-width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
-    max-width: calc((100% - 2 * #{vars.$spacing-3}) / 3);
+  // Desktop : 3 cartes par vue
+  flex: 0 0 calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  min-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  max-width: calc((100% - 2 * #{vars.$spacing-4}) / 3);
+  
+  // Tablette large : 2 cartes par vue
+  @media (max-width: vars.$breakpoint-lg) {
+    flex: 0 0 calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    min-width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    max-width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+  }
+  
+  // Tablette : 2 cartes par vue
+  @media (max-width: vars.$breakpoint-md) {
+    flex: 0 0 calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    min-width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+    max-width: calc((100% - 1 * #{vars.$spacing-3}) / 2);
+  }
+  
+  // Mobile : 1 carte par vue
+  @media (max-width: vars.$breakpoint-sm) {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
   }
 }
 
@@ -857,11 +903,20 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   line-height: 1;
   
-  @media (max-width: 768px) {
+  // Tablette
+  @media (max-width: vars.$breakpoint-md) {
     font-size: vars.$font-size-lg;
     padding: vars.$spacing-1 vars.$spacing-3;
     top: vars.$spacing-2;
     left: vars.$spacing-2;
+  }
+  
+  // Mobile
+  @media (max-width: vars.$breakpoint-sm) {
+    font-size: vars.$font-size-base;
+    padding: vars.$spacing-1 vars.$spacing-2;
+    top: vars.$spacing-1;
+    left: vars.$spacing-1;
   }
 }
 

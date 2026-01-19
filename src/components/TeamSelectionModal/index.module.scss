@@ -316,6 +316,37 @@
   }
 }
 
+.teamHeader {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+  margin-bottom: 0.25rem;
+}
+
+.teamLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid vars.$lt-border;
+}
+
+.teamLogoPlaceholder {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: vars.$lt-accent-purple;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: vars.$lt-text-primary;
+  font-weight: vars.$font-weight-bold;
+  font-size: vars.$font-size-lg;
+  flex-shrink: 0;
+  border: 2px solid vars.$lt-border;
+}
+
 .joinTeamButton {
   padding: vars.$spacing-2 vars.$spacing-4;
   background: vars.$primary-600;
