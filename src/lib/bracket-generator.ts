@@ -83,7 +83,9 @@ export async function generateSingleEliminationBracket(
     slots[i] = shuffledEntrants[i]
   }
 
-  // Créer les matchs du premier tour
+  // Créer les matchs du premier tour et gérer les BYE
+  const round1Matches: Array<{ teamAId: string | null; teamBId: string | null; position: number }> = []
+  
   for (let pos = 0; pos < matchesPerRound1; pos++) {
     const slotA = slots[pos * 2]
     const slotB = slots[pos * 2 + 1]
@@ -109,92 +111,93 @@ export async function generateSingleEliminationBracket(
         winnerTeamId: undefined,
         status: 'PENDING'
       })
+      
+      round1Matches.push({ teamAId: slotA.teamId, teamBId: slotB.teamId, position: pos })
     } else if (slotA && !slotB) {
       // Équipe A a un BYE → passe directement au round suivant
       immediateWinners.push(slotA.teamId)
+      round1Matches.push({ teamAId: slotA.teamId, teamBId: null, position: pos })
     } else if (!slotA && slotB) {
       // Équipe B a un BYE → passe directement au round suivant
       immediateWinners.push(slotB.teamId)
+      round1Matches.push({ teamAId: null, teamBId: slotB.teamId, position: pos })
+    } else {
+      // Slot vide (ne devrait pas arriver)
+      round1Matches.push({ teamAId: null, teamBId: null, position: pos })
     }
-    // Si les deux sont null, c'est un slot vide (ne devrait pas arriver)
   }
 
-  // Créer tous les matchs des rounds suivants avec des équipes placeholder
-  // Les équipes seront mises à jour quand les matchs précédents seront terminés
+  // Créer tous les matchs des rounds suivants
+  // Pour le round 2, on doit gérer correctement les BYE et les gagnants du round 1
   for (let round = 2; round <= totalRounds; round++) {
     const matchesInRound = bracketSize / Math.pow(2, round)
     
     for (let pos = 0; pos < matchesInRound; pos++) {
-      // Pour le round 2, gérer les BYE
-      if (round === 2 && immediateWinners.length > 0) {
-        const byeIndex = pos * 2
-        const teamA = immediateWinners[byeIndex]
-        const teamB = immediateWinners[byeIndex + 1]
+      if (round === 2) {
+        // Pour le round 2, on doit combiner les gagnants du round 1 avec les équipes qui ont eu un BYE
+        // On a `matchesPerRound1` matchs au round 1, donc `matchesPerRound1` gagnants potentiels
+        // On a `immediateWinners.length` équipes qui ont eu un BYE
         
-        if (teamA && teamB) {
-          // Deux équipes avec BYE se rencontrent
-          const match = await prisma.match.create({
-            data: {
-              tournamentId,
-              round: 2,
-              teamAId: teamA,
-              teamBId: teamB,
-              status: 'PENDING'
-            }
-          })
-          
-          matches.push({
-            id: match.id,
-            round: 2,
-            position: pos,
-            teamAId: match.teamAId,
-            teamBId: match.teamBId,
-            winnerTeamId: undefined,
-            status: 'PENDING'
-          })
-        } else if (teamA) {
-          // Une seule équipe avec BYE, elle attend un gagnant du round 1
-          const match = await prisma.match.create({
-            data: {
-              tournamentId,
-              round: 2,
-              teamAId: teamA,
-              teamBId: tbdTeam.id, // Placeholder pour le gagnant du round 1
-              status: 'PENDING'
-            }
-          })
-          
-          matches.push({
-            id: match.id,
-            round: 2,
-            position: pos,
-            teamAId: match.teamAId,
-            teamBId: match.teamBId,
-            winnerTeamId: undefined,
-            status: 'PENDING'
-          })
-        } else {
-          // Pas d'équipe avec BYE à cette position, créer un match placeholder
-          const match = await prisma.match.create({
-            data: {
-              tournamentId,
-              round: 2,
-              teamAId: tbdTeam.id,
-              teamBId: tbdTeam.id,
-              status: 'PENDING'
-            }
-          })
-          
-          matches.push({
-            id: match.id,
-            round: 2,
-            position: pos,
-            teamAId: match.teamAId,
-            teamBId: match.teamBId,
-            winnerTeamId: undefined,
-            status: 'PENDING'
-          })
+        // Calculer quels matchs du round 1 alimentent ce match du round 2
+        const round1MatchIndex1 = pos * 2
+        const round1MatchIndex2 = pos * 2 + 1
+        
+        let teamAId: string | null = null
+        let teamBId: string | null = null
+        
+        // Vérifier le premier match du round 1
+        if (round1MatchIndex1 < round1Matches.length) {
+          const round1Match1 = round1Matches[round1MatchIndex1]
+          if (round1Match1.teamAId && round1Match1.teamBId) {
+            // Match normal, le gagnant sera déterminé plus tard
+            teamAId = tbdTeam.id
+          } else if (round1Match1.teamAId) {
+            // BYE pour teamA
+            teamAId = round1Match1.teamAId
+          } else if (round1Match1.teamBId) {
+            // BYE pour teamB
+            teamAId = round1Match1.teamBId
+          }
         }
+        
+        // Vérifier le deuxième match du round 1
+        if (round1MatchIndex2 < round1Matches.length) {
+          const round1Match2 = round1Matches[round1MatchIndex2]
+          if (round1Match2.teamAId && round1Match2.teamBId) {
+            // Match normal, le gagnant sera déterminé plus tard
+            teamBId = tbdTeam.id
+          } else if (round1Match2.teamAId) {
+            // BYE pour teamA
+            teamBId = round1Match2.teamAId
+          } else if (round1Match2.teamBId) {
+            // BYE pour teamB
+            teamBId = round1Match2.teamBId
+          }
+        }
+        
+        // Si on n'a pas d'équipe, utiliser un placeholder
+        if (!teamAId) teamAId = tbdTeam.id
+        if (!teamBId) teamBId = tbdTeam.id
+        
+        const match = await prisma.match.create({
+          data: {
+            tournamentId,
+            round: 2,
+            teamAId,
+            teamBId,
+            status: 'PENDING'
+          }
+        })
+        
+        matches.push({
+          id: match.id,
+          round: 2,
+          position: pos,
+          teamAId: match.teamAId,
+          teamBId: match.teamBId,
+          winnerTeamId: undefined,
+          status: 'PENDING'
+        })
       } else {
         // Pour les rounds 3+, créer des matchs avec des placeholders
         // Ces équipes seront mises à jour quand les matchs précédents seront terminés
@@ -300,15 +303,9 @@ export async function validateTournamentStart(tournamentId: string): Promise<{
     }
   }
 
-  // Vérifier le nombre max si défini
-  const maxTeams = tournament.bracketMaxTeams || 256
-  if (participantCount > maxTeams) {
-    return { 
-      canStart: false, 
-      reason: `Trop de participants (${participantCount}/${maxTeams} max)`, 
-      participantCount 
-    }
-  }
+  // Note: On ne bloque plus si le nombre de participants dépasse le maximum
+  // Le bracket sera généré avec le nombre réel de participants, même s'il est inférieur au maximum
+  // Le bracketMaxTeams sert uniquement de limite pour les inscriptions, pas pour la génération du bracket
 
   return { canStart: true, participantCount }
 }

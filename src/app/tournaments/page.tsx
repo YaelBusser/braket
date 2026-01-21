@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useSession } from 'next-auth/react'
-import { TournamentCard, SearchBar, PageContent, TournamentFilters } from '@/components/ui'
+import { TournamentCard, SearchBarWrapper, PageContent, TournamentFilters } from '@/components/ui'
 import Link from 'next/link'
 import styles from './page.module.scss'
 
@@ -132,30 +132,20 @@ function TournamentsList() {
       <h1 className={styles.title}>Tournois</h1>
       
       {/* Barre de recherche avec filtres */}
-      <div className={styles.searchSection}>
-        <div className={styles.searchBarWrapper}>
-          <SearchBar
-            placeholder="Rechercher un tournoi..."
-            size="md"
-            variant="dark"
-            onSearch={(v) => setQ(v || '')}
-            autoSearchDelay={300}
-            defaultValue={q}
-            className={styles.customSearchBar}
-          />
-        </div>
-        
-        {/* Filtres à droite de la barre de recherche */}
-        <div className={styles.filtersWrapper}>
-          <TournamentFilters
-            games={availableGames}
-            selectedGames={selectedGameIds}
-            onGamesChange={setSelectedGameIds}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
-          />
-        </div>
-      </div>
+      <SearchBarWrapper
+        placeholder="Rechercher un tournoi..."
+        onSearch={(v) => setQ(v || '')}
+        autoSearchDelay={300}
+        defaultValue={q}
+      >
+        <TournamentFilters
+          games={availableGames}
+          selectedGames={selectedGameIds}
+          onGamesChange={setSelectedGameIds}
+          statusFilter={statusFilter}
+          onStatusChange={setStatusFilter}
+        />
+      </SearchBarWrapper>
 
       {loading ? (
         <div className={styles.tournamentsGrid}>

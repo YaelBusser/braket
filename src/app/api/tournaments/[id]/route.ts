@@ -49,12 +49,6 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
       return false
     }
 
-    // Passer le tournoi en cours
-    await prisma.tournament.update({ 
-      where: { id: tournamentId }, 
-      data: { status: 'IN_PROGRESS' } as any 
-    })
-
     // Générer le bracket
     let entrants: Array<{ teamId: string; teamName: string; members: Array<{ userId: string; user: { pseudo: string } }> }> = []
 
@@ -113,10 +107,20 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
       }
     }
 
+    // Mettre à jour bracketMaxTeams avec le nombre réel de participants
+    const actualParticipantCount = entrants.length
+    await prisma.tournament.update({ 
+      where: { id: tournamentId }, 
+      data: { 
+        status: 'IN_PROGRESS',
+        bracketMaxTeams: actualParticipantCount
+      } as any 
+    })
+
     // Générer le bracket d'élimination directe
     const { matches, immediateWinners } = await generateSingleEliminationBracket(tournamentId, entrants)
     
-    console.log(`Tournoi ${tournamentId} démarré automatiquement: ${matches.length} matchs générés, ${immediateWinners.length} BYE`)
+    console.log(`Tournoi ${tournamentId} démarré automatiquement: ${matches.length} matchs générés, ${immediateWinners.length} BYE, ${actualParticipantCount} participants`)
     return true
   } catch (error) {
     console.error('Erreur lors du démarrage automatique du tournoi:', error)
@@ -154,7 +158,32 @@ export async function GET(
         // Charger les matchs seulement si demandé
         ...(includeMatches ? {
           matches: {
-            include: { teamA: true, teamB: true, winnerTeam: true },
+            include: { 
+              teamA: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  bannerUrl: true
+                }
+              }, 
+              teamB: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  bannerUrl: true
+                }
+              }, 
+              winnerTeam: {
+                select: {
+                  id: true,
+                  name: true,
+                  avatarUrl: true,
+                  bannerUrl: true
+                }
+              }
+            },
             orderBy: { round: 'asc' }
           },
         } : {}),
@@ -501,9 +530,6 @@ export async function PUT(
         }, { status: 400 })
       }
 
-      // Passer le tournoi en cours
-      const updated = await prisma.tournament.update({ where: { id }, data: ({ status: 'IN_PROGRESS' } as any) })
-
       // Générer le bracket d'élimination directe
       try {
         const full = await prisma.tournament.findUnique({
@@ -582,10 +608,24 @@ export async function PUT(
             }
           }
 
+          // Mettre à jour bracketMaxTeams avec le nombre réel de participants
+          const actualParticipantCount = entrants.length
+          
+          // Passer le tournoi en cours et mettre à jour bracketMaxTeams
+          const updated = await prisma.tournament.update({ 
+            where: { id }, 
+            data: { 
+              status: 'IN_PROGRESS',
+              bracketMaxTeams: actualParticipantCount
+            } as any 
+          })
+
           // Générer le bracket d'élimination directe
           const { matches, immediateWinners } = await generateSingleEliminationBracket(id, entrants)
           
-          console.log(`Bracket généré: ${matches.length} matchs, ${immediateWinners.length} vainqueurs immédiats`)
+          console.log(`Bracket généré: ${matches.length} matchs, ${immediateWinners.length} vainqueurs immédiats, ${actualParticipantCount} participants`)
+          
+          return NextResponse.json({ tournament: updated })
         }
       } catch (error) {
         console.error('Erreur génération bracket:', error)
@@ -594,7 +634,7 @@ export async function PUT(
         }, { status: 500 })
       }
 
-      return NextResponse.json({ tournament: updated })
+      return NextResponse.json({ message: 'Tournoi introuvable' }, { status: 404 })
     }
     if (mode === 'finish') {
       const res = await prisma.tournament.update({ where: { id }, data: ({ status: 'COMPLETED', endDate: new Date() } as any) })

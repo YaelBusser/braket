@@ -6,6 +6,7 @@ import { useNotification } from '../../../../components/providers/notification-p
 import ClientPageWrapper from '../../../../components/ClientPageWrapper'
 import Link from 'next/link'
 import Cropper from 'react-easy-crop'
+import { Button } from '../../../../components/ui'
 import styles from './page.module.scss'
 import { getCroppedImg } from '@/lib/image'
 import VisualsIcon from '../../../../components/icons/VisualsIcon'
@@ -186,7 +187,7 @@ function BracketSettingsSection({
       <div className={styles.bracketSettingsGrid}>
         <div className={styles.bracketSettingField}>
           <label className={styles.bracketSettingLabel}>
-            Minimum teams
+            Équipes minimum
           </label>
           <input
             type="number"
@@ -204,13 +205,13 @@ function BracketSettingsSection({
             <div className={styles.fieldError}>{errors.min}</div>
           )}
           <div className={styles.bracketSettingHelp}>
-            Minimum number of teams required to start the tournament.
+            Nombre minimum d'équipes requis pour démarrer le tournoi.
           </div>
         </div>
 
         <div className={styles.bracketSettingField}>
           <label className={styles.bracketSettingLabel}>
-            Maximum teams
+            Équipes maximum
           </label>
           <div className={styles.bracketSettingMaxContainer}>
             <div className={styles.bracketSettingMaxOptions}>
@@ -245,7 +246,7 @@ function BracketSettingsSection({
             <div className={styles.fieldError}>{errors.max}</div>
           )}
           <div className={styles.bracketSettingHelp}>
-            Maximum number of teams of the bracket.
+            Nombre maximum d'équipes du bracket.
           </div>
         </div>
       </div>
@@ -352,7 +353,15 @@ function TournamentAdminContent() {
           const data = await res.json()
           if (res.ok && data.tournament) {
             // Fusionner les nouvelles données avec les données existantes
-            setTournament(prev => prev ? { ...prev, ...data.tournament } : data.tournament)
+            setTournament(prev => {
+              if (!prev) return data.tournament
+              // Préserver _count si les nouvelles données ne l'ont pas
+              const merged = { ...prev, ...data.tournament }
+              if (!merged._count && prev._count) {
+                merged._count = prev._count
+              }
+              return merged
+            })
             // Marquer les données comme chargées
             setLoadedData(prev => ({
               teams: prev.teams || needsTeams,
@@ -700,20 +709,22 @@ function TournamentAdminContent() {
               {/* Stats */}
               <div className={styles.statsGrid}>
                 <div className={styles.statCard}>
-                  <div className={styles.statValue}>{tournament._count.registrations}</div>
+                  <div className={styles.statValue}>{tournament._count?.registrations ?? 0}</div>
                   <div className={styles.statLabel}>
                     {tournament.isTeamBased ? 'Équipes' : 'Participants'}
             </div>
           </div>
                 <div className={styles.statCard}>
                   <div className={styles.statValue} style={{ color: 'var(--lt-success)' }}>
-              {tournament._count.matches}
+              {tournament._count?.matches ?? 0}
             </div>
                   <div className={styles.statLabel}>Matchs</div>
             </div>
                 <div className={styles.statCard}>
                   <div className={styles.statValue} style={{ color: 'var(--lt-warning)' }}>
-              {tournament.maxParticipants || '∞'}
+              {tournament.isTeamBased 
+                ? (tournament.bracketMaxTeams || '∞')
+                : (tournament.maxParticipants || '∞')}
             </div>
                   <div className={styles.statLabel}>Max participants</div>
         </div>
@@ -724,27 +735,22 @@ function TournamentAdminContent() {
                 Actions rapides
               </h2>
               <div className={styles.actionsGrid}>
-              <button
-                onClick={() => callAction('open_reg')}
-                disabled={tournament.status === 'REG_OPEN'}
-                  className={`${styles.actionButton} ${styles.success}`}
-              >
-                Ouvrir inscriptions
-              </button>
-              <button
+              <Button
                 onClick={() => callAction('close_reg')}
                 disabled={tournament.status !== 'REG_OPEN'}
-                  className={`${styles.actionButton} ${styles.warning}`}
+                variant="primary"
               >
                 Démarrer tournoi
-              </button>
-              <button
-                onClick={() => callAction('finish')}
-                disabled={tournament.status === 'COMPLETED'}
-                  className={`${styles.actionButton} ${styles.danger}`}
-              >
-                Terminer tournoi
-              </button>
+              </Button>
+              {tournament.status === 'IN_PROGRESS' && (
+                <Button
+                  onClick={() => callAction('finish')}
+                  disabled={tournament.status === 'COMPLETED'}
+                  variant="primary"
+                >
+                  Terminer tournoi
+                </Button>
+              )}
             </div>
 
               {/* Info Cards */}
@@ -776,7 +782,7 @@ function TournamentAdminContent() {
           {activeSection === 'participants' && (
             <div className={styles.contentSection}>
               <h1 className={styles.contentTitle}>
-              {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count.registrations})
+              {tournament.isTeamBased ? 'Équipes' : 'Participants'} ({tournament._count?.registrations ?? 0})
               </h1>
             {tournament.teams && tournament.teams.length > 0 ? (
                 <div className={styles.participantsList}>
@@ -819,7 +825,7 @@ function TournamentAdminContent() {
 
           {activeSection === 'matches' && (
             <div className={styles.contentSection}>
-              <h1 className={styles.contentTitle}>Matchs ({tournament._count.matches})</h1>
+              <h1 className={styles.contentTitle}>Matchs ({tournament._count?.matches ?? 0})</h1>
             {tournament.matches && tournament.matches.length > 0 ? (
                 <div className={styles.matchesList}>
                 {tournament.matches.map((match) => (

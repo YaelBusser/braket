@@ -201,6 +201,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'a3.espncdn.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.seeklogo.com',
+      },
     ],
   },
   

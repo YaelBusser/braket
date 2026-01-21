@@ -11,15 +11,28 @@ $accent-vs: #ff6b35;
   width: 260px;
   height: 64px;
   background: $bg-node;
-  border: 1px solid $border-color;
+  border: none;
   border-radius: 8px;
   overflow: hidden;
-  display: flex;
-  align-items: stretch;
-  transition: border-color 0.15s ease;
+  position: relative;
+  transition: all 0.15s ease;
+  
+  // Fond unifié pour tout le bloc
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: $bg-node;
+    z-index: 0;
+  }
   
   &:hover {
-    border-color: #5a6577;
+    &::before {
+      background: lighten($bg-node, 3%);
+    }
   }
   
   &.placeholder {
@@ -36,12 +49,29 @@ $accent-vs: #ff6b35;
   }
   
   &.completed {
-    border-color: $accent-green;
+    &::before {
+      background: linear-gradient(135deg, rgba(255, 0, 140, 0.1) 0%, rgba(255, 0, 140, 0.05) 100%);
+    }
+  }
+  
+  &.inProgress {
+    animation: pulseGlow 2s ease-in-out infinite;
+    border: 2px solid rgba(245, 158, 11, 0.6);
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.2),
+      inset 0 0 20px rgba(245, 158, 11, 0.1);
+    
+    &::before {
+      background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 107, 53, 0.1) 100%);
+    }
   }
 }
 
 .teamSide {
-  flex: 1;
+  position: absolute;
+  top: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -49,31 +79,49 @@ $accent-vs: #ff6b35;
   padding: 0.4rem;
   gap: 0.2rem;
   transition: opacity 0.15s ease;
-  min-width: 0;
+  z-index: 2;
+  
+  // S'assurer que le contenu (logo, nom) est toujours visible
+  > * {
+    position: relative;
+    z-index: 1;
+  }
   
   &.teamA {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(50% + 7px);
     background: $bg-team-a;
+    // Diagonale vers le haut à droite (partie droite en diagonale)
+    // Angle réduit : utilise 48% pour un angle moins prononcé
+    clip-path: polygon(0 0, 100% 0, 90% 100%, 0 100%);
+    padding-right: 2rem;
   }
   
   &.teamB {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: calc(50% + 7px);
     background: $bg-team-b;
+    // Diagonale vers le bas à gauche (partie gauche en diagonale)
+    // Angle réduit : utilise 52% pour un angle moins prononcé
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
+    // S'assurer que teamB est visible même quand le match est terminé
+    z-index: 3;
+    padding-left: 0.4rem;
   }
   
   &.winner {
-    .teamLogo {
-      background: $accent-green;
-      color: #0a0d12;
-      box-shadow: 0 0 12px rgba(0, 212, 170, 0.4);
-    }
-    
-    .teamName {
-      color: $accent-green;
-      font-weight: 600;
-    }
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.25) 0%, rgba(0, 212, 170, 0.15) 100%) !important;
+  
   }
   
   &.loser {
-    opacity: 0.4;
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%) !important;
   }
 }
 
@@ -115,20 +163,25 @@ $accent-vs: #ff6b35;
 }
 
 .vsSeparator {
-  position: relative;
-  width: 44px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  background: linear-gradient(90deg, $bg-team-a 0%, $bg-team-b 100%);
+  z-index: 10;
+  pointer-events: none;
+  background: transparent;
 }
 
 .vsText {
-  font-size: 0.8rem;
-  font-weight: 500;
-  font-style: italic;
-  color: #8b949e;
+  font-size: 1rem;
+  font-weight: 600;
+  color: $text-primary;
+  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
@@ -138,4 +191,22 @@ $accent-vs: #ff6b35;
   background: $border-color !important;
   border: none !important;
   opacity: 0;
+}
+
+// Animations pour les matchs en cours
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.2),
+      inset 0 0 20px rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(245, 158, 11, 0.6),
+      0 0 60px rgba(245, 158, 11, 0.3),
+      inset 0 0 30px rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.9);
+  }
 }

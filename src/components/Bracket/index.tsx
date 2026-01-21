@@ -187,8 +187,12 @@ export default function Bracket({
               target: nextMatchId,
               type: 'smoothstep',
               style: { 
-                stroke: match.status === 'COMPLETED' ? '#00d4aa' : '#3d4654',
-                strokeWidth: 2,
+                stroke: match.status === 'COMPLETED' 
+                  ? '#ff008c' 
+                  : (match.status === 'IN_PROGRESS' || match.status === 'SCHEDULED')
+                    ? '#f59e0b'
+                    : '#3d4654',
+                strokeWidth: match.status === 'IN_PROGRESS' || match.status === 'SCHEDULED' ? 3 : 2,
               },
             })
           }

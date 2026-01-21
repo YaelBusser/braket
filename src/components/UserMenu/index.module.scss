@@ -280,8 +280,17 @@
       // Pour les icônes qui utilisent fill (comme SettingsIcon)
       path[fill],
       path {
-        fill: vars.$lt-accent-blue !important;
+        stroke: vars.$lt-accent-blue !important;
       }
+    }
+  }
+  
+  // Empêcher le changement de couleur de l'icône pour les items danger
+  &.menuItemDanger:hover .menuIcon {
+    color: vars.$lt-error !important;
+    
+    path {
+      stroke: vars.$lt-error !important;
     }
   }
 
@@ -306,12 +315,25 @@
 .menuItemDanger {
   color: vars.$lt-error;
 
+  // Empêcher le changement de couleur de l'icône au survol
+  .menuIcon {
+    color: vars.$lt-error !important;
+    
+    path {
+      stroke: vars.$lt-error !important;
+    }
+  }
+
   &:hover {
     background: rgba(239, 68, 68, 0.15);
     color: vars.$lt-error;
     
     .menuIcon {
-      color: vars.$lt-error;
+      color: vars.$lt-error !important;
+      
+      path {
+        stroke: vars.$lt-error !important;
+      }
     }
   }
 }

@@ -1,0 +1,248 @@
+@use '@/styles/variables.module' as vars;
+
+.matchesSidebar {
+  width: 320px;
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  padding: vars.$spacing-6;
+  height: fit-content;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+  position: sticky;
+  top: vars.$spacing-6;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: vars.$lt-border;
+    border-radius: 3px;
+    
+    &:hover {
+      background: vars.$primary-600;
+    }
+  }
+}
+
+.sidebarTitle {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin: 0 0 vars.$spacing-6 0;
+  font-family: vars.$font-family-secondary;
+}
+
+.sectionTitle {
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 vars.$spacing-4 0;
+  font-family: vars.$font-family-secondary;
+}
+
+.currentMatchSection {
+  margin-bottom: vars.$spacing-8;
+  padding-bottom: vars.$spacing-8;
+  border-bottom: 1px solid vars.$lt-border;
+}
+
+.matchesList {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+}
+
+.matchesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-4;
+}
+
+.matchCard {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-button;
+  padding: vars.$spacing-4;
+  transition: all vars.$transition-base;
+  
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    border-color: vars.$primary-600;
+    box-shadow: vars.$shadow-glow;
+  }
+  
+  &.currentMatch {
+    border-color: vars.$primary-600;
+    background: rgba(255, 0, 140, 0.1);
+    box-shadow: vars.$shadow-glow;
+  }
+  
+  &.inProgress {
+    animation: pulseGlow 2s ease-in-out infinite;
+    border: 2px solid rgba(245, 158, 11, 0.6);
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.2),
+      inset 0 0 20px rgba(245, 158, 11, 0.1);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 107, 53, 0.1) 100%);
+  }
+  
+  &.completed {
+    border-color: vars.$primary-600;
+    background: rgba(255, 0, 140, 0.1);
+    box-shadow: 0 0 20px rgba(255, 0, 140, 0.2);
+  }
+  
+  &.scheduled {
+    animation: pulseGlow 2s ease-in-out infinite;
+    border: 2px solid rgba(245, 158, 11, 0.6);
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.2),
+      inset 0 0 20px rgba(245, 158, 11, 0.1);
+    background: linear-gradient(135deg, rgba(255, 107, 53, 0.2) 0%, rgba(255, 107, 53, 0.1) 100%);
+  }
+}
+
+.matchHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: vars.$spacing-3;
+}
+
+.roundName {
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: vars.$font-family-secondary;
+}
+
+.statusBadge {
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+  padding: vars.$spacing-1 vars.$spacing-2;
+  border-radius: vars.$radius-base;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: vars.$font-family-secondary;
+  
+  &.pending {
+    background: rgba(139, 111, 163, 0.2);
+    border: 1px solid rgba(139, 111, 163, 0.4);
+    color: vars.$lt-text-muted;
+  }
+  
+  &.inProgress {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+  
+  &.scheduled {
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+  
+  &.completed {
+    background: rgba(255, 0, 140, 0.2);
+    border: 1px solid rgba(255, 0, 140, 0.4);
+    color: vars.$primary-600;
+  }
+}
+
+.matchTeams {
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-3;
+}
+
+.team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: vars.$spacing-2;
+  min-width: 0;
+}
+
+.teamLogo {
+  width: 40px;
+  height: 40px;
+  border-radius: vars.$radius-full;
+  background: vars.$gradient-primary;
+  border: 2px solid vars.$lt-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.teamName {
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-medium;
+  color: vars.$lt-text-primary;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  font-family: vars.$font-family-secondary;
+}
+
+.vs {
+  font-size: vars.$font-size-xs;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-muted;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  font-family: vars.$font-family-secondary;
+}
+
+.emptyMessage {
+  color: vars.$lt-text-muted;
+  font-size: vars.$font-size-sm;
+  text-align: center;
+  padding: vars.$spacing-8 0;
+  margin: 0;
+  font-family: vars.$font-family-secondary;
+}
+
+// Animations pour les matchs en cours (même que dans MatchNode)
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(245, 158, 11, 0.4),
+      0 0 40px rgba(245, 158, 11, 0.2),
+      inset 0 0 20px rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 
+      0 0 30px rgba(245, 158, 11, 0.6),
+      0 0 60px rgba(245, 158, 11, 0.3),
+      inset 0 0 30px rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.9);
+  }
+}
+

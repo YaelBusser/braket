@@ -413,6 +413,8 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
       try {
         localStorage.removeItem('lt_returnTo')
       } catch {}
+      // Réinitialiser le formulaire immédiatement après création réussie
+      resetForm()
       notify({ type: 'success', message: '🎉 Tournoi créé avec succès !' })
       onClose()
       setTimeout(() => {
@@ -425,42 +427,61 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     }
   }
 
+  // Fonction pour réinitialiser complètement le formulaire
+  const resetForm = useCallback(() => {
+    setStep(0)
+    setForm({
+      name: '',
+      description: '',
+      game: '',
+      format: 'SINGLE_ELIMINATION',
+      visibility: 'PUBLIC',
+      isTeamBased: 'solo',
+      teamMinSize: '',
+      teamMaxSize: '',
+      startDate: '',
+      prizes: '',
+      rules: ''
+    })
+    setSelectedGameId(null)
+    setSelectedGameName('')
+    setGameQuery('')
+    setGameResults([])
+    // Nettoyer les previews d'images avant de réinitialiser
+    setPosterPreview(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    setLogoPreview(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    setPosterFile(null)
+    setLogoFile(null)
+    setShowCropper(false)
+    setOriginalImageUrl(prev => {
+      if (prev) URL.revokeObjectURL(prev)
+      return null
+    })
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    setCroppedAreaPixels(null)
+  }, [])
+
   const handleClose = useCallback(() => {
+    // Ne pas fermer si le cropper est ouvert
+    if (showCropper) return
+    
     setIsClosing(true)
     // Sauvegarder l'état avant de fermer (sauf si on vient de créer le tournoi)
     saveToLocalStorage()
     // Réinitialiser après fermeture (mais garder le localStorage pour reprendre plus tard)
     setTimeout(() => {
-      setStep(0)
-      setForm({
-        name: '',
-        description: '',
-        game: '',
-        format: 'SINGLE_ELIMINATION',
-        visibility: 'PUBLIC',
-        isTeamBased: 'solo',
-        teamMinSize: '',
-        teamMaxSize: '',
-        startDate: '',
-        prizes: '',
-        rules: ''
-      })
-      setSelectedGameId(null)
-      setSelectedGameName('')
-      setGameQuery('')
-      setGameResults([])
-      setPosterFile(null)
-      setPosterPreview(null)
-      setLogoFile(null)
-      setLogoPreview(null)
+      resetForm()
       setIsClosing(false)
-      setShowCropper(false)
-      if (originalImageUrl) URL.revokeObjectURL(originalImageUrl)
-      if (posterPreview) URL.revokeObjectURL(posterPreview)
-      if (logoPreview) URL.revokeObjectURL(logoPreview)
       onClose()
     }, 300)
-  }, [saveToLocalStorage, onClose, originalImageUrl, posterPreview, logoPreview])
+  }, [saveToLocalStorage, onClose, showCropper, resetForm])
 
   // Nettoyage des URLs lors du démontage
   useEffect(() => {
@@ -1182,6 +1203,71 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
           </div>
         </div>
       </div>
+
+      {/* Modal de recadrage d'image */}
+      {showCropper && originalImageUrl && (
+        <div className={styles.cropModal} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.cropContainer} onClick={(e) => e.stopPropagation()}>
+            <h2 className={styles.cropTitle}>
+              {cropType === 'logo' ? 'Recadrer le logo' : 'Recadrer la bannière'}
+            </h2>
+            <div 
+              className={styles.cropArea} 
+              data-aspect={cropType === 'banner' ? 'banner' : undefined}
+              data-crop-type={cropType}
+            >
+              <Cropper
+                image={originalImageUrl}
+                crop={crop}
+                zoom={zoom}
+                aspect={cropType === 'logo' ? 1 : 16 / 9}
+                onCropChange={setCrop}
+                onCropComplete={onCropComplete}
+                onZoomChange={setZoom}
+                cropShape={cropType === 'logo' ? 'round' : 'rect'}
+              />
+            </div>
+            <div className={styles.cropControls}>
+              <div className={styles.cropZoomControl}>
+                <label>Zoom:</label>
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.1}
+                  value={zoom}
+                  onChange={(e) => setZoom(Number(e.target.value))}
+                />
+              </div>
+              <div className={styles.cropButtons}>
+                <button 
+                  className={styles.cancelBtn}
+                  onClick={() => {
+                    setShowCropper(false)
+                    if (originalImageUrl) {
+                      URL.revokeObjectURL(originalImageUrl)
+                    }
+                    setOriginalImageUrl(null)
+                    if (cropType === 'logo') {
+                      setLogoFile(null)
+                    } else {
+                      setPosterFile(null)
+                    }
+                  }}
+                >
+                  Annuler
+                </button>
+                <button 
+                  className={styles.cropBtn}
+                  onClick={handleCropComplete}
+                >
+                  Valider
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

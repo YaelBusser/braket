@@ -32,16 +32,17 @@ function MatchNode({ data }: { data: MatchNodeData }) {
   const { match, isPlaceholder, currentRound } = data
   
   const isCompleted = match.status === 'COMPLETED'
+  const isInProgress = match.status === 'IN_PROGRESS' || match.status === 'SCHEDULED'
   const teamAWins = match.winnerTeamId && match.winnerTeamId === match.teamAId
   const teamBWins = match.winnerTeamId && match.winnerTeamId === match.teamBId
 
   const teamAName = isPlaceholder ? '?' : (match.teamA?.name || '?')
   const teamBName = isPlaceholder ? '?' : (match.teamB?.name || '?')
   
-  // Normaliser le nom pour remplacer "TBD (À déterminer)" par "À déterminer"
+  // Normaliser le nom pour remplacer "TBD (À déterminer)" ou "À déterminer" par "?"
   const normalizeName = (name: string) => {
-    if (name.includes('TBD') || name === 'TBD (À déterminer)') {
-      return 'À déterminer'
+    if (name.includes('TBD') || name === 'TBD (À déterminer)' || name === 'À déterminer') {
+      return '?'
     }
     return name
   }
@@ -51,7 +52,7 @@ function MatchNode({ data }: { data: MatchNodeData }) {
 
   // Initiales pour le logo placeholder
   const getInitials = (name: string) => {
-    if (name === '?' || name === 'À déterminer') return '?'
+    if (name === '?') return '?'
     return name.slice(0, 2).toUpperCase()
   }
   
@@ -66,6 +67,7 @@ function MatchNode({ data }: { data: MatchNodeData }) {
       className={`
         ${styles.matchNode}
         ${isCompleted ? styles.completed : ''}
+        ${isInProgress ? styles.inProgress : ''}
         ${isPlaceholder ? styles.placeholder : ''}
       `}
     >

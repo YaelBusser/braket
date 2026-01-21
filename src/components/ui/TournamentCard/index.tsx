@@ -30,6 +30,7 @@ interface TournamentCardProps {
     isTeamBased?: boolean
     teamMinSize?: number | null
     teamMaxSize?: number | null
+    bracketMaxTeams?: number | null
     region?: string | null
     organizer?: {
       id: string
@@ -78,7 +79,10 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
   }
 
   const participantsCount = tournament._count?.registrations || 0
-  const maxParticipants = tournament.maxParticipants || 0
+  // Pour le maximum : utiliser bracketMaxTeams si tournoi en équipe, sinon maxParticipants
+  const maxParticipants = tournament.isTeamBased 
+    ? (tournament.bracketMaxTeams || 0)
+    : (tournament.bracketMaxTeams || tournament.maxParticipants || 0)
   
   // Utiliser gameRef si disponible, sinon fallback sur game
   const gameName = tournament.gameRef?.name || tournament.game || ''
@@ -108,31 +112,6 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
     return '1v1'
   }
 
-  // Format des emplacements (places restantes / total)
-  const formatSlots = () => {
-    if (maxParticipants > 0) {
-      const remaining = maxParticipants - participantsCount
-      return {
-        remaining,
-        total: maxParticipants,
-        text: `${remaining} place${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''} / ${maxParticipants}`
-      }
-    }
-    if (participantsCount > 0) {
-      return {
-        remaining: null,
-        total: null,
-        text: `${participantsCount} participant${participantsCount > 1 ? 's' : ''}`
-      }
-    }
-    return {
-      remaining: null,
-      total: null,
-      text: ''
-    }
-  }
-
-  const slotsInfo = formatSlots()
 
   // Format du statut du tournoi
   const getStatusLabel = () => {
@@ -250,12 +229,12 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
       
       {/* Section contenu en dessous de l'image */}
       <div className={styles.cardContent}>
-        {/* Logo organisateur à gauche - utilise le logo du jeu par défaut si pas de logo tournoi */}
-        {organizer?.avatarUrl || tournament.logoUrl || gameLogoUrl ? (
+        {/* Logo du tournoi à gauche - utilise le logo du jeu par défaut si pas de logo tournoi */}
+        {tournament.logoUrl || gameLogoUrl ? (
           <div className={styles.organizerLogo}>
             <Image 
-              src={organizer?.avatarUrl || tournament.logoUrl || gameLogoUrl || ''} 
-              alt={organizer?.pseudo || tournament.name || gameName}
+              src={tournament.logoUrl || gameLogoUrl || ''} 
+              alt={tournament.name || gameName}
               width={40}
               height={40}
               loading="lazy"
@@ -263,7 +242,7 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
           </div>
         ) : (
           <div className={styles.organizerLogoPlaceholder}>
-            {organizer?.pseudo?.charAt(0).toUpperCase() || tournament.name.charAt(0).toUpperCase()}
+            {tournament.name.charAt(0).toUpperCase()}
           </div>
         )}
         
@@ -285,23 +264,22 @@ function TournamentCard({ tournament, className = '', variant = 'default', loadi
             <span className={`${styles.statusTag} ${getStatusColor()}`}>
               {getStatusLabel()}
             </span>
-          </div>
-          
-          {/* Détails du tournoi : Places et format de tournoi */}
-          <div className={styles.tournamentDetails}>
-            {slotsInfo.text && (
-              <span className={styles.slotsInfo}>
-                {slotsInfo.text}
+            {maxParticipants > 0 && (
+              <span className={styles.participantsTag}>
+                {participantsCount}/{maxParticipants}
               </span>
             )}
-            {tournament.format && tournament.format !== 'SINGLE_ELIMINATION' && (
-              <>
-                {slotsInfo.text && ' • '}
+          </div>
+          
+          {/* Détails du tournoi : Format de tournoi */}
+          {tournament.format && tournament.format !== 'SINGLE_ELIMINATION' && (
+            <div className={styles.tournamentDetails}>
+              <span className={styles.slotsInfo}>
                 {tournament.format === 'DOUBLE_ELIMINATION' ? 'Double élimination' : 
                  tournament.format === 'ROUND_ROBIN' ? 'Round robin' : 'Elimination directe'}
-              </>
-            )}
-          </div>
+              </span>
+            </div>
+          )}
         </div>
       </div>
       </Link>

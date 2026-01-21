@@ -141,9 +141,9 @@ function Navigation() {
           </Link>
           
           <div className={styles.navLinks}>
-            <Link href="/tournaments" className={styles.navLink} prefetch={true} onClick={handleLinkClick}>Rejoindre un tournoi</Link>
+            <Link href="/tournaments" className={styles.navLink} prefetch={true} onClick={handleLinkClick}>Tournois</Link>
             {mounted && session && (
-              <Link href="/teams" className={styles.navLink} prefetch={true} onClick={handleLinkClick}>Mes équipes</Link>
+              <Link href="/teams" className={styles.navLink} prefetch={true} onClick={handleLinkClick}>Équipes</Link>
             )}
           </div>
         </div>
@@ -195,11 +195,11 @@ function Navigation() {
           </div>
           <div className={styles.mobileNavLinks}>
             <Link href="/tournaments" className={styles.mobileNavLink} prefetch={true} onClick={handleLinkClick}>
-              Rejoindre un tournoi
+              Tournois
             </Link>
             {mounted && session && (
               <Link href="/teams" className={styles.mobileNavLink} prefetch={true} onClick={handleLinkClick}>
-                Mes équipes
+                Équipes
               </Link>
             )}
             {mounted && session && isAdmin && (

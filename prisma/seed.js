@@ -180,7 +180,7 @@ const LOL_TEAMS = [
   {
     name: 'MAD Lions',
     description: 'Équipe européenne, multiple championne de la LEC',
-    avatarUrl: 'https://scontent-cdg4-1.xx.fbcdn.net/v/t39.30808-6/348240478_263228082735159_1867399792017196595_n.png?_nc_cat=108&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=9lOK_mgYT-AQ7kNvwFwb8K8&_nc_oc=AdmFpxtaWOfrXjoc-1BRBbVCQ45j9cBDENF7lLq_HM1WLRVb7c53hr3MGgpY6cXdun8&_nc_zt=23&_nc_ht=scontent-cdg4-1.xx&_nc_gid=a55p2bHvM4Cmky01hGZpyA&oh=00_AfryoKqcKLWjU8cuLbttoHxtsxR0DTFLqWKjwqfDvxaMxQ&oe=69746E4F',
+    avatarUrl: 'https://images.seeklogo.com/logo-png/61/1/mad-lions-logo-png_seeklogo-612974.png',
     bannerUrl: 'https://cdn.uc.assets.prezly.com/e05c35e7-1a0a-4a67-8bfe-5fc77e8874b4/ML_splash_2K.jpg',
     players: [
       { pseudo: 'Elyoya', email: 'elyoya@mad.gg', name: 'Javier Prades', avatarUrl: 'https://pbs.twimg.com/media/FCa6O88WQAgfCbb.jpg', bannerUrl: 'https://www.eclypsia.com/wp-content/uploads/eclypsia/2024/01/52835441998_c1aa045906_k-1024x683.jpg' },
@@ -230,18 +230,18 @@ const LOL_TEAMS = [
   {
     name: 'DetonatioN FocusMe',
     description: 'Équipe japonaise, dominante de la LJL',
-    avatarUrl: 'https://scontent-cdg4-3.xx.fbcdn.net/v/t39.30808-6/319860536_692073809078881_5301025885744282960_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=dytVp7MNSH0Q7kNvwF8rpWC&_nc_oc=AdkMZte71Di-E-EI8VN23M03YUYRvcIknohMiEsEfFCSTrn_MEPcVZrqS4TWmUdNjTs&_nc_zt=23&_nc_ht=scontent-cdg4-3.xx&_nc_gid=FHOS5sBys1cYLSYS2rT-ng&oh=00_Afqcn0SPkBopkBLryUiNui5qJQIl_bASOO9AtJAhUnaQ6Q&oe=69749564',
-    bannerUrl: 'https://team-detonation.net/wp-content/uploads/2024/02/web-bg-min-1.jpg',
+    avatarUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTz-tDCayxoH6wxFgGhBgk_N_9KqwdIod0Yaw&s',
+    bannerUrl: 'https://team-detonation.net/wp-content/uploads/2017/12/catch_loldfm.jpg',
     players: [
-      { pseudo: 'Aria', email: 'aria@dfm.gg', name: 'Lee Ga-eul', avatarUrl: 'https://liquipedia.net/commons/images/thumb/5/50/DFM_Aria_Worlds_2023.jpg/450px-DFM_Aria_Worlds_2023.jpg', bannerUrl: 'https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/7/7f/Team_DetonatioN_FocusMe_LCP_2026.jpg/revision/latest?cb=20260109123251' },
+      { pseudo: 'Aria', email: 'aria@dfm.gg', name: 'Lee Ga-eul', avatarUrl: 'https://scontent-cdg4-1.xx.fbcdn.net/v/t39.30808-6/585904556_818906054380053_2164980956004041878_n.jpg?_nc_cat=108&ccb=1-7&_nc_sid=833d8c&_nc_ohc=cRDxj1YUCuUQ7kNvwEx37vY&_nc_oc=AdnW9uSScGUB-9rKO2VxPZz7mvAwatDYx_clUm5X1YsWw79wkE1IuGlPZfdIa_lE7kw&_nc_zt=23&_nc_ht=scontent-cdg4-1.xx&_nc_gid=-JzY-OaHDWxCV5eRZJRYuw&oh=00_AfrugM2SqK-Q8YgP_gQ45fyYHqhxjG8rzkYfAQe9pIoiyA&oe=6977045E', bannerUrl: 'https://www.team-aaa.com/upload/media/post_image/0001/12/436acfcc5a487cd46ef406a6fa97eb475684c7c5.jpeg' },
       { pseudo: 'Yutapon', email: 'yutapon@dfm.gg', name: 'Yuta Sugiura', avatarUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSwoYhIg_H5F3rxQnVmNkkn1aV5kB6QalxFWw&s', bannerUrl: 'https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/7/7f/Team_DetonatioN_FocusMe_LCP_2026.jpg/revision/latest?cb=20260109123251' }
     ]
   },
   {
     name: 'PSG Talon',
     description: 'Équipe de la région Asie-Pacifique, championne de la PCS',
-    avatarUrl: 'https://scontent-cdg4-2.xx.fbcdn.net/v/t39.30808-6/585203521_1256362353178784_6160683117736291360_n.jpg?_nc_cat=109&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=aho_jxpAN5MQ7kNvwHSV9s7&_nc_oc=AdlR2WbU-qxW5k4jEHS4hycNCFZ_ghQfY-BFH6Zn_DZbv5NnnukiF_DEPU7TcZQp4Dc&_nc_zt=23&_nc_ht=scontent-cdg4-2.xx&_nc_gid=AEh2vQMYLZLDDkRmN7k4tQ&oh=00_Afow0uRREKXtd5rRkLZDthBX6710b3DjhVvxO2t157jOdA&oe=6974A1B8',
-    bannerUrl: 'https://scontent-cdg4-1.xx.fbcdn.net/v/t1.6435-9/163394917_1428599080816020_416909874350563053_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=cc71e4&_nc_ohc=E5ZYcyb58xAQ7kNvwG6qPRf&_nc_oc=AdmySP0VzFWkJ87pEwR8ddVuZHV4Lv-a8J6q4X2PdnKxE2_sZGIHPmESzh1gC2GirFA&_nc_zt=23&_nc_ht=scontent-cdg4-1.xx&_nc_gid=ZxMO_m1st9kYpylWnkR7VQ&oh=00_AfqRQ93EUlmeztEpQBOvLGvlAn43xkDBqldYAG5iHoPBIA&oe=69963349',
+    avatarUrl: 'https://upload.wikimedia.org/wikipedia/en/2/25/PSG_Talon_logo.png?20250715193658',
+    bannerUrl: 'https://www.team-aaa.com/media/cache/article_big/upload/media/post_image/0001/12/d41e178d9cd9d9aa6bd3cf4312e24226a5686c67.jpeg',
     players: [
       { pseudo: 'Maple', email: 'maple@psg.gg', name: 'Huang Yi-Tang', avatarUrl: 'https://pbs.twimg.com/media/Gv31hqtWcAAd_0s?format=jpg&name=small', bannerUrl: 'https://noticias.maisesports.com.br/wp-content/uploads/2020/12/maple-psg-talon.jpeg' },
       { pseudo: 'Wako', email: 'wako@psg.gg', name: 'Tsou Wei-Chiang', avatarUrl: 'https://static-esports.ubisoft.com/esports-platform/common/members/51f07515-5ed8-439e-a07b-f7a99b8e0c64.png', bannerUrl: 'https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/b/b0/TALON_LCP_2025_Split_1.jpg/revision/latest?cb=20250116143949' }
@@ -291,8 +291,15 @@ async function main() {
     const createdPlayers = []
     for (let i = 0; i < teamData.players.length; i++) {
       const player = teamData.players[i]
-      const user = await prisma.user.create({
-        data: {
+      const user = await prisma.user.upsert({
+        where: { email: player.email },
+        update: {
+          pseudo: player.pseudo,
+          name: player.name,
+          avatarUrl: player.avatarUrl || null,
+          bannerUrl: player.bannerUrl || null
+        },
+        create: {
           email: player.email,
           pseudo: player.pseudo,
           name: player.name,
@@ -302,9 +309,18 @@ async function main() {
       })
       createdPlayers.push(user)
       
-      // Ajouter le joueur à l'équipe (le premier est capitaine)
-      await prisma.teamMember.create({
-        data: {
+      // Ajouter le joueur à l'équipe (le premier est capitaine) - utiliser upsert pour éviter les doublons
+      await prisma.teamMember.upsert({
+        where: {
+          teamId_userId: {
+            teamId: team.id,
+            userId: user.id
+          }
+        },
+        update: {
+          isCaptain: i === 0
+        },
+        create: {
           teamId: team.id,
           userId: user.id,
           isCaptain: i === 0

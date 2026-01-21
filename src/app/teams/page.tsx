@@ -1,13 +1,14 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { useState, useEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNotification } from '../../components/providers/notification-provider'
 import { useAuthModal } from '../../components/AuthModal/AuthModalContext'
 import { useCreateTeamModal } from '../../components/CreateTeamModal/CreateTeamModalContext'
-import { ContentWithTabs } from '../../components/ui'
+import { ContentWithTabs, SearchBarWrapper, Button } from '../../components/ui'
 import TeamCard from '../../components/ui/TeamCard'
+import Link from 'next/link'
 import styles from './page.module.scss'
 import profileStyles from '../profile/page.module.scss'
 
@@ -35,12 +36,15 @@ interface Team {
 export default function TeamsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { notify } = useNotification()
   const { openAuthModal } = useAuthModal()
   const { openCreateTeamModal } = useCreateTeamModal()
-  const [teams, setTeams] = useState<Team[]>([])
+  const [allTeams, setAllTeams] = useState<Team[]>([]) // Toutes les équipes chargées
   const [loading, setLoading] = useState(true)
   const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showMine, setShowMine] = useState(false) // true = mes équipes, false = toutes les équipes
 
   const loadTeams = useCallback(async () => {
     setLoading(true)
@@ -56,12 +60,12 @@ export default function TeamsPage() {
         }
       }
 
-      // Si connecté, charger mes équipes, sinon charger toutes les équipes
-      const endpoint = session?.user ? '/api/teams?mine=true' : '/api/teams'
-      const res = await fetch(endpoint)
-      if (res.ok) {
-        const data = await res.json()
-        setTeams(Array.isArray(data) ? data : (data.teams || []))
+      // Charger toutes les équipes (on filtrera côté client pour "mes équipes")
+      const allTeamsRes = await fetch('/api/teams')
+      if (allTeamsRes.ok) {
+        const allData = await allTeamsRes.json()
+        const allTeamsData = Array.isArray(allData) ? allData : (allData.teams || [])
+        setAllTeams(allTeamsData)
       } else {
         notify({ message: 'Erreur lors du chargement des équipes', type: 'error' })
       }
@@ -72,6 +76,40 @@ export default function TeamsPage() {
       setLoading(false)
     }
   }, [notify, session])
+
+  // Filtrer les équipes selon la recherche et le mode (mes équipes / toutes)
+  const filteredTeams = useMemo(() => {
+    let baseTeams = allTeams
+
+    // Si on veut voir "mes équipes" et qu'on est connecté
+    if (showMine && session?.user) {
+      const userId = (session.user as any).id
+      baseTeams = allTeams.filter((team: any) => 
+        team.members?.some((member: any) => member.user?.id === userId)
+      )
+    }
+
+    // Filtrer par recherche
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim()
+      baseTeams = baseTeams.filter((team: any) => 
+        team.name?.toLowerCase().includes(query) ||
+        team.tournament?.name?.toLowerCase().includes(query) ||
+        team.members?.some((member: any) => 
+          member.user?.name?.toLowerCase().includes(query) ||
+          member.user?.pseudo?.toLowerCase().includes(query)
+        )
+      )
+    }
+
+    return baseTeams
+  }, [allTeams, searchQuery, showMine, session])
+
+  // Initialiser showMine depuis l'URL
+  useEffect(() => {
+    const mine = searchParams.get('mine')
+    setShowMine(mine === 'true' || mine === '1')
+  }, [searchParams])
 
   useEffect(() => {
     loadTeams()
@@ -128,9 +166,9 @@ export default function TeamsPage() {
               </div>
             </div>
             <div className={profileStyles.userInfo}>
-              <div className={profileStyles.userLabel}>MES ÉQUIPES</div>
+              <div className={profileStyles.userLabel}>{showMine ? 'MES ÉQUIPES' : 'ÉQUIPES'}</div>
               <h1 className={profileStyles.username}>
-                {session?.user?.name || 'Utilisateur'}
+                {showMine ? (session?.user?.name || 'Utilisateur') : 'Toutes les équipes'}
               </h1>
               <div className={profileStyles.userMeta}>
                 <span className={profileStyles.status}>
@@ -139,7 +177,7 @@ export default function TeamsPage() {
                 </span>
                 <span className={profileStyles.separator}>•</span>
                 <span className={profileStyles.registrationDate}>
-                  {teams.length} équipe{teams.length > 1 ? 's' : ''}
+                  {filteredTeams.length} équipe{filteredTeams.length > 1 ? 's' : ''}
                 </span>
               </div>
             </div>
@@ -164,7 +202,7 @@ export default function TeamsPage() {
               </h1>
               <div className={profileStyles.userMeta}>
                 <span className={profileStyles.registrationDate}>
-                  {teams.length} équipe{teams.length > 1 ? 's' : ''}
+                  {filteredTeams.length} équipe{filteredTeams.length > 1 ? 's' : ''}
                 </span>
               </div>
             </div>
@@ -177,33 +215,48 @@ export default function TeamsPage() {
         <div className={profileStyles.tabContent}>
           <div className={profileStyles.teamsTab}>
             <div className={profileStyles.tabHeader}>
-              <h3>{isAuthenticated ? 'Mes équipes' : 'Toutes les équipes'}</h3>
+              <h3>{showMine && isAuthenticated ? 'Mes équipes' : 'Toutes les équipes'}</h3>
               {isAuthenticated && (
-                <button 
-                  className={profileStyles.createBtn}
-                  onClick={openCreateTeamModal}
-                >
-                  Créer une équipe
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginLeft: 'auto' }}>
+                  <Button
+                    variant={!showMine ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => router.push('/teams')}
+                  >
+                    Toutes les équipes
+                  </Button>
+                  <Button
+                    variant={showMine ? 'primary' : 'outline'}
+                    size="sm"
+                    onClick={() => router.push('/teams?mine=true')}
+                  >
+                    Mes équipes
+                  </Button>
+                </div>
               )}
             </div>
+            
+            {/* Barre de recherche */}
+            <SearchBarWrapper
+              placeholder="Rechercher une équipe..."
+              onSearch={setSearchQuery}
+              autoSearchDelay={300}
+              defaultValue={searchQuery}
+            />
             
             {loading ? (
               <div className={profileStyles.loading}>
                 <div className={profileStyles.spinner}></div>
                 <p>Chargement...</p>
               </div>
-            ) : !teams || teams.length === 0 ? (
+            ) : !filteredTeams || filteredTeams.length === 0 ? (
               <div className={profileStyles.emptyState}>
-                <p>{isAuthenticated ? 'Aucune équipe rejointe' : 'Aucune équipe disponible'}</p>
-                {isAuthenticated && (
-                  <button 
-                    className={profileStyles.createBtn}
-                    onClick={openCreateTeamModal}
-                  >
-                    Créer ma première équipe
-                  </button>
-                )}
+                <p>
+                  {searchQuery.trim() 
+                    ? 'Aucune équipe trouvée pour cette recherche' 
+                    : (showMine && isAuthenticated ? 'Aucune équipe rejointe' : 'Aucune équipe disponible')
+                  }
+                </p>
               </div>
             ) : (
               <div style={{ 
@@ -212,7 +265,7 @@ export default function TeamsPage() {
                 gap: '1.5rem',
                 width: '100%'
               }}>
-                {teams.map((team: any) => (
+                {filteredTeams.map((team: any) => (
                   <TeamCard key={team.id} team={team} />
                 ))}
               </div>

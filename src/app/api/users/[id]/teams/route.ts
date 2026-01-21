@@ -40,19 +40,35 @@ export async function GET(
             }
           }
         },
-        tournament: {
-          select: {
-            id: true,
-            name: true,
-            game: true,
-            status: true
+        registrations: {
+          include: {
+            tournament: {
+              select: {
+                id: true,
+                name: true,
+                game: true,
+                status: true
+              }
+            }
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json(teams)
+    // Transformer les équipes pour avoir une structure compatible avec TeamCard
+    const teamsWithTournament = teams.map(team => {
+      // Prendre le premier tournoi inscrit (ou null si aucun)
+      const tournament = team.registrations?.[0]?.tournament || null
+      // Retirer registrations et ajouter tournament directement
+      const { registrations, ...teamWithoutRegistrations } = team
+      return {
+        ...teamWithoutRegistrations,
+        tournament
+      }
+    })
+
+    return NextResponse.json(teamsWithTournament)
   } catch (error) {
     console.error('GET /api/users/[id]/teams error', error)
     return NextResponse.json(

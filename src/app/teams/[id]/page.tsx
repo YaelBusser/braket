@@ -491,14 +491,16 @@ function TeamView({ teamId }: { teamId: string }) {
                     href={`/profile/${member.user.id}`}
                     className={styles.memberItem}
                   >
-                    <div className={styles.memberAvatar}>
-                      {member.user.avatarUrl ? (
-                        <img src={member.user.avatarUrl} alt={member.user.name || member.user.pseudo} />
-                      ) : (
-                        <div className={styles.avatarPlaceholder}>
-                          {(member.user.name || member.user.pseudo)?.charAt(0).toUpperCase()}
-                        </div>
-                      )}
+                    <div className={styles.memberAvatarWrapper}>
+                      <div className={styles.memberAvatar}>
+                        {member.user.avatarUrl ? (
+                          <img src={member.user.avatarUrl} alt={member.user.name || member.user.pseudo} />
+                        ) : (
+                          <div className={styles.avatarPlaceholder}>
+                            {(member.user.name || member.user.pseudo)?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
                       {member.isCaptain && (
                         <div className={styles.captainBadge}>C</div>
                       )}
