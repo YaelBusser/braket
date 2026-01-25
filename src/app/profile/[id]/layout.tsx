@@ -5,6 +5,7 @@ import { useRouter, usePathname, useParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Tabs, ContentWithTabs, TournamentCard } from '../../../components/ui'
 import TeamCard from '../../../components/ui/TeamCard'
+import OverviewTab from './overview/page'
 import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
@@ -119,37 +120,7 @@ function ParticipationsContent() {
 }
 
 function OverviewContent() {
-  const { userTournaments, loadingData } = useProfileData()
-
-  return (
-    <div className={styles.overviewTab}>
-      <div className={styles.activityCard}>
-        <h3 className={styles.activityTitle}>Activité récente</h3>
-        {loadingData ? (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner}></div>
-            <p>Chargement...</p>
-          </div>
-        ) : userTournaments && Array.isArray(userTournaments) && userTournaments.length > 0 ? (
-          <div className={styles.activityList}>
-            {userTournaments.slice(0, 5).map((tournament) => (
-              <div key={tournament.id} className={styles.activityItem}>
-                <div className={styles.activityIcon}>🏆</div>
-                <div className={styles.activityContent}>
-                  <h4>{tournament.name}</h4>
-                  <p>{new Date(tournament.createdAt).toLocaleDateString('fr-FR')}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className={styles.emptyActivity}>
-            <p>Aucune activité récente</p>
-          </div>
-        )}
-      </div>
-    </div>
-  )
+  return <OverviewTab />
 }
 
 function TeamsContent() {

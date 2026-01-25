@@ -189,6 +189,64 @@
   gap: vars.$spacing-6;
 }
 
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: vars.$spacing-4;
+  margin-bottom: vars.$spacing-6;
+}
+
+.statCard {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-card;
+  padding: vars.$spacing-4;
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-4;
+  transition: all vars.$transition-fast;
+
+  &:hover {
+    background: vars.$lt-dark-tertiary;
+    border-color: vars.$primary-600;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 0, 140, 0.1);
+  }
+}
+
+.statIcon {
+  font-size: vars.$font-size-3xl;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 0, 140, 0.1);
+  border-radius: vars.$radius-md;
+}
+
+.statContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: vars.$spacing-1;
+}
+
+.statValue {
+  font-size: vars.$font-size-2xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-text-primary;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .activityCard {
   background: transparent;
   border: none;

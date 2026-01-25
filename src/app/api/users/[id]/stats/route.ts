@@ -105,14 +105,57 @@ export async function GET(
       }
     })
 
+    // Statistiques des matchs
+    const matchStats = await prisma.match.findMany({
+      where: {
+        OR: [
+          { teamA: { members: { some: { userId: id } } } },
+          { teamB: { members: { some: { userId: id } } } }
+        ],
+        tournament: {
+          visibility: 'PUBLIC'
+        }
+      },
+      include: {
+        teamA: {
+          include: {
+            members: true
+          }
+        },
+        teamB: {
+          include: {
+            members: true
+          }
+        },
+        winnerTeam: true,
+        tournament: {
+          select: {
+            visibility: true
+          }
+        }
+      }
+    })
+
+    const totalMatches = matchStats.length
+    const wonMatches = matchStats.filter(match => 
+      match.winnerTeam && 
+      (match.teamA.members.some((m: any) => m.userId === id) || 
+       match.teamB.members.some((m: any) => m.userId === id))
+    ).length
+
+    const winRate = totalMatches > 0 ? (wonMatches / totalMatches) * 100 : 0
+
     return NextResponse.json({
       totalTournaments,
       activeTournaments,
       completedTournaments,
       totalParticipants,
       totalWins,
-      totalTeams: totalTeamsJoined,
-      totalRegistrations
+      totalTeamsJoined: totalTeamsJoined,
+      totalRegistrations,
+      totalMatches,
+      wonMatches,
+      winRate: Math.round(winRate * 100) / 100
     })
   } catch (error) {
     console.error('GET /api/users/[id]/stats error', error)
