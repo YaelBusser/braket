@@ -1,1 +1,1 @@
-fais un message de commit dans le chat avec des gitmojis
+fais un message de commit dans le chat avec des gitmojis et si tu met un " met plutot un '

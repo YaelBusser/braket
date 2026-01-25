@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '../../../../../../../lib/auth'
 import { prisma } from '../../../../../../../lib/prisma'
 
-// GET: Récupère les équipes où l'utilisateur est capitaine pour ce tournoi
+// GET: Récupère toutes les équipes de l'utilisateur (capitaine ou non) pour ce tournoi
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,14 +15,13 @@ export async function GET(
 
     const { id: tournamentId } = await params
 
-    // Récupérer toutes les équipes où l'utilisateur est capitaine
+    // Récupérer toutes les équipes où l'utilisateur est membre (capitaine ou non)
     // (pas seulement celles liées à ce tournoi, car on peut vouloir inscrire une équipe existante)
     const teams = await prisma.team.findMany({
       where: {
         members: {
           some: {
-            userId,
-            isCaptain: true
+            userId
           }
         }
       },
@@ -46,7 +45,16 @@ export async function GET(
       orderBy: { createdAt: 'desc' }
     })
 
-    return NextResponse.json({ teams })
+    // Ajouter une propriété isCaptain pour chaque équipe
+    const teamsWithCaptainStatus = teams.map(team => {
+      const userMember = team.members.find(m => m.userId === userId)
+      return {
+        ...team,
+        isUserCaptain: userMember?.isCaptain || false
+      }
+    })
+
+    return NextResponse.json({ teams: teamsWithCaptainStatus })
   } catch (error) {
     console.error('GET /api/tournaments/[id]/teams/captain error', error)
     return NextResponse.json({ message: 'Erreur serveur' }, { status: 500 })

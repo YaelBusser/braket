@@ -11,12 +11,16 @@ $accent-green: #00d4aa;
   border-radius: 8px;
   padding: 1rem 0.75rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   
   &.hasWinner {
     border-style: solid;
     border-color: $accent-gold;
     
-    .trophy {
+    .winnerLogo {
       animation: float 3s ease-in-out infinite;
     }
     
@@ -28,9 +32,42 @@ $accent-green: #00d4aa;
   }
 }
 
-.trophy {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+.winnerLogo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3d4654 0%, #2d3440 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 0.25rem;
+}
+
+.winnerLogoImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.winnerLogoPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
 }
 
 @keyframes float {

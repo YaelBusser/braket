@@ -731,7 +731,7 @@ function TournamentAdminContent() {
       </div>
 
               {/* Actions */}
-              <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
+              <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl' }}>
                 Actions rapides
               </h2>
               <div className={styles.actionsGrid}>
@@ -753,29 +753,6 @@ function TournamentAdminContent() {
               )}
             </div>
 
-              {/* Info Cards */}
-              <h2 className={styles.contentTitle} style={{ fontSize: 'var(--font-size-xl)', marginBottom: 'var(--spacing-4)' }}>
-                Informations du tournoi
-              </h2>
-              <div className={styles.infoGrid}>
-                <div className={styles.infoCard}>
-                  <h3 className={styles.infoCardTitle}>Détails</h3>
-                  <div className={styles.infoCardContent}>
-                  <div><strong>Catégorie:</strong> {tournament.category}</div>
-                  <div><strong>Format:</strong> {tournament.format}</div>
-                  <div><strong>Visibilité:</strong> {tournament.visibility}</div>
-                  <div><strong>Type:</strong> {tournament.isTeamBased ? 'Équipes' : 'Solo'}</div>
-                </div>
-              </div>
-                <div className={styles.infoCard}>
-                  <h3 className={styles.infoCardTitle}>Dates</h3>
-                  <div className={styles.infoCardContent}>
-                  <div><strong>Début:</strong> {tournament.startDate ? new Date(tournament.startDate).toLocaleString('fr-FR') : '—'}</div>
-                  <div><strong>Fin:</strong> {tournament.endDate ? new Date(tournament.endDate).toLocaleString('fr-FR') : '—'}</div>
-                  <div><strong>Clôture:</strong> {tournament.registrationDeadline ? new Date(tournament.registrationDeadline).toLocaleString('fr-FR') : '—'}</div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 

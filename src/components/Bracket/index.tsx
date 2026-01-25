@@ -22,6 +22,8 @@ import styles from './index.module.scss'
 interface Team {
   id: string
   name: string
+  avatarUrl?: string | null
+  logoUrl?: string | null
 }
 
 interface Match {
@@ -206,16 +208,20 @@ export default function Bracket({
     const championX = totalRounds * (NODE_WIDTH + HORIZONTAL_GAP)
     const championY = getMatchYPosition(totalRounds - 1, 0, VERTICAL_GAP)
     
+    // Déterminer l'équipe gagnante
+    const winnerTeam = finalMatch?.status === 'COMPLETED' 
+      ? (finalMatch.winnerTeamId === finalMatch.teamAId 
+          ? finalMatch.teamA 
+          : finalMatch.teamB)
+      : null
+    
     nodes.push({
       id: 'champion',
       type: 'champion',
       position: { x: championX, y: championY },
       data: {
-        winner: finalMatch?.status === 'COMPLETED' 
-          ? (finalMatch.winnerTeamId === finalMatch.teamAId 
-              ? finalMatch.teamA?.name 
-              : finalMatch.teamB?.name)
-          : null
+        winner: winnerTeam?.name || null,
+        winnerTeam: winnerTeam || null
       },
       draggable: false,
     })

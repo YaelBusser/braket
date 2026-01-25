@@ -121,6 +121,23 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
   }
 
   const handleSelectTeam = (team: any) => {
+    // Vérifier que l'utilisateur est bien capitaine de cette équipe
+    const userId = (session?.user as any)?.id
+    if (!userId) {
+      notify({ type: 'error', message: 'Vous devez être connecté' })
+      return
+    }
+    
+    // Utiliser isUserCaptain si disponible, sinon vérifier manuellement
+    const isCaptain = team.isUserCaptain !== undefined 
+      ? team.isUserCaptain 
+      : team.members?.some((m: any) => m.userId === userId && m.isCaptain)
+    
+    if (!isCaptain) {
+      notify({ type: 'error', message: 'Seul le capitaine de l\'équipe peut l\'inscrire au tournoi' })
+      return
+    }
+    
     setSelectedTeam(team)
     // Pré-sélectionner le capitaine
     const captainMember = team.members.find((m: any) => m.isCaptain)
@@ -141,6 +158,23 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
   const handleRegisterTeam = async () => {
     if (!selectedTeam || selectedMembers.length === 0) {
       notify({ type: 'error', message: 'Veuillez sélectionner au moins un membre' })
+      return
+    }
+
+    // Vérifier une dernière fois que l'utilisateur est bien capitaine avant l'inscription
+    const userId = (session?.user as any)?.id
+    if (!userId) {
+      notify({ type: 'error', message: 'Vous devez être connecté' })
+      return
+    }
+    
+    // Utiliser isUserCaptain si disponible, sinon vérifier manuellement
+    const isCaptain = selectedTeam.isUserCaptain !== undefined 
+      ? selectedTeam.isUserCaptain 
+      : selectedTeam.members?.some((m: any) => m.userId === userId && m.isCaptain)
+    
+    if (!isCaptain) {
+      notify({ type: 'error', message: 'Seul le capitaine de l\'équipe peut l\'inscrire au tournoi' })
       return
     }
 
@@ -246,34 +280,55 @@ export default function TeamSelectionModal({ isOpen, onClose, tournamentId, tour
                   </div>
                   {filteredTeams.length > 0 ? (
                     <div className={styles.teamsList} style={{ marginBottom: '2rem' }}>
-                      {filteredTeams.map(team => (
-                        <div key={team.id} className={styles.teamCard}>
-                          <div className={styles.teamInfo}>
-                            <div className={styles.teamHeader}>
-                              {team.avatarUrl ? (
-                                <img 
-                                  src={team.avatarUrl} 
-                                  alt={team.name}
-                                  className={styles.teamLogo}
-                                />
-                              ) : (
-                                <div className={styles.teamLogoPlaceholder}>
-                                  {team.name.charAt(0).toUpperCase()}
-                                </div>
+                      {filteredTeams.map(team => {
+                        const userId = (session?.user as any)?.id
+                        const isCaptain = team.isUserCaptain !== undefined 
+                          ? team.isUserCaptain 
+                          : team.members?.some((m: any) => m.userId === userId && m.isCaptain)
+                        
+                        return (
+                          <div key={team.id} className={styles.teamCard}>
+                            <div className={styles.teamInfo}>
+                              <div className={styles.teamHeader}>
+                                {team.avatarUrl ? (
+                                  <img 
+                                    src={team.avatarUrl} 
+                                    alt={team.name}
+                                    className={styles.teamLogo}
+                                  />
+                                ) : (
+                                  <div className={styles.teamLogoPlaceholder}>
+                                    {team.name.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <h4>{team.name}</h4>
+                              </div>
+                              <p>{team.members?.length || 0} membre{team.members?.length !== 1 ? 's' : ''}</p>
+                              {!isCaptain && (
+                                <p style={{ 
+                                  fontSize: '0.75rem', 
+                                  color: '#fca5a5', 
+                                  marginTop: '0.5rem',
+                                  fontStyle: 'italic'
+                                }}>
+                                  Seul le capitaine peut inscrire l'équipe
+                                </p>
                               )}
-                              <h4>{team.name}</h4>
                             </div>
-                            <p>{team.members?.length || 0} membre{team.members?.length !== 1 ? 's' : ''}</p>
+                            <button
+                              className={styles.joinTeamButton}
+                              onClick={() => handleSelectTeam(team)}
+                              disabled={loading || !isCaptain}
+                              style={{
+                                opacity: !isCaptain ? 0.5 : 1,
+                                cursor: !isCaptain ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {isCaptain ? 'Sélectionner' : 'Non disponible'}
+                            </button>
                           </div>
-                          <button
-                            className={styles.joinTeamButton}
-                            onClick={() => handleSelectTeam(team)}
-                            disabled={loading}
-                          >
-                            Sélectionner
-                          </button>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   ) : (
                     <div style={{ 
