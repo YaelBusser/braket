@@ -10,6 +10,7 @@ import { TeamSelectionModalProvider } from "../components/TeamSelectionModal/Tea
 import { CreateTeamModalProvider } from "../components/CreateTeamModal/CreateTeamModalContext";
 import { ThemeProvider } from "../components/providers/theme-provider";
 import Sidebar from "../components/Sidebar";
+import CookieConsent from "../components/CookieConsent";
 import { Funnel_Display, Red_Hat_Display } from "next/font/google";
 
 const primaryFont = Funnel_Display({
@@ -64,6 +65,7 @@ export default function RootLayout({
                           <Footer />
                         </div>
                       </div>
+                      <CookieConsent />
                     </CreateTeamModalProvider>
                   </TeamSelectionModalProvider>
                 </CreateTournamentModalProvider>

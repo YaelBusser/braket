@@ -50,7 +50,8 @@ function TournamentView() {
   const [registrations, setRegistrations] = useState<any[]>([])
   const [hasTeam, setHasTeam] = useState(false)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
-  const [tab, setTab] = useState<'overview'|'bracket'|'players'>('overview')
+  const [tab, setTab] = useState<'overview'|'bracket'|'players'|'ranking'>('overview')
+  const [ranking, setRanking] = useState<any[]>([])
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
   const [showUnregisterModal, setShowUnregisterModal] = useState(false)
   const [myTeam, setMyTeam] = useState<any>(null)
@@ -89,12 +90,41 @@ function TournamentView() {
         startTransition(() => {
           setTeams(teamData.teams)
         })
+
+        // Charger le classement si le tournoi est terminé
+        if (tData.tournament?.status === 'COMPLETED') {
+          const rankingRes = await fetch(`/api/tournaments/${id}/ranking`)
+          if (rankingRes.ok) {
+            const rankingData = await rankingRes.json()
+            startTransition(() => {
+              setRanking(rankingData.ranking || [])
+            })
+          }
+        }
       } catch (error) {
         console.error('Erreur lors du chargement:', error)
       }
     }
     load()
   }, [id, session])
+
+  // Recharger le classement quand le tournoi est terminé
+  useEffect(() => {
+    const loadRanking = async () => {
+      if (tournament?.status === 'COMPLETED' && id) {
+        try {
+          const rankingRes = await fetch(`/api/tournaments/${id}/ranking`)
+          if (rankingRes.ok) {
+            const rankingData = await rankingRes.json()
+            setRanking(rankingData.ranking || [])
+          }
+        } catch (error) {
+          console.error('Erreur lors du chargement du classement:', error)
+        }
+      }
+    }
+    loadRanking()
+  }, [tournament?.status, id])
 
   // Optimisation : combiner les calculs liés à l'utilisateur
   useEffect(() => {
@@ -557,7 +587,8 @@ function TournamentView() {
           tabs={[
             { key: 'overview', label: 'Aperçu' },
             { key: 'bracket', label: 'Bracket' },
-            { key: 'players', label: 'Equipes' }
+            { key: 'players', label: 'Equipes' },
+            ...(tournament?.status === 'COMPLETED' ? [{ key: 'ranking', label: 'Classement' }] : [])
           ]}
           activeTab={tab}
           onTabChange={(key) => setTab(key as any)}
@@ -1294,7 +1325,7 @@ function TournamentView() {
                 </div>
 
               {/* Classement */}
-              {(tournament.matches && tournament.matches.length > 0) || status === 'COMPLETED' ? (
+              {status === 'COMPLETED' ? (
                 <div>
                   <div style={{ 
                     display: 'flex', 
@@ -1310,12 +1341,15 @@ function TournamentView() {
                     }}>
                       Classement
                     </h3>
-                    {tournament.matches && tournament.matches.length > 0 && (
-                      <Link
-                        href={`#`}
+                    {tournament.status === 'COMPLETED' && ranking.length > 0 && (
+                      <button
+                        onClick={() => setTab('ranking')}
                         style={{
+                          background: 'transparent',
+                          border: 'none',
                           color: '#3b82f6',
                           fontSize: '0.875rem',
+                          cursor: 'pointer',
                           textDecoration: 'none'
                         }}
                         onMouseEnter={(e) => {
@@ -1326,7 +1360,7 @@ function TournamentView() {
                         }}
                       >
                         Voir tout
-                      </Link>
+                      </button>
                     )}
                   </div>
                   <div style={{
@@ -1335,10 +1369,87 @@ function TournamentView() {
                     borderRadius: '8px',
                     overflow: 'hidden'
                   }}>
-                    {[1, 2, 3].map((rank) => {
-                      // Pour l'instant, on affiche "À déterminer" car le classement nécessite une logique plus complexe
-                      // basée sur les résultats des matchs et le format du tournoi
-                      return (
+                    {ranking.length > 0 ? (
+                      ranking.slice(0, 3).map((entry: any) => {
+                        const team = entry.team
+                        return (
+                          <div key={entry.rank} style={{
+                            padding: '1rem',
+                            borderBottom: entry.rank < 3 ? '1px solid #374151' : 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '1rem'
+                          }}>
+                            <div style={{
+                              width: '24px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              {entry.rank === 1 && <span style={{ fontSize: '1.25rem' }}>🥇</span>}
+                              {entry.rank === 2 && <span style={{ fontSize: '1.25rem' }}>🥈</span>}
+                              {entry.rank === 3 && <span style={{ fontSize: '1.25rem' }}>🥉</span>}
+                            </div>
+                            <div style={{
+                              width: '32px',
+                              color: '#9ca3af',
+                              fontSize: '0.875rem',
+                              fontWeight: '500'
+                            }}>
+                              {entry.rank}
+                            </div>
+                            <div style={{
+                              flex: 1,
+                              color: '#fff',
+                              fontSize: '0.875rem',
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              {tournament.isTeamBased ? (
+                                team.avatarUrl ? (
+                                  <img 
+                                    src={team.avatarUrl} 
+                                    alt={team.name}
+                                    style={{
+                                      width: '24px',
+                                      height: '24px',
+                                      borderRadius: '4px',
+                                      objectFit: 'cover'
+                                    }}
+                                  />
+                                ) : (
+                                  <div style={{
+                                    width: '24px',
+                                    height: '24px',
+                                    background: '#374151',
+                                    borderRadius: '4px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '0.75rem'
+                                  }}>👥</div>
+                                )
+                              ) : (
+                                <div style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  background: '#374151',
+                                  borderRadius: '50%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.75rem'
+                                }}>👤</div>
+                              )}
+                              <span>{team.name || 'À déterminer'}</span>
+                            </div>
+                          </div>
+                        )
+                      })
+                    ) : (
+                      [1, 2, 3].map((rank) => (
                         <div key={rank} style={{
                           padding: '1rem',
                           borderBottom: rank < 3 ? '1px solid #374151' : 'none',
@@ -1399,8 +1510,8 @@ function TournamentView() {
                             <span>À déterminer</span>
                           </div>
                         </div>
-                      )
-                    })}
+                      ))
+                    )}
                   </div>
                 </div>
               ) : null}
@@ -1549,6 +1660,118 @@ function TournamentView() {
                 totalSlots={tournament.bracketMaxTeams || 8}
               />
             </div>
+          </div>
+        )}
+
+        {tab === 'ranking' && (
+          <div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>Classement</h2>
+            </div>
+            {loading ? (
+              <div style={{ color: '#9ca3af', textAlign: 'center', padding: '2rem' }}>Chargement du classement...</div>
+            ) : ranking.length === 0 ? (
+              <div style={{
+                background: '#1f2937',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                padding: '2rem',
+                textAlign: 'center',
+                color: '#9ca3af'
+              }}>
+                <p>Aucun classement disponible</p>
+              </div>
+            ) : (
+              <div style={{
+                background: 'transparent',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}>
+                {ranking.map((entry: any, index: number) => {
+                  const team = entry.team
+                  return (
+                    <div key={entry.rank} style={{
+                      padding: '1rem',
+                      borderBottom: index < ranking.length - 1 ? '1px solid #374151' : 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '1rem',
+                      background: entry.rank <= 3 ? 'rgba(255, 0, 140, 0.05)' : 'transparent'
+                    }}>
+                      <div style={{
+                        width: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {entry.rank === 1 && <span style={{ fontSize: '1.5rem' }}>🥇</span>}
+                        {entry.rank === 2 && <span style={{ fontSize: '1.5rem' }}>🥈</span>}
+                        {entry.rank === 3 && <span style={{ fontSize: '1.5rem' }}>🥉</span>}
+                        {entry.rank > 3 && (
+                          <span style={{
+                            color: '#9ca3af',
+                            fontSize: '0.875rem',
+                            fontWeight: '500',
+                            width: '32px',
+                            textAlign: 'center'
+                          }}>
+                            {entry.rank}
+                          </span>
+                        )}
+                      </div>
+                      <div style={{
+                        flex: 1,
+                        color: '#fff',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}>
+                        {tournament.isTeamBased ? (
+                          team.avatarUrl ? (
+                            <img 
+                              src={team.avatarUrl} 
+                              alt={team.name}
+                              style={{
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '4px',
+                                objectFit: 'cover'
+                              }}
+                            />
+                          ) : (
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              background: '#374151',
+                              borderRadius: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '0.875rem'
+                            }}>👥</div>
+                          )
+                        ) : (
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            background: '#374151',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.875rem'
+                          }}>👤</div>
+                        )}
+                        <span>{team.name || 'À déterminer'}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
 

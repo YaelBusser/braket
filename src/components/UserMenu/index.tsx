@@ -42,6 +42,16 @@ export default function UserMenu({ forceOpen = false }: UserMenuProps = {}) {
 
   const handleSignOut = async () => {
     setIsOpen(false)
+    
+    // Supprimer le consentement aux cookies avant la déconnexion
+    // (NextAuth supprimera automatiquement les cookies de session)
+    try {
+      localStorage.removeItem('cookie-consent')
+    } catch (e) {
+      // Ignorer les erreurs localStorage (mode privé, etc.)
+    }
+    
+    // NextAuth supprime automatiquement les cookies de session lors de signOut
     await signOut({ callbackUrl: '/' })
   }
 
