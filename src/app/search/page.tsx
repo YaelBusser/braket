@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { TournamentCard, CircularCard, GameCardSkeleton, PageContent, SearchBar, TournamentFilters } from '@/components/ui'
+import { TournamentCard, CircularCard, GameCardSkeleton, PageContent, SearchBarWrapper, TournamentFilters } from '@/components/ui'
 import { formatRelativeTime } from '@/utils/dateUtils'
 import Link from 'next/link'
 import styles from './page.module.scss'
@@ -32,6 +32,7 @@ interface TeamResult {
   name: string
   game: string | null
   description: string | null
+  avatarUrl: string | null
   members: Array<{
     user: {
       id: string
@@ -347,30 +348,33 @@ function SearchPageContent() {
           </h1>
           
           {/* Barre de recherche avec filtres */}
-          <div className={styles.searchSection}>
-            <div className={styles.searchBarWrapper}>
-              <SearchBar
-                placeholder="Rechercher des tournois, jeux, utilisateurs..."
-                size="md"
-                variant="dark"
-                autoSearchDelay={500}
-                defaultValue={q}
-              />
-            </div>
-            
+          <SearchBarWrapper
+            placeholder="Rechercher des tournois, jeux, utilisateurs..."
+            onSearch={(v) => {
+              setQ(v || '')
+              // Mettre à jour l'URL avec le paramètre de recherche sans remonter en haut
+              const params = new URLSearchParams(searchParams.toString())
+              if (v && v.trim()) {
+                params.set('q', v.trim())
+              } else {
+                params.delete('q')
+              }
+              router.replace(`/search?${params.toString()}`, { scroll: false })
+            }}
+            autoSearchDelay={500}
+            defaultValue={q}
+          >
             {/* Filtres à droite de la barre de recherche */}
             {(activeFilter === 'Tout' || activeFilter === 'Tournois') && (
-              <div className={styles.filtersWrapper}>
-                <TournamentFilters
-                  games={availableGames}
-                  selectedGames={selectedGameIds}
-                  onGamesChange={setSelectedGameIds}
-                  statusFilter={tournamentStatusFilter}
-                  onStatusChange={setTournamentStatusFilter}
-                />
-              </div>
+              <TournamentFilters
+                games={availableGames}
+                selectedGames={selectedGameIds}
+                onGamesChange={setSelectedGameIds}
+                statusFilter={tournamentStatusFilter}
+                onStatusChange={setTournamentStatusFilter}
+              />
             )}
-          </div>
+          </SearchBarWrapper>
 
           {/* Filtres de type de recherche */}
           <div className={styles.filters}>
@@ -545,8 +549,8 @@ function SearchPageContent() {
             ) : (
               <div className={styles.circularList}>
                 {teams.map(team => {
-                  // Utiliser l'avatar du premier membre ou un placeholder
-                  const teamImage = team.members[0]?.user?.avatarUrl || null
+                  // Utiliser le logo de l'équipe (avatarUrl) ou un placeholder
+                  const teamImage = team.avatarUrl || null
                   return (
                     <CircularCard
                       key={team.id}

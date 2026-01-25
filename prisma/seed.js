@@ -150,8 +150,8 @@ const LOL_TEAMS = [
   {
     name: 'Weibo Gaming',
     description: 'Équipe chinoise, finaliste mondiale 2023',
-    avatarUrl: 'https://static.wikia.nocookie.net/id5/images/9/9c/WeiboGamingOfficial.jpg/revision/latest?cb=20240805140508',
-    bannerUrl: 'https://static.wikia.nocookie.net/lolesports_gamepedia_en/images/d/da/WBG_2022_Spring.jpg/revision/latest/scale-to-width-down/1200?cb=20230115134526',
+    avatarUrl: 'https://pbs.twimg.com/media/F_JAdvhW8AAjYb1.jpg',
+    bannerUrl: 'https://pbs.twimg.com/media/Gpv32nJasAALi-N.jpg',
     players: [
       { pseudo: 'Xiaohu', email: 'xiaohu@wbg.gg', name: 'Li Yuanhao', avatarUrl: 'https://storage.ensigame.com/logos/players/be33d4e41afc443b29ea62390bdb4dc5.png', bannerUrl: 'https://s.yimg.com/ny/api/res/1.2/pdfUBCv5xgEP7S8rDXN8sA--/YXBwaWQ9aGlnaGxhbmRlcjt3PTEyNDI7aD02OTk7Y2Y9d2VicA--/https://s.yimg.com/os/creatr-uploaded-images/2022-12/52fe8f90-7c3c-11ed-affb-7c8bc9a0e437' },
       { pseudo: 'Light', email: 'light@wbg.gg', name: 'Wang Guangyu', avatarUrl: 'https://media.trackingthepros.com/profile/p825.png', bannerUrl: 'https://pbs.twimg.com/media/G7POcCqbQAAX5rr?format=jpg&name=small' }
