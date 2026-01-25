@@ -42,23 +42,12 @@ export default function TeamsPage() {
   const { openCreateTeamModal } = useCreateTeamModal()
   const [allTeams, setAllTeams] = useState<Team[]>([]) // Toutes les équipes chargées
   const [loading, setLoading] = useState(true)
-  const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMine, setShowMine] = useState(false) // true = mes équipes, false = toutes les équipes
 
   const loadTeams = useCallback(async () => {
     setLoading(true)
     try {
-      // Charger la bannière seulement si connecté
-      if (session?.user) {
-        const profileRes = await fetch('/api/profile')
-        if (profileRes.ok) {
-          const profile = await profileRes.json()
-          if (profile.user?.bannerUrl) {
-            setBannerUrl(profile.user.bannerUrl)
-          }
-        }
-      }
 
       // Charger toutes les équipes (on filtrera côté client pour "mes équipes")
       const allTeamsRes = await fetch('/api/teams')
@@ -141,75 +130,6 @@ export default function TeamsPage() {
 
   return (
     <div className={profileStyles.profilePage}>
-      {/* Header avec avatar et infos */}
-      {isAuthenticated ? (
-        <div 
-          className={profileStyles.profileHeader}
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        >
-          <div className={profileStyles.headerContent}>
-            <div className={profileStyles.avatarWrapper}>
-              <div className={profileStyles.avatarContainer}>
-                {session?.user?.image ? (
-                  <img src={session.user.image} alt="Avatar" className={profileStyles.avatar} />
-                ) : (
-                  <div className={profileStyles.avatarPlaceholder}>
-                    {session?.user?.name?.charAt(0) || 'U'}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className={profileStyles.userInfo}>
-              <div className={profileStyles.userLabel}>{showMine ? 'MES ÉQUIPES' : 'ÉQUIPES'}</div>
-              <h1 className={profileStyles.username}>
-                {showMine ? (session?.user?.name || 'Utilisateur') : 'Toutes les équipes'}
-              </h1>
-              <div className={profileStyles.userMeta}>
-                <span className={profileStyles.status}>
-                  <span className={profileStyles.statusDot}></span>
-                  En ligne
-                </span>
-                <span className={profileStyles.separator}>•</span>
-                <span className={profileStyles.registrationDate}>
-                  {filteredTeams.length} équipe{filteredTeams.length > 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div 
-          className={profileStyles.profileHeader}
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        >
-          <div className={profileStyles.headerContent}>
-            <div className={profileStyles.userInfo}>
-              <div className={profileStyles.userLabel}>ÉQUIPES</div>
-              <h1 className={profileStyles.username}>
-                Toutes les équipes
-              </h1>
-              <div className={profileStyles.userMeta}>
-                <span className={profileStyles.registrationDate}>
-                  {filteredTeams.length} équipe{filteredTeams.length > 1 ? 's' : ''}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       <ContentWithTabs style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
         {/* Contenu principal */}
         <div className={profileStyles.tabContent}>

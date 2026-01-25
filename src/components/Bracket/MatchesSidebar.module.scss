@@ -1,16 +1,15 @@
 @use '@/styles/variables.module' as vars;
 
 .matchesSidebar {
-  width: 320px;
+  width: 100%;
+  max-width: 100%;
   background: vars.$lt-dark-secondary;
   border: 1px solid vars.$lt-border;
   border-radius: vars.$radius-card;
   padding: vars.$spacing-6;
   height: fit-content;
-  max-height: calc(100vh - 200px);
+  max-height: calc(100vh - 300px);
   overflow-y: auto;
-  position: sticky;
-  top: vars.$spacing-6;
   
   &::-webkit-scrollbar {
     width: 6px;
@@ -83,6 +82,14 @@
     border-color: vars.$primary-600;
     background: rgba(255, 0, 140, 0.1);
     box-shadow: vars.$shadow-glow;
+  }
+  
+  &.currentMatchPrimary {
+    border-color: vars.$primary;
+    background: rgba(255, 0, 140, 0.15);
+    box-shadow: 
+      0 0 20px rgba(255, 0, 140, 0.3),
+      0 0 40px rgba(255, 0, 140, 0.15);
   }
   
   &.inProgress {
@@ -208,6 +215,35 @@
   text-overflow: ellipsis;
   max-width: 100%;
   font-family: vars.$font-family-secondary;
+  display: flex;
+  align-items: center;
+  gap: vars.$spacing-1;
+  justify-content: center;
+}
+
+.winnerBadge {
+  font-size: vars.$font-size-sm;
+  flex-shrink: 0;
+}
+
+.team {
+  &.winner {
+    .teamName {
+      color: rgba(0, 255, 150, 1);
+      font-weight: vars.$font-weight-semibold;
+    }
+    .teamLogo {
+      border-color: rgba(0, 255, 150, 0.6);
+      box-shadow: 0 0 10px rgba(0, 255, 150, 0.3);
+    }
+  }
+  
+  &.loser {
+    opacity: 0.6;
+    .teamName {
+      color: vars.$lt-text-muted;
+    }
+  }
 }
 
 .vs {

@@ -113,12 +113,24 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
       where: { id: tournamentId }, 
       data: { 
         status: 'IN_PROGRESS',
-        bracketMaxTeams: actualParticipantCount
+        bracketMaxTeams: actualParticipantCount,
+        startDate: new Date() // Mettre à jour la date de début à maintenant
       } as any 
     })
 
     // Générer le bracket d'élimination directe
     const { matches, immediateWinners } = await generateSingleEliminationBracket(tournamentId, entrants)
+    
+    // Mettre automatiquement tous les matchs PENDING en SCHEDULED quand le tournoi démarre
+    await prisma.match.updateMany({
+      where: {
+        tournamentId: tournamentId,
+        status: 'PENDING'
+      },
+      data: {
+        status: 'SCHEDULED'
+      }
+    })
     
     console.log(`Tournoi ${tournamentId} démarré automatiquement: ${matches.length} matchs générés, ${immediateWinners.length} BYE, ${actualParticipantCount} participants`)
     return true
@@ -616,12 +628,24 @@ export async function PUT(
             where: { id }, 
             data: { 
               status: 'IN_PROGRESS',
-              bracketMaxTeams: actualParticipantCount
+              bracketMaxTeams: actualParticipantCount,
+              startDate: new Date() // Mettre à jour la date de début à maintenant
             } as any 
           })
 
           // Générer le bracket d'élimination directe
           const { matches, immediateWinners } = await generateSingleEliminationBracket(id, entrants)
+          
+          // Mettre automatiquement tous les matchs PENDING en SCHEDULED quand le tournoi démarre
+          await prisma.match.updateMany({
+            where: {
+              tournamentId: id,
+              status: 'PENDING'
+            },
+            data: {
+              status: 'SCHEDULED'
+            }
+          })
           
           console.log(`Bracket généré: ${matches.length} matchs, ${immediateWinners.length} vainqueurs immédiats, ${actualParticipantCount} participants`)
           

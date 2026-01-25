@@ -79,6 +79,7 @@ interface TeamStats {
   losses: number
   winRate: number
   totalTournaments: number
+  tournamentsWon: number
 }
 
 export default function TeamPage() {
@@ -97,7 +98,8 @@ function TeamView({ teamId }: { teamId: string }) {
     wins: 0,
     losses: 0,
     winRate: 0,
-    totalTournaments: 0
+    totalTournaments: 0,
+    tournamentsWon: 0
   })
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'overview' | 'members' | 'tournaments'>('overview')
@@ -139,6 +141,24 @@ function TeamView({ teamId }: { teamId: string }) {
       if (res.ok) {
         const data = await res.json()
         setTeam(data)
+        
+        // Charger les statistiques de l'équipe
+        try {
+          const statsRes = await fetch(`/api/teams/${teamId}/stats`)
+          if (statsRes.ok) {
+            const statsData = await statsRes.json()
+            setTeamStats({
+              totalMatches: statsData.totalMatches || 0,
+              wins: statsData.wins || 0,
+              losses: statsData.losses || 0,
+              winRate: statsData.winRate || 0,
+              totalTournaments: statsData.totalTournaments || 0,
+              tournamentsWon: statsData.tournamentsWon || 0
+            })
+          }
+        } catch (error) {
+          console.error('Error loading team stats:', error)
+        }
         
         // Vérifier si l'utilisateur est membre de l'équipe
         if (session?.user) {
@@ -452,6 +472,10 @@ function TeamView({ teamId }: { teamId: string }) {
                 <div className={styles.statCard}>
                   <h3>Taux de victoire</h3>
                   <div className={styles.statNumber}>{teamStats.winRate}%</div>
+                </div>
+                <div className={styles.statCard}>
+                  <h3>Tournois gagnés</h3>
+                  <div className={styles.statNumber}>{teamStats.tournamentsWon}</div>
                 </div>
               </div>
 

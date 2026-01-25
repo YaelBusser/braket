@@ -16,6 +16,7 @@ import { Tabs, ContentWithTabs, TournamentPageSkeleton, TeamCard, Modal, type Mo
 // Lazy load Bracket component
 const Bracket = lazy(() => import('../../../components/Bracket'))
 import MatchesSidebar from '../../../components/Bracket/MatchesSidebar'
+import MatchChat from '../../../components/Bracket/MatchChat'
 
 type Tournament = {
   id: string
@@ -50,11 +51,12 @@ function TournamentView() {
   const [registrations, setRegistrations] = useState<any[]>([])
   const [hasTeam, setHasTeam] = useState(false)
   const [myTeamId, setMyTeamId] = useState<string | null>(null)
-  const [tab, setTab] = useState<'overview'|'bracket'|'players'|'ranking'>('overview')
+  const [tab, setTab] = useState<'overview'|'bracket'|'matches'|'players'|'ranking'>('overview')
   const [ranking, setRanking] = useState<any[]>([])
   const [countdown, setCountdown] = useState<{ days: number; hours: number; minutes: number; seconds: number } | null>(null)
   const [showUnregisterModal, setShowUnregisterModal] = useState(false)
   const [myTeam, setMyTeam] = useState<any>(null)
+  const [openChatMatchId, setOpenChatMatchId] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
@@ -107,6 +109,43 @@ function TournamentView() {
     }
     load()
   }, [id, session])
+
+  // Polling pour mettre à jour les matchs en temps réel
+  useEffect(() => {
+    if (!id || tab !== 'bracket') return
+    
+    const interval = setInterval(async () => {
+      try {
+        const tRes = await fetch(`/api/tournaments/${id}?includeMatches=true`)
+        const tData = await tRes.json()
+        if (tData.tournament?.matches) {
+          setTournament((prev: any) => prev ? { ...prev, matches: tData.tournament.matches } : null)
+        }
+      } catch (error) {
+        console.error('Error refreshing matches:', error)
+      }
+    }, 5000) // Mise à jour toutes les 5 secondes
+    
+    return () => clearInterval(interval)
+  }, [id, tab])
+
+  // Écouter les événements de résolution de match
+  useEffect(() => {
+    const handleMatchResolved = async () => {
+      try {
+        const tRes = await fetch(`/api/tournaments/${id}?includeMatches=true`)
+        const tData = await tRes.json()
+        if (tData.tournament?.matches) {
+          setTournament((prev: any) => prev ? { ...prev, matches: tData.tournament.matches } : null)
+        }
+      } catch (error) {
+        console.error('Error refreshing matches after resolution:', error)
+      }
+    }
+    
+    window.addEventListener('match-resolved', handleMatchResolved)
+    return () => window.removeEventListener('match-resolved', handleMatchResolved)
+  }, [id])
 
   // Recharger le classement quand le tournoi est terminé
   useEffect(() => {
@@ -587,6 +626,7 @@ function TournamentView() {
           tabs={[
             { key: 'overview', label: 'Aperçu' },
             { key: 'bracket', label: 'Bracket' },
+            { key: 'matches', label: 'Matchs' },
             { key: 'players', label: 'Equipes' },
             ...(tournament?.status === 'COMPLETED' ? [{ key: 'ranking', label: 'Classement' }] : [])
           ]}
@@ -1573,11 +1613,7 @@ function TournamentView() {
 
             {regClosed && (
               <div style={{
-                background: '#1f2937',
-                borderRadius: '12px',
-                padding: '1.5rem',
                 marginBottom: '1.5rem',
-                border: '1px solid #374151',
                 textAlign: 'center'
               }}>
                 <div style={{ color: '#9ca3af' }}>Les inscriptions sont fermées.</div>
@@ -1641,8 +1677,9 @@ function TournamentView() {
             <div style={{ marginBottom: '1.5rem' }}>
               <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>Arbre de tournoi</h2>
             </div>
-            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              {/* Bracket en haut */}
+              <div>
                 <Suspense fallback={<div style={{ color: '#9ca3af', textAlign: 'center', padding: '2rem' }}>Chargement du tableau...</div>}>
                   <Bracket 
                     matches={tournament.matches || []} 
@@ -1652,13 +1689,130 @@ function TournamentView() {
                   />
                 </Suspense>
               </div>
-              <MatchesSidebar
-                matches={tournament.matches || []}
-                userId={(session?.user as any)?.id}
-                userTeamId={myTeamId}
-                isTeamBased={tournament.isTeamBased || false}
-                totalSlots={tournament.bracketMaxTeams || 8}
-              />
+              
+              {/* Matchs et Chat côte à côte */}
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                {/* Matchs à gauche - largeur réduite */}
+                <div style={{ flex: '0 0 400px', minWidth: 0 }}>
+                  <MatchesSidebar
+                    matches={tournament.matches || []}
+                    userId={(session?.user as any)?.id}
+                    userTeamId={myTeamId}
+                    isTeamBased={tournament.isTeamBased || false}
+                    totalSlots={tournament.bracketMaxTeams || 8}
+                    tournamentStatus={tournament.status}
+                    isAdmin={isOrganizer}
+                    onMatchClick={(matchId) => {
+                      setOpenChatMatchId(openChatMatchId === matchId ? null : matchId)
+                    }}
+                  />
+                </div>
+                
+                {/* Chat du match à droite - plus large */}
+                {openChatMatchId && tournament?.matches && (() => {
+                  const match = tournament.matches.find((m: any) => m.id === openChatMatchId)
+                  if (!match) return null
+                  
+                  return (
+                    <div style={{
+                      flex: 1,
+                      minWidth: 0,
+                      background: 'var(--lt-dark-secondary)',
+                      border: '1px solid var(--lt-border)',
+                      borderRadius: 'var(--radius-lg)',
+                      overflow: 'hidden'
+                    }}>
+                      <MatchChat
+                        matchId={match.id}
+                        teamAId={match.teamAId || ''}
+                        teamBId={match.teamBId || ''}
+                        teamAName={match.teamA?.name || '?'}
+                        teamBName={match.teamB?.name || '?'}
+                        teamAAvatarUrl={match.teamA?.avatarUrl || null}
+                        teamBAvatarUrl={match.teamB?.avatarUrl || null}
+                        round={match.round}
+                        totalSlots={tournament.bracketMaxTeams || 8}
+                        isAdmin={isOrganizer}
+                        matchStatus={match.status}
+                        onClose={() => setOpenChatMatchId(null)}
+                        onMatchResolved={async () => {
+                          // Recharger les matchs après résolution
+                          const tRes = await fetch(`/api/tournaments/${id}?includeMatches=true`)
+                          const tData = await tRes.json()
+                          if (tData.tournament?.matches) {
+                            setTournament((prev: any) => prev ? { ...prev, matches: tData.tournament.matches } : null)
+                          }
+                        }}
+                      />
+                    </div>
+                  )
+                })()}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab === 'matches' && (
+          <div>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2 style={{ margin: 0, color: '#fff', fontSize: '1.5rem', fontWeight: '600' }}>Matchs</h2>
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+              {/* Matchs à gauche */}
+              <div style={{ flex: '0 0 400px', minWidth: 0 }}>
+                <MatchesSidebar
+                  matches={tournament.matches || []}
+                  userId={(session?.user as any)?.id}
+                  userTeamId={myTeamId}
+                  isTeamBased={tournament.isTeamBased || false}
+                  totalSlots={tournament.bracketMaxTeams || 8}
+                  tournamentStatus={tournament.status}
+                  isAdmin={isOrganizer}
+                  onMatchClick={(matchId) => {
+                    setOpenChatMatchId(openChatMatchId === matchId ? null : matchId)
+                  }}
+                />
+              </div>
+              
+              {/* Chat du match à droite */}
+              {openChatMatchId && tournament?.matches && (() => {
+                const match = tournament.matches.find((m: any) => m.id === openChatMatchId)
+                if (!match) return null
+                
+                return (
+                  <div style={{
+                    flex: 1,
+                    minWidth: 0,
+                    background: 'var(--lt-dark-secondary)',
+                    border: '1px solid var(--lt-border)',
+                    borderRadius: 'var(--radius-lg)',
+                    overflow: 'hidden'
+                  }}>
+                    <MatchChat
+                      matchId={match.id}
+                      teamAId={match.teamAId || ''}
+                      teamBId={match.teamBId || ''}
+                      teamAName={match.teamA?.name || '?'}
+                      teamBName={match.teamB?.name || '?'}
+                      teamAAvatarUrl={match.teamA?.avatarUrl || null}
+                      teamBAvatarUrl={match.teamB?.avatarUrl || null}
+                      round={match.round}
+                      totalSlots={tournament.bracketMaxTeams || 8}
+                      isAdmin={isOrganizer}
+                      matchStatus={match.status}
+                      onClose={() => setOpenChatMatchId(null)}
+                      onMatchResolved={async () => {
+                        // Recharger les matchs après résolution
+                        const tRes = await fetch(`/api/tournaments/${id}?includeMatches=true`)
+                        const tData = await tRes.json()
+                        if (tData.tournament?.matches) {
+                          setTournament((prev: any) => prev ? { ...prev, matches: tData.tournament.matches } : null)
+                        }
+                      }}
+                    />
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )}
@@ -1862,6 +2016,7 @@ function TournamentView() {
           <p>Êtes-vous sûr de vouloir vous désinscrire de ce tournoi ?</p>
         )}
       </Modal>
+
     </div>
   )
 }

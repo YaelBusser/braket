@@ -179,6 +179,11 @@ export async function generateSingleEliminationBracket(
         if (!teamAId) teamAId = tbdTeam.id
         if (!teamBId) teamBId = tbdTeam.id
         
+        // Ne pas créer de match si les deux équipes sont TBD
+        if (teamAId === tbdTeam.id && teamBId === tbdTeam.id) {
+          continue
+        }
+        
         const match = await prisma.match.create({
           data: {
             tournamentId,
@@ -199,27 +204,10 @@ export async function generateSingleEliminationBracket(
           status: 'PENDING'
         })
       } else {
-        // Pour les rounds 3+, créer des matchs avec des placeholders
-        // Ces équipes seront mises à jour quand les matchs précédents seront terminés
-        const match = await prisma.match.create({
-          data: {
-            tournamentId,
-            round,
-            teamAId: tbdTeam.id,
-            teamBId: tbdTeam.id,
-            status: 'PENDING'
-          }
-        })
-        
-        matches.push({
-          id: match.id,
-          round,
-          position: pos,
-          teamAId: match.teamAId,
-          teamBId: match.teamBId,
-          winnerTeamId: undefined,
-          status: 'PENDING'
-        })
+        // Pour les rounds 3+, ne pas créer de matchs TBD vs TBD
+        // Ces matchs seront créés dynamiquement quand les matchs précédents seront terminés
+        // On ne crée pas de match si les deux équipes sont TBD
+        // Le match sera créé dans propagateWinnerToNextRound quand une équipe sera déterminée
       }
     }
   }

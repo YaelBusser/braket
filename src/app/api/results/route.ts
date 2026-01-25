@@ -113,10 +113,25 @@ async function propagateWinnerToNextRound(
       // Un match existe déjà, on ajoute l'équipe manquante
       const updateData: any = {}
       
-      if (!existingNextMatch.teamAId) {
-        updateData.teamAId = winnerTeamId
-      } else if (!existingNextMatch.teamBId) {
-        updateData.teamBId = winnerTeamId
+      // Vérifier si le match existant a déjà les deux équipes "À déterminer"
+      const existingTeamAId = existingNextMatch.teamAId || 'tbd-global'
+      const existingTeamBId = existingNextMatch.teamBId || 'tbd-global'
+      
+      if (existingTeamAId === 'tbd-global' && existingTeamBId === 'tbd-global') {
+        // Le match existant a les deux équipes "À déterminer", on peut le mettre à jour
+        // avec au moins une équipe réelle
+        if (!existingNextMatch.teamAId) {
+          updateData.teamAId = winnerTeamId
+        } else if (!existingNextMatch.teamBId) {
+          updateData.teamBId = winnerTeamId
+        }
+      } else {
+        // Le match a déjà au moins une équipe réelle, on ajoute l'équipe manquante
+        if (!existingNextMatch.teamAId || existingNextMatch.teamAId === 'tbd-global') {
+          updateData.teamAId = winnerTeamId
+        } else if (!existingNextMatch.teamBId || existingNextMatch.teamBId === 'tbd-global') {
+          updateData.teamBId = winnerTeamId
+        }
       }
       
       if (Object.keys(updateData).length > 0) {
@@ -130,6 +145,12 @@ async function propagateWinnerToNextRound(
       // L'ordre : gagnant du premier match de la paire en teamA, gagnant du second en teamB
       const teamAId = isFirstOfPair ? winnerTeamId : siblingMatch.winnerTeamId
       const teamBId = isFirstOfPair ? siblingMatch.winnerTeamId : winnerTeamId
+
+      // Ne pas créer de match si les deux équipes sont "À déterminer" (tbd-global)
+      if (teamAId === 'tbd-global' && teamBId === 'tbd-global') {
+        // Les deux équipes sont "À déterminer", ne pas créer le match
+        return
+      }
 
       await prisma.match.create({
         data: {
