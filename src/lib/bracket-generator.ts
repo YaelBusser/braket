@@ -261,7 +261,7 @@ export async function validateTournamentStart(tournamentId: string): Promise<{
     return { canStart: false, reason: 'Tournoi introuvable', participantCount: 0 }
   }
 
-  if (tournament.status !== 'REG_OPEN' && tournament.status !== 'REG_CLOSED') {
+  if (tournament.status !== 'REG_OPEN') {
     return { canStart: false, reason: 'Le tournoi a déjà commencé ou est terminé', participantCount: 0 }
   }
 

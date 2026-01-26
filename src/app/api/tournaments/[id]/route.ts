@@ -35,7 +35,7 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
 
     // Vérifier si le tournoi doit commencer automatiquement
     const shouldAutoStart = 
-      (tournament.status === 'REG_OPEN' || tournament.status === 'REG_CLOSED') &&
+      tournament.status === 'REG_OPEN' &&
       tournament.startDate &&
       tournament.startDate <= new Date() &&
       tournament._count.matches === 0
@@ -86,13 +86,18 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
         const teamName = `Solo - ${registration.user?.pseudo || 'Joueur'}`
         const soloTeam = await prisma.team.create({
           data: { 
-            tournamentId: tournamentId, 
             name: teamName, 
             members: { 
               create: { 
-                userId: registration.userId 
+                userId: registration.userId,
+                isCaptain: true
               } 
-            } 
+            },
+            registrations: {
+              create: {
+                tournamentId: tournamentId
+              }
+            }
           }
         })
         
@@ -599,13 +604,18 @@ export async function PUT(
               const teamName = `Solo - ${registration.user?.pseudo || 'Joueur'}`
               const soloTeam = await prisma.team.create({
                 data: { 
-                  tournamentId: id, 
                   name: teamName, 
                   members: { 
                     create: { 
-                      userId: registration.userId 
+                      userId: registration.userId,
+                      isCaptain: true
                     } 
-                  } 
+                  },
+                  registrations: {
+                    create: {
+                      tournamentId: id
+                    }
+                  }
                 }
               })
               

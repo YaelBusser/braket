@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
       
       if (isTeamBasedStr) (global as any).__tmp_isTeamBased = isTeamBasedStr === 'true'
       if (maxParticipantsStr) {
-        const parsed = parseInteger(maxParticipantsStr)
-        (global as any).__tmp_maxParticipants = parsed !== null ? parsed : undefined
+        const parsedMaxParticipants = parseInteger(maxParticipantsStr)
+        ;(global as any).__tmp_maxParticipants = parsedMaxParticipants !== null ? parsedMaxParticipants : undefined
       }
       // Parser teamMinSize et teamMaxSize (vérifier que c'est une string)
       const teamMinSizeStr = typeof teamMinSizeValue === 'string' ? teamMinSizeValue : null
