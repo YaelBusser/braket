@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { useNotification } from '../providers/notification-provider'
@@ -37,7 +37,7 @@ interface CreateTournamentModalProps {
   onClose: () => void
 }
 
-export default function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModalProps) {
+export default function CreateTournamentModal({ isOpen, onClose }: CreateTournamentModalProps): React.ReactNode {
   const router = useRouter()
   const { data: session } = useSession()
   const { notify } = useNotification()
@@ -505,13 +505,13 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
     [selectedGameId, allGames]
   )
   
-  const gameLogo = useMemo(() => 
-    selectedGame && 'logoUrl' in selectedGame ? selectedGame.logoUrl : null,
+  const gameLogo: string | null = useMemo(() => 
+    selectedGame && 'logoUrl' in selectedGame ? (selectedGame.logoUrl as string) : null,
     [selectedGame]
   )
   
-  const gamePoster = useMemo(() => 
-    selectedGame && 'posterUrl' in selectedGame ? selectedGame.posterUrl : selectedGame?.image || null,
+  const gamePoster: string | null = useMemo(() => 
+    selectedGame && 'posterUrl' in selectedGame ? (selectedGame.posterUrl as string) : (selectedGame?.image as string | undefined) || null,
     [selectedGame]
   )
 
@@ -587,7 +587,6 @@ export default function CreateTournamentModal({ isOpen, onClose }: CreateTournam
           </svg>
         </button>
 
-        {/* Bannière avec logo du jeu - affichée seulement si un jeu est sélectionné */}
         {selectedGameId && gamePoster && (
           <div className={styles.banner}>
             <div className={styles.bannerImage} style={{ backgroundImage: `url(${gamePoster})` }} />

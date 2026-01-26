@@ -49,7 +49,11 @@ function ProfilePage() {
     totalParticipants: 0,
     totalWins: 0,
     totalTeams: 0,
-    totalRegistrations: 0
+    totalRegistrations: 0,
+    totalTeamsJoined: 0,
+    totalMatches: 0,
+    wonMatches: 0,
+    winRate: 0
   })
 
 

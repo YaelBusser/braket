@@ -134,11 +134,14 @@ export async function PATCH(
     // Pour les tournois en équipe, s'assurer que l'équipe est inscrite aux tournois actifs
     for (const reg of activeRegistrations) {
       try {
-        await prisma.tournamentRegistration.upsert({
-          where: { tournamentId_teamId: { tournamentId: reg.tournament.id, teamId: invitation.teamId } },
-          create: { tournamentId: reg.tournament.id, teamId: invitation.teamId },
-          update: {}
+        const existingReg = await prisma.tournamentRegistration.findFirst({
+          where: { tournamentId: reg.tournament.id, teamId: invitation.teamId }
         })
+        if (!existingReg) {
+          await prisma.tournamentRegistration.create({
+            data: { tournamentId: reg.tournament.id, teamId: invitation.teamId }
+          })
+        }
       } catch (error) {
         console.error('Error auto-registering team to tournament:', error)
       }

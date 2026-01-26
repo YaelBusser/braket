@@ -119,13 +119,7 @@ export async function POST(
         team: {
           select: {
             id: true,
-            name: true,
-            tournament: {
-              select: {
-                id: true,
-                name: true
-              }
-            }
+            name: true
           }
         }
       }
@@ -138,7 +132,7 @@ export async function POST(
           userId: captain.userId,
           type: 'team_invite',
           title: 'Demande pour rejoindre l\'équipe',
-          message: `${(session.user as any).name || (session.user as any).pseudo} souhaite rejoindre votre équipe "${team.name}"${activeRegistrations.length > 0 ? ` pour le tournoi "${activeRegistrations[0].tournament.name}"` : ''}`,
+          message: `${(session?.user as any)?.name || (session?.user as any)?.pseudo} souhaite rejoindre votre équipe "${team.name}"${activeRegistrations.length > 0 ? ` pour le tournoi "${activeRegistrations[0].tournament.name}"` : ''}`,
           link: `/teams/${teamId}/manage?fromNotification=true`
         }
       })

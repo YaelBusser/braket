@@ -113,12 +113,12 @@ export async function GET(
         }
       }
 
-      // Ajouter les perdants de ce round au classement (trier par position pour cohérence)
+      // Ajouter les perdants de ce round au classement (trier par ordre d'apparition dans les matchs)
       losers.sort((a, b) => {
-        // Trier par l'ordre dans lequel ils apparaissent dans les matchs
-        const aMatch = roundMatches.find(m => m.teamAId === a.id || m.teamBId === a.id)
-        const bMatch = roundMatches.find(m => m.teamAId === b.id || m.teamBId === b.id)
-        return (aMatch?.position || 0) - (bMatch?.position || 0)
+        // Trier par l'index du match dans lequel ils apparaissent
+        const aMatchIndex = roundMatches.findIndex(m => m.teamAId === a.id || m.teamBId === a.id)
+        const bMatchIndex = roundMatches.findIndex(m => m.teamAId === b.id || m.teamBId === b.id)
+        return aMatchIndex - bMatchIndex
       })
 
       for (const loser of losers) {

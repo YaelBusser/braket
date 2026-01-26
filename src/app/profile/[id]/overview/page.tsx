@@ -6,6 +6,7 @@ import styles from '../page.module.scss'
 
 export default function OverviewTab() {
   const { userTournaments, userRegistrations, userTeams, userStats, loadingData } = useProfileData()
+  const stats = userStats as any
 
   return (
     <div className={styles.overviewTab}>
@@ -22,7 +23,7 @@ export default function OverviewTab() {
         <div className={styles.statCard}>
           <div className={styles.statIcon}>👥</div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{userStats.totalTeamsJoined || userTeams?.length || 0}</div>
+            <div className={styles.statValue}>{stats?.totalTeamsJoined || userTeams?.length || 0}</div>
             <div className={styles.statLabel}>Équipes</div>
           </div>
         </div>
@@ -30,26 +31,26 @@ export default function OverviewTab() {
         <div className={styles.statCard}>
           <div className={styles.statIcon}>⚔️</div>
           <div className={styles.statContent}>
-            <div className={styles.statValue}>{userStats.totalMatches || 0}</div>
+            <div className={styles.statValue}>{stats?.totalMatches || 0}</div>
             <div className={styles.statLabel}>Matchs joués</div>
           </div>
         </div>
         
-        {(userStats.totalMatches || 0) > 0 && (
+        {(stats?.totalMatches || 0) > 0 && (
           <div className={styles.statCard}>
             <div className={styles.statIcon}>🏅</div>
             <div className={styles.statContent}>
-              <div className={styles.statValue}>{userStats.wonMatches || 0}</div>
+              <div className={styles.statValue}>{stats?.wonMatches || 0}</div>
               <div className={styles.statLabel}>Victoires</div>
             </div>
           </div>
         )}
         
-        {(userStats.totalMatches || 0) > 0 && (
+        {(stats?.totalMatches || 0) > 0 && (
           <div className={styles.statCard}>
             <div className={styles.statIcon}>📊</div>
             <div className={styles.statContent}>
-              <div className={styles.statValue}>{userStats.winRate || 0}%</div>
+              <div className={styles.statValue}>{stats?.winRate || 0}%</div>
               <div className={styles.statLabel}>Taux de victoire</div>
             </div>
           </div>

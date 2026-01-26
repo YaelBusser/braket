@@ -1,5 +1,6 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState, useEffect, useCallback, useMemo } from 'react'
@@ -33,7 +34,7 @@ interface Team {
   createdAt: string
 }
 
-export default function TeamsPage() {
+function TeamsPageContent() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -194,5 +195,13 @@ export default function TeamsPage() {
         </div>
       </ContentWithTabs>
     </div>
+  )
+}
+
+export default function TeamsPage() {
+  return (
+    <Suspense fallback={<div className={styles.loading}>Chargement...</div>}>
+      <TeamsPageContent />
+    </Suspense>
   )
 }

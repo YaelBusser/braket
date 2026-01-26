@@ -24,16 +24,7 @@ export async function PATCH(
     const currentCaptain = await prisma.teamMember.findUnique({
       where: { teamId_userId: { teamId, userId } },
       include: {
-        team: {
-          include: {
-            tournament: {
-              select: {
-                id: true,
-                status: true
-              }
-            }
-          }
-        }
+        team: true
       }
     })
 

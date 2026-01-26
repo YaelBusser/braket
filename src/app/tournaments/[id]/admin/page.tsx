@@ -745,7 +745,6 @@ function TournamentAdminContent() {
               {tournament.status === 'IN_PROGRESS' && (
                 <Button
                   onClick={() => callAction('finish')}
-                  disabled={tournament.status === 'COMPLETED'}
                   variant="primary"
                 >
                   Terminer tournoi
