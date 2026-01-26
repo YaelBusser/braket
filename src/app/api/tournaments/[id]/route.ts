@@ -7,6 +7,171 @@ import fs from 'fs'
 import { promises as fsp } from 'fs'
 import path from 'path'
 
+/**
+ * Envoie des notifications aux capitaines des équipes quand un match commence
+ */
+async function notifyCaptainsMatchStarted(matchId: string, tournamentId: string) {
+  try {
+    // Récupérer le match avec les équipes et leurs capitaines
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        teamA: {
+          include: {
+            members: {
+              where: { isCaptain: true },
+              include: {
+                user: {
+                  select: { id: true }
+                }
+              }
+            }
+          }
+        },
+        teamB: {
+          include: {
+            members: {
+              where: { isCaptain: true },
+              include: {
+                user: {
+                  select: { id: true }
+                }
+              }
+            }
+          }
+        },
+        tournament: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    if (!match || !match.teamA || !match.teamB) return
+
+    // Vérifier que ce ne sont pas des équipes "À déterminer"
+    const isTBD = (team: any) => {
+      if (!team) return true
+      const name = team.name || ''
+      return name.includes('TBD') || name === '?' || name === 'À déterminer' || name === 'TBD (À déterminer)'
+    }
+
+    if (isTBD(match.teamA) || isTBD(match.teamB)) return
+
+    // Notifier le capitaine de l'équipe A
+    const captainA = match.teamA.members.find(m => m.isCaptain)
+    if (captainA) {
+      await prisma.notification.create({
+        data: {
+          userId: captainA.user.id,
+          type: 'match_started',
+          title: 'Match en cours',
+          message: `Votre match contre ${match.teamB?.name || '?'} dans le tournoi "${match.tournament.name}" a commencé !`,
+          link: `/tournaments/${tournamentId}`
+        }
+      })
+    }
+
+    // Notifier le capitaine de l'équipe B
+    const captainB = match.teamB.members.find(m => m.isCaptain)
+    if (captainB) {
+      await prisma.notification.create({
+        data: {
+          userId: captainB.user.id,
+          type: 'match_started',
+          title: 'Match en cours',
+          message: `Votre match contre ${match.teamA?.name || '?'} dans le tournoi "${match.tournament.name}" a commencé !`,
+          link: `/tournaments/${tournamentId}`
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error notifying captains about match start:', error)
+  }
+}
+
+/**
+ * Met à jour automatiquement les featuredPosition de tous les tournois publics
+ * Logique : Priorité aux tournois en cours, puis récemment terminés, puis par nombre de participants
+ */
+async function updateFeaturedPositions() {
+  try {
+    // Récupérer tous les tournois publics
+    const tournaments = await prisma.tournament.findMany({
+      where: {
+        visibility: 'PUBLIC'
+      },
+      include: {
+        _count: {
+          select: {
+            registrations: true
+          }
+        }
+      },
+      orderBy: [
+        // Priorité 1: Statut (IN_PROGRESS > REG_OPEN > COMPLETED)
+        {
+          status: 'asc' // IN_PROGRESS vient avant REG_OPEN dans l'ordre alphabétique
+        },
+        // Priorité 2: Nombre de participants (décroissant)
+        {
+          _count: {
+            registrations: 'desc'
+          }
+        },
+        // Priorité 3: Date de création (plus récent en premier)
+        {
+          createdAt: 'desc'
+        }
+      ]
+    })
+
+    // Trier avec une logique personnalisée pour le statut
+    const sortedTournaments = tournaments.sort((a, b) => {
+      // Priorité des statuts (1 = meilleur)
+      const statusPriority: Record<string, number> = {
+        'IN_PROGRESS': 1,
+        'REG_OPEN': 2,
+        'COMPLETED': 3,
+        'DRAFT': 4
+      }
+      
+      const aPriority = statusPriority[a.status] || 99
+      const bPriority = statusPriority[b.status] || 99
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority
+      }
+      
+      // Si même statut, comparer par nombre de participants (plus = mieux)
+      const aParticipants = a._count.registrations
+      const bParticipants = b._count.registrations
+      if (aParticipants !== bParticipants) {
+        return bParticipants - aParticipants
+      }
+      
+      // Si même nombre de participants, comparer par date de création (plus récent = mieux)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    // Attribuer les positions 1-4 aux 4 meilleurs tournois
+    // Mettre les autres à null
+    const updates = sortedTournaments.map((tournament, index) => {
+      const position = index < 4 ? index + 1 : null
+      return prisma.tournament.update({
+        where: { id: tournament.id },
+        data: { featuredPosition: position }
+      })
+    })
+
+    await Promise.all(updates)
+    console.log(`✅ Featured positions mises à jour pour ${sortedTournaments.length} tournois`)
+  } catch (error) {
+    console.error('❌ Error updating featured positions:', error)
+  }
+}
+
 // Fonction helper pour générer automatiquement le bracket si nécessaire
 async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolean> {
   try {
@@ -122,7 +287,7 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
     const { matches, immediateWinners } = await generateSingleEliminationBracket(tournamentId, entrants)
     
     // Mettre automatiquement tous les matchs PENDING en SCHEDULED quand le tournoi démarre
-    await prisma.match.updateMany({
+    const updatedMatches = await prisma.match.updateMany({
       where: {
         tournamentId: tournamentId,
         status: 'PENDING'
@@ -131,6 +296,19 @@ async function autoStartTournamentIfNeeded(tournamentId: string): Promise<boolea
         status: 'SCHEDULED'
       }
     })
+    
+    // Notifier les capitaines des équipes pour tous les matchs qui viennent de commencer
+    const allMatches = await prisma.match.findMany({
+      where: {
+        tournamentId: tournamentId,
+        status: 'SCHEDULED'
+      },
+      select: { id: true }
+    })
+    
+    for (const match of allMatches) {
+      await notifyCaptainsMatchStarted(match.id, tournamentId)
+    }
     
     console.log(`Tournoi ${tournamentId} démarré automatiquement: ${matches.length} matchs générés, ${immediateWinners.length} BYE, ${actualParticipantCount} participants`)
     return true
@@ -647,6 +825,19 @@ export async function PUT(
             }
           })
           
+          // Notifier les capitaines des équipes pour tous les matchs qui viennent de commencer
+          const allMatches = await prisma.match.findMany({
+            where: {
+              tournamentId: id,
+              status: 'SCHEDULED'
+            },
+            select: { id: true }
+          })
+          
+          for (const match of allMatches) {
+            await notifyCaptainsMatchStarted(match.id, id)
+          }
+          
           console.log(`Bracket généré: ${matches.length} matchs, ${immediateWinners.length} vainqueurs immédiats, ${actualParticipantCount} participants`)
           
           return NextResponse.json({ tournament: updated })
@@ -662,6 +853,10 @@ export async function PUT(
     }
     if (mode === 'finish') {
       const res = await prisma.tournament.update({ where: { id }, data: ({ status: 'COMPLETED', endDate: new Date() } as any) })
+      
+      // Mettre à jour les featured positions après la fin du tournoi
+      await updateFeaturedPositions()
+      
       return NextResponse.json({ tournament: res })
     }
 

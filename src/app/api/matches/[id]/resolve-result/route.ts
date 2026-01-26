@@ -4,6 +4,90 @@ import { authOptions } from '../../../../../../lib/auth'
 import { prisma } from '../../../../../../lib/prisma'
 
 /**
+ * Envoie des notifications aux capitaines des équipes quand un match commence
+ */
+async function notifyCaptainsMatchStarted(matchId: string, tournamentId: string) {
+  try {
+    // Récupérer le match avec les équipes et leurs capitaines
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        teamA: {
+          include: {
+            members: {
+              where: { isCaptain: true },
+              include: {
+                user: {
+                  select: { id: true }
+                }
+              }
+            }
+          }
+        },
+        teamB: {
+          include: {
+            members: {
+              where: { isCaptain: true },
+              include: {
+                user: {
+                  select: { id: true }
+                }
+              }
+            }
+          }
+        },
+        tournament: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    if (!match || !match.teamA || !match.teamB) return
+
+    // Vérifier que ce ne sont pas des équipes "À déterminer"
+    const isTBD = (team: any) => {
+      if (!team) return true
+      const name = team.name || ''
+      return name.includes('TBD') || name === '?' || name === 'À déterminer' || name === 'TBD (À déterminer)'
+    }
+
+    if (isTBD(match.teamA) || isTBD(match.teamB)) return
+
+    // Notifier le capitaine de l'équipe A
+    const captainA = match.teamA.members.find(m => m.isCaptain)
+    if (captainA) {
+      await prisma.notification.create({
+        data: {
+          userId: captainA.user.id,
+          type: 'match_started',
+          title: 'Match en cours',
+          message: `Votre match contre ${match.teamB?.name || '?'} dans le tournoi "${match.tournament.name}" a commencé !`,
+          link: `/tournaments/${tournamentId}`
+        }
+      })
+    }
+
+    // Notifier le capitaine de l'équipe B
+    const captainB = match.teamB.members.find(m => m.isCaptain)
+    if (captainB) {
+      await prisma.notification.create({
+        data: {
+          userId: captainB.user.id,
+          type: 'match_started',
+          title: 'Match en cours',
+          message: `Votre match contre ${match.teamA?.name || '?'} dans le tournoi "${match.tournament.name}" a commencé !`,
+          link: `/tournaments/${tournamentId}`
+        }
+      })
+    }
+  } catch (error) {
+    console.error('Error notifying captains about match start:', error)
+  }
+}
+
+/**
  * Met à jour les statistiques des équipes et des joueurs après un match terminé
  * Les statistiques sont calculées dynamiquement, cette fonction s'assure que
  * les données sont à jour et peut être étendue pour mettre en cache les stats
@@ -50,6 +134,87 @@ async function updateMatchStatistics(
 }
 
 /**
+ * Met à jour automatiquement les featuredPosition de tous les tournois publics
+ * Logique : Priorité aux tournois en cours, puis récemment terminés, puis par nombre de participants
+ */
+async function updateFeaturedPositions() {
+  try {
+    // Récupérer tous les tournois publics
+    const tournaments = await prisma.tournament.findMany({
+      where: {
+        visibility: 'PUBLIC'
+      },
+      include: {
+        _count: {
+          select: {
+            registrations: true
+          }
+        }
+      },
+      orderBy: [
+        // Priorité 1: Statut (IN_PROGRESS > REG_OPEN > COMPLETED)
+        {
+          status: 'asc' // IN_PROGRESS vient avant REG_OPEN dans l'ordre alphabétique
+        },
+        // Priorité 2: Nombre de participants (décroissant)
+        {
+          _count: {
+            registrations: 'desc'
+          }
+        },
+        // Priorité 3: Date de création (plus récent en premier)
+        {
+          createdAt: 'desc'
+        }
+      ]
+    })
+
+    // Trier avec une logique personnalisée pour le statut
+    const sortedTournaments = tournaments.sort((a, b) => {
+      // Priorité des statuts (1 = meilleur)
+      const statusPriority: Record<string, number> = {
+        'IN_PROGRESS': 1,
+        'REG_OPEN': 2,
+        'COMPLETED': 3,
+        'DRAFT': 4
+      }
+      
+      const aPriority = statusPriority[a.status] || 99
+      const bPriority = statusPriority[b.status] || 99
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority
+      }
+      
+      // Si même statut, comparer par nombre de participants (plus = mieux)
+      const aParticipants = a._count.registrations
+      const bParticipants = b._count.registrations
+      if (aParticipants !== bParticipants) {
+        return bParticipants - aParticipants
+      }
+      
+      // Si même nombre de participants, comparer par date de création (plus récent = mieux)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+
+    // Attribuer les positions 1-4 aux 4 meilleurs tournois
+    // Mettre les autres à null
+    const updates = sortedTournaments.map((tournament, index) => {
+      const position = index < 4 ? index + 1 : null
+      return prisma.tournament.update({
+        where: { id: tournament.id },
+        data: { featuredPosition: position }
+      })
+    })
+
+    await Promise.all(updates)
+    console.log(`✅ Featured positions mises à jour pour ${sortedTournaments.length} tournois`)
+  } catch (error) {
+    console.error('❌ Error updating featured positions:', error)
+  }
+}
+
+/**
  * Vérifie si le match est la finale et termine le tournoi si c'est le cas
  */
 async function checkAndCompleteTournament(
@@ -80,8 +245,11 @@ async function checkAndCompleteTournament(
     if (matchRound === totalRounds) {
       await prisma.tournament.update({
         where: { id: tournamentId },
-        data: { status: 'COMPLETED' }
+        data: { status: 'COMPLETED', endDate: new Date() }
       })
+      
+      // Mettre à jour les featured positions après la fin du tournoi
+      await updateFeaturedPositions()
     }
   } catch (error) {
     console.error('Error checking and completing tournament:', error)
@@ -156,10 +324,25 @@ async function propagateWinnerToNextRound(
       }
       
       if (Object.keys(updateData).length > 0) {
-        await prisma.match.update({
+        const updatedMatch = await prisma.match.update({
           where: { id: existingNextMatch.id },
-          data: updateData
+          data: updateData,
+          include: {
+            tournament: {
+              select: { status: true }
+            }
+          }
         })
+        
+        // Notifier les capitaines si le match est maintenant complet (les deux équipes sont définies) et en cours
+        if (updatedMatch.tournament.status === 'IN_PROGRESS' && 
+            updatedMatch.status === 'SCHEDULED' && 
+            updatedMatch.teamAId && 
+            updatedMatch.teamBId &&
+            updatedMatch.teamAId !== 'tbd-global' && 
+            updatedMatch.teamBId !== 'tbd-global') {
+          await notifyCaptainsMatchStarted(updatedMatch.id, tournamentId)
+        }
       }
     } else {
       const teamAId = isFirstOfPair ? winnerTeamId : siblingMatch.winnerTeamId
@@ -178,7 +361,7 @@ async function propagateWinnerToNextRound(
       
       const matchStatus = tournament?.status === 'IN_PROGRESS' ? 'SCHEDULED' : 'PENDING'
       
-      await prisma.match.create({
+      const newMatch = await prisma.match.create({
         data: {
           tournamentId,
           round: nextRound,
@@ -187,6 +370,11 @@ async function propagateWinnerToNextRound(
           status: matchStatus
         }
       })
+      
+      // Notifier les capitaines si le match est en cours (SCHEDULED)
+      if (matchStatus === 'SCHEDULED') {
+        await notifyCaptainsMatchStarted(newMatch.id, tournamentId)
+      }
     }
   } catch (error) {
     console.error('Error propagating winner:', error)

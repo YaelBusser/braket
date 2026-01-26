@@ -232,7 +232,7 @@ export default function Home() {
           <div className={styles.heroTopSection}>
             <div className={styles.heroTextContainer}>
               <h1 className={styles.heroTitle}>
-                Rejoignez les tournois et gagnez des gains
+                Entrez dans la compétition et gagnez des récompenses exclusives !
               </h1>
               <p className={styles.heroSubtitle}>
                 La plateforme esport où les joueurs participent à des tournois compétitifs et remportent des récompenses. 
