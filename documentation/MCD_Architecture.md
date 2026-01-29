@@ -1,98 +1,72 @@
-# Modèle Conceptuel de Données (MCD) - Braket
+# Modèle Conceptuel de Données (MCD) - Mapping des 13 Tables
 
-Ce document décrit la structure de la base de données, les entités, leurs relations et les cardinalités.
+Ce document fait le lien entre les concepts du MCD (Entités/Relations) et les 13 tables physiques présentes dans la base de données.
 
-## 1. Liste des Entités
+## 1. Les Entités (Objets Métiers)
+Ces tables correspondent directement aux objets principaux du modèle.
 
-### **User** (Utilisateur)
-Représente un utilisateur inscrit sur la plateforme.
-*   **Identifiant** : `id`
-*   **Attributs** : email, pseudo, passwordHash, avatarUrl, bannerUrl, isAdmin...
-
-### **Tournament** (Tournoi)
-Représente un tournoi créé par un organisateur.
-*   **Identifiant** : `id`
-*   **Attributs** : name, format (SINGLE_ELIMINATION, etc.), visibility, status, startDate...
-
-### **Game** (Jeu)
-Référentiel des jeux vidéo supportés (ex: CS2, LoL).
-*   **Identifiant** : `id`
-*   **Attributs** : name, slug, logoUrl, posterUrl.
-
-### **Team** (Équipe)
-Une équipe pouvant participer à des tournois.
-*   **Identifiant** : `id`
-*   **Attributs** : name, description, avatarUrl, bannerUrl.
-
-### **TeamMember** (Membre d'équipe)
-Table de jointure enrichie reliant un User à une Team.
-*   **Identifiant** : `id`
-*   **Attributs** : isCaptain, role.
-
-### **Match**
-Représente une rencontre entre deux équipes dans un tournoi.
-*   **Identifiant** : `id`
-*   **Attributs** : round, status, scheduledAt.
-
-### **TournamentRegistration** (Inscription)
-L'inscription d'un utilisateur ou d'une équipe à un tournoi.
-*   **Identifiant** : `id`
-*   **Attributs** : createdAt.
+| Table Physique | Entité Conceptuelle | Description |
+| :--- | :--- | :--- |
+| **users** | **USER** | L'utilisateur de la plateforme. |
+| **games** | **GAME** | Le jeu vidéo (référentiel). |
+| **teams** | **TEAM** | L'équipe créée par des utilisateurs. |
+| **tournaments** | **TOURNAMENT** | Le tournoi organisé. |
+| **matches** | **MATCH** | La rencontre sportive. |
+| **sessions** | **SESSION** | (Technique) La session de connexion Auth. |
+| **notifications** | **NOTIFICATION** | (Technique) Les alertes utilisateurs. |
 
 ---
 
-## 2. Relations et Cardinalités
+## 2. Les Relations transformées en Tables
+Ces tables proviennent d'associations porteuses (n-n) ou complexes qui nécessitent une table intermédiaire.
 
-Voici les relations entre les entités sous la forme : **Entité A - (Card A, Card B) - Entité B**
-*(0,1) = Zéro ou un | (1,1) = Exactement un | (0,n) = Zéro ou plusieurs | (1,n) = Un ou plusieurs*
-
-### Relations Utilisateurs (User)
-*   **Organiser** : User `(0,n)` --- `(1,1)` Tournament
-    *   *Un user peut organiser plusieurs tournois. Un tournoi est organisé par exactement un user.*
-*   **Appartenir** : User `(0,n)` --- `(1,1)` TeamMember `(1,1)` --- `(0,n)` Team
-    *   *Un user peut être membre de plusieurs équipes (via TeamMember). Une équipe a plusieurs membres.*
-*   **Inviter (Équipe)** : User (Invited) `(0,n)` --- `(1,1)` TeamInvitation `(1,1)` --- `(0,n)` Team
-*   **Envoyer Message** : User `(0,n)` --- `(1,1)` MatchMessage
-
-### Relations Tournois (Tournament)
-*   **Concerner** : Tournament `(0,1)` --- `(0,n)` Game
-    *   *Un tournoi concerne un jeu (ou aucun si "Autre"). Un jeu peut avoir plusieurs tournois.*
-*   **Contenir** : Tournament `(0,n)` --- `(1,1)` Match
-    *   *Un tournoi contient plusieurs matchs. Un match appartient à un seul tournoi.*
-*   **Recevoir** : Tournament `(0,n)` --- `(1,1)` TournamentRegistration
-    *   *Un tournoi a plusieurs inscriptions.*
-
-### Relations Matchs (Match)
-*   **Jouer (Team A)** : Match `(1,1)` --- `(0,n)` Team
-    *   *Un match a une équipe A.*
-*   **Jouer (Team B)** : Match `(1,1)` --- `(0,n)` Team
-    *   *Un match a une équipe B.*
-*   **Gagner** : Match `(0,1)` --- `(0,n)` Team
-    *   *Un match a (éventuellement) un vainqueur. Une équipe peut gagner plusieurs matchs.*
-
-### Relations Inscriptions (TournamentRegistration)
-*   **Inscrire (User)** : TournamentRegistration `(0,1)` --- `(0,n)` User
-    *   *Pour les tournois solo.*
-*   **Inscrire (Team)** : TournamentRegistration `(0,1)` --- `(0,n)` Team
-    *   *Pour les tournois par équipe.*
+| Table Physique | Association MCD | Entités reliées | Pourquoi une table ? |
+| :--- | :--- | :--- | :--- |
+| **team_members** | **ETRE_MEMBRE** | User ↔ Team | Relation portoise : contient le rôle (`isCaptain`). |
+| **tournament_registrations** | **S_INSCRIRE** | User/Team ↔ Tournament | Relation portoise : contient la date d'inscription. |
+| **match_messages** | **DISCUTER** | User ↔ Match | Relation 1-n devenue table pour stocker l'historique de chat. |
+| **match_result_votes** | **VOTER_RESULTAT** | User ↔ Match | Relation pour valider le score (anti-triche). |
+| **team_invitations** | **INVITER** | User ↔ Team | Relation pour gérer l'état 'En attente' avant de devenir membre. |
+| **team_tournament_participants**| **PARTICIPER** | Registration ↔ TeamMember | (Technique) Lie une inscription aux membres spécifiques qui jouent. |
 
 ---
 
-## 3. Schéma Relationnel Simplifié
+## 3. Synthèse des 13 Tables
+
+*   **7 Entités** : `users`, `games`, `teams`, `tournaments`, `matches`, `sessions`, `notifications`.
+*   **6 Relations** : `team_members`, `tournament_registrations`, `match_messages`, `match_result_votes`, `team_invitations`, `team_tournament_participants`.
+
+---
+
+## 4. Schéma Conceptuel Simplifié
 
 ```mermaid
 erDiagram
-    Users ||--o{ Tournaments : "creates"
-    Users ||--o{ TeamMembers : "is in"
-    Teams ||--o{ TeamMembers : "has"
+    %% ENTITÉS
+    USER ||--o{ TEAM_MEMBER : "1. EST MEMBRE"
+    TEAM ||--o{ TEAM_MEMBER : "2. COMPOSE"
     
-    Games ||--o{ Tournaments : "category"
+    USER ||--o{ TOURNAMENT : "3. ORGANISE"
+    GAME ||--o{ TOURNAMENT : "4. CONCERNE"
     
-    Tournaments ||--o{ Matches : "contains"
-    Tournaments ||--o{ Registrations : "has"
+    TOURNAMENT ||--o{ MATCH : "5. CONTIENT"
+    TOURNAMENT ||--o{ REGISTRATION : "6. RECOIT"
     
-    Teams ||--o{ Matches : "plays"
+    %% RELATIONS TABLES
+    TEAM_MEMBER {
+        bool isCaptain
+    }
+    REGISTRATION {
+        date createdAt
+    }
+    INVITATION {
+        string status
+    }
     
-    Registrations }o--o| Users : "solo entry"
-    Registrations }o--o| Teams : "team entry"
+    %% LIENS COMPLEXES
+    USER ||--o{ INVITATION : "REÇOIT"
+    TEAM ||--o{ INVITATION : "CONCERNE"
+    
+    MATCH ||--o{ MATCH_MESSAGE : "CONTIENT"
+    USER ||--o{ MATCH_MESSAGE : "ECRIT"
 ```

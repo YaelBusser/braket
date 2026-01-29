@@ -6,7 +6,7 @@ $bg-team-b: #252b38;
 $border-color: #3d4654;
 $text-primary: #ffffff;
 $text-muted: #6b7280;
-$accent-green: #00d4aa;
+$accent-green: vars.$primary-600; // Use Magenta
 $accent-vs: #ff6b35;
 
 .matchNode {
@@ -126,11 +126,12 @@ $accent-vs: #ff6b35;
   
   // Couleurs simples pour gagnant/perdant
   &.winner {
-    background: rgba(0, 255, 150, 0.2) !important;
+    background: linear-gradient(135deg, rgba(255, 0, 140, 0.4) 0%, rgba(103, 72, 255, 0.4) 100%) !important; // Magenta/Indigo gradient
   }
   
   &.loser {
-    background: rgba(255, 50, 50, 0.2) !important;
+    background: rgba(12, 0, 22, 0.6) !important; // Darker background
+    opacity: 0.7;
   }
   
 }

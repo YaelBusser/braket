@@ -15,7 +15,11 @@ import styles from './page.module.scss'
 
 type TabKey = 'tournaments' | 'participations' | 'overview' | 'teams'
 
-function ProfilePage() {
+interface ProfilePageProps {
+  defaultTab?: TabKey
+}
+
+function ProfilePage({ defaultTab = 'overview' }: ProfilePageProps) {
   const { data: session, status } = useSession()
   const router = useRouter()
   const { notify } = useNotification()
@@ -23,8 +27,8 @@ function ProfilePage() {
   const { openCreateTournamentModal } = useCreateTournamentModal()
   const { openCreateTeamModal } = useCreateTeamModal()
   const isAdmin = (session?.user as any)?.isAdmin === 1
-  
-  
+
+
   // États pour les données utilisateur
   const [userTournaments, setUserTournaments] = useState<any[]>([])
   const [userTeams, setUserTeams] = useState<any[]>([])
@@ -33,14 +37,14 @@ function ProfilePage() {
   const [loadingData, setLoadingData] = useState(false)
   // Initialiser avec la valeur par défaut pour afficher immédiatement
   const [bannerUrl, setBannerUrl] = useState<string>('/images/games.jpg')
-  
-  const [activeTab, setActiveTab] = useState<TabKey>('overview')
-  
+
+  const [activeTab, setActiveTab] = useState<TabKey>(defaultTab)
+
   const handleTabChange = (key: string) => {
     const tabKey = key as TabKey
     setActiveTab(tabKey)
   }
-  
+
   // Statistiques utilisateur
   const [userStats, setUserStats] = useState({
     totalTournaments: 0,
@@ -60,7 +64,7 @@ function ProfilePage() {
   // Redirection hors rendu pour éviter les problèmes d'ordre des hooks
   useEffect(() => {
     if (status === 'unauthenticated') {
-      try { localStorage.setItem('lt_returnTo', '/profile') } catch {}
+      try { localStorage.setItem('lt_returnTo', '/profile') } catch { }
       openAuthModal('login')
       router.push('/')
       return
@@ -155,72 +159,72 @@ function ProfilePage() {
 
   return (
     <div className={styles.profilePage}>
-        {/* Header avec avatar et infos */}
-        <div 
-          className={styles.profileHeader}
-          style={{
-            backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-            backgroundAttachment: 'fixed'
-          }}
-        >
-          <div className={styles.headerContent}>
-            <div className={styles.avatarWrapper}>
-              <div className={styles.avatarContainer}>
-                {session?.user?.image ? (
-                  <img src={session.user.image} alt="Avatar" className={styles.avatar} />
-                ) : (
-                  <div className={styles.avatarPlaceholder}>
-                    {session?.user?.name?.charAt(0) || 'U'}
-                  </div>
-                )}
-              </div>
+      {/* Header avec avatar et infos */}
+      <div
+        className={styles.profileHeader}
+        style={{
+          backgroundImage: `linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%), url(${bannerUrl})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }}
+      >
+        <div className={styles.headerContent}>
+          <div className={styles.avatarWrapper}>
+            <div className={styles.avatarContainer}>
+              {session?.user?.image ? (
+                <img src={session.user.image} alt="Avatar" className={styles.avatar} />
+              ) : (
+                <div className={styles.avatarPlaceholder}>
+                  {session?.user?.name?.charAt(0) || 'U'}
+                </div>
+              )}
             </div>
-            <div className={styles.userInfo}>
-              <div className={styles.userLabel}>UTILISATEUR</div>
-              <h1 className={styles.username}>
-                {session?.user?.name || 'Utilisateur'}
-              </h1>
-              <div className={styles.userMeta}>
-                <span className={styles.status}>
-                  <span className={styles.statusDot}></span>
-                  En ligne
-                </span>
-                <span className={styles.separator}>•</span>
-                <span className={styles.registrationDate}>
-                  Inscrit(e) il y a {yearsSinceRegistration > 0 ? `${yearsSinceRegistration} an${yearsSinceRegistration > 1 ? 's' : ''}` : 'moins d\'un an'}
-                </span>
-              </div>
+          </div>
+          <div className={styles.userInfo}>
+            <div className={styles.userLabel}>UTILISATEUR</div>
+            <h1 className={styles.username}>
+              {session?.user?.name || 'Utilisateur'}
+            </h1>
+            <div className={styles.userMeta}>
+              <span className={styles.status}>
+                <span className={styles.statusDot}></span>
+                En ligne
+              </span>
+              <span className={styles.separator}>•</span>
+              <span className={styles.registrationDate}>
+                Inscrit(e) il y a {yearsSinceRegistration > 0 ? `${yearsSinceRegistration} an${yearsSinceRegistration > 1 ? 's' : ''}` : 'moins d\'un an'}
+              </span>
             </div>
           </div>
         </div>
+      </div>
 
-        <ContentWithTabs style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
-          {/* Navigation par onglets */}
-          <Tabs
-            tabs={[
-              { key: 'overview', label: 'Aperçu' },
-              { key: 'participations', label: 'Tournois rejoints' },
-              { key: 'tournaments', label: 'Tournois créés' },
-              { key: 'teams', label: 'Équipes' }
-            ]}
-            activeTab={activeTab}
-            onTabChange={handleTabChange}
+      <ContentWithTabs style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
+        {/* Navigation par onglets */}
+        <Tabs
+          tabs={[
+            { key: 'overview', label: 'Aperçu' },
+            { key: 'participations', label: 'Tournois rejoints' },
+            { key: 'tournaments', label: 'Tournois créés' },
+            { key: 'teams', label: 'Équipes' }
+          ]}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        >
+          <button
+            className={styles.settingsButton}
+            onClick={() => router.push('/settings')}
+            title="Paramètres"
           >
-            <button
-              className={styles.settingsButton}
-              onClick={() => router.push('/settings')}
-              title="Paramètres"
-            >
-              <SettingsIcon width={20} height={20} />
-              <span>Paramètres</span>
-            </button>
-          </Tabs>
+            <SettingsIcon width={20} height={20} />
+            <span>Paramètres</span>
+          </button>
+        </Tabs>
 
-          {/* Contenu principal */}
-          <div className={styles.tabContent}>
+        {/* Contenu principal */}
+        <div className={styles.tabContent}>
           {activeTab === 'overview' && (
             <div className={styles.overviewTab}>
               {/* Statistiques principales */}
@@ -232,7 +236,7 @@ function ProfilePage() {
                     <div className={styles.statLabel}>Tournois rejoints</div>
                   </div>
                 </div>
-                
+
                 <div className={styles.statCard}>
                   <div className={styles.statIcon}>👥</div>
                   <div className={styles.statContent}>
@@ -240,7 +244,7 @@ function ProfilePage() {
                     <div className={styles.statLabel}>Équipes</div>
                   </div>
                 </div>
-                
+
                 <div className={styles.statCard}>
                   <div className={styles.statIcon}>⚔️</div>
                   <div className={styles.statContent}>
@@ -248,7 +252,7 @@ function ProfilePage() {
                     <div className={styles.statLabel}>Matchs joués</div>
                   </div>
                 </div>
-                
+
                 {userStats.totalMatches > 0 && (
                   <div className={styles.statCard}>
                     <div className={styles.statIcon}>🏅</div>
@@ -258,7 +262,7 @@ function ProfilePage() {
                     </div>
                   </div>
                 )}
-                
+
                 {userStats.totalMatches > 0 && (
                   <div className={styles.statCard}>
                     <div className={styles.statIcon}>📊</div>
@@ -316,7 +320,7 @@ function ProfilePage() {
               <div className={styles.tabHeader}>
                 <h3>Tournois créés</h3>
                 {isAdmin && (
-                  <button 
+                  <button
                     className={styles.createBtn}
                     onClick={openCreateTournamentModal}
                   >
@@ -324,7 +328,7 @@ function ProfilePage() {
                   </button>
                 )}
               </div>
-              
+
               <div className={styles.tournamentList}>
                 {loadingData ? (
                   <div className={styles.loading}>Chargement...</div>
@@ -332,7 +336,7 @@ function ProfilePage() {
                   <div className={styles.emptyState}>
                     <p>Aucun tournoi créé</p>
                     {isAdmin && (
-                      <button 
+                      <button
                         className={styles.createBtn}
                         onClick={openCreateTournamentModal}
                       >
@@ -341,9 +345,9 @@ function ProfilePage() {
                     )}
                   </div>
                 ) : (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                     gap: '1.5rem',
                     width: '100%'
                   }}>
@@ -363,14 +367,14 @@ function ProfilePage() {
             <div className={styles.teamsTab}>
               <div className={styles.tabHeader}>
                 <h3>Mes équipes</h3>
-                <button 
+                <button
                   className={styles.createBtn}
                   onClick={openCreateTeamModal}
                 >
                   Créer une équipe
                 </button>
               </div>
-              
+
               {loadingData ? (
                 <div className={styles.loading}>
                   <div className={styles.spinner}></div>
@@ -379,7 +383,7 @@ function ProfilePage() {
               ) : !userTeams || userTeams.length === 0 ? (
                 <div className={styles.emptyState}>
                   <p>Aucune équipe rejointe</p>
-                  <button 
+                  <button
                     className={styles.createBtn}
                     onClick={openCreateTeamModal}
                   >
@@ -387,7 +391,7 @@ function ProfilePage() {
                   </button>
                 </div>
               ) : (
-                <div style={{ 
+                <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                   gap: '1.5rem',
@@ -406,7 +410,7 @@ function ProfilePage() {
               <div className={styles.tabHeader}>
                 <h3>Tournois rejoints</h3>
               </div>
-              
+
               <div className={styles.tournamentList}>
                 {loadingData ? (
                   <div className={styles.loading}>Chargement...</div>
@@ -415,9 +419,9 @@ function ProfilePage() {
                     <p>Aucun tournoi rejoint</p>
                   </div>
                 ) : (
-                  <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
                     gap: '1.5rem',
                     width: '100%'
                   }}>
@@ -433,13 +437,13 @@ function ProfilePage() {
             </div>
           )}
 
-          </div>
-        </ContentWithTabs>
+        </div>
+      </ContentWithTabs>
 
-      </div>
+    </div>
   )
 }
 
-export default function Profile() {
-  return <ProfilePage />
+export default function Profile(props: any) {
+  return <ProfilePage {...props} />
 }
