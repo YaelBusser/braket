@@ -150,23 +150,7 @@ async function updateFeaturedPositions() {
             registrations: true
           }
         }
-      },
-      orderBy: [
-        // Priorité 1: Statut (IN_PROGRESS > REG_OPEN > COMPLETED)
-        {
-          status: 'asc' // IN_PROGRESS vient avant REG_OPEN dans l'ordre alphabétique
-        },
-        // Priorité 2: Nombre de participants (décroissant)
-        {
-          _count: {
-            registrations: 'desc'
-          }
-        },
-        // Priorité 3: Date de création (plus récent en premier)
-        {
-          createdAt: 'desc'
-        }
-      ]
+      }
     })
 
     // Trier avec une logique personnalisée pour le statut

@@ -1,0 +1,6 @@
+modif Visuels en Apparence
+maths braket = pas de vert à mettre, rester dans la chart
+ptite page qui simule paiements
+changer code couleur (redemander)
+témoignages qui défilent au début (demander aux market)
+page FAQ (demander aux market)

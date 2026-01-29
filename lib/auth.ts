@@ -74,7 +74,8 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        // secure: true uniquement si HTTPS (NEXTAUTH_URL commence par https://)
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
         maxAge: 60 * 60 * 24 * 30, // 30 jours
       },
     },
@@ -84,7 +85,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
       },
     },
     csrfToken: {
@@ -93,7 +94,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://') ?? false,
       },
     },
   },
