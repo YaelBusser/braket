@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "test": "jest",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
@@ -32,13 +33,17 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
+    "jest": "^30.2.0",
     "sass": "^1.93.0",
     "sass-loader": "^16.0.5",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }
