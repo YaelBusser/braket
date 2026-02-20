@@ -4,76 +4,41 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Permet de lancer manuellement
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build project
-        run: npm run build
-        env:
-          # Variables d'env nécessaires pour le build
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          NODE_ENV: production
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          DISCORD_CLIENT_ID: ${{ secrets.DISCORD_CLIENT_ID }}
-          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
-
-      - name: Stop server via Pterodactyl API
+      - name: Restart Pterodactyl server
         run: |
-          curl -X POST "${{ secrets.PTERO_PANEL_URL }}/api/client/servers/${{ secrets.PTERO_SERVER_ID }}/power" \
+          echo "Sending restart signal to Pterodactyl..."
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "${{ secrets.PTERO_PANEL_URL }}/api/client/servers/${{ secrets.PTERO_SERVER_ID }}/power" \
             -H "Authorization: Bearer ${{ secrets.PTERO_API_KEY }}" \
             -H "Content-Type: application/json" \
             -H "Accept: application/json" \
-            -d '{"signal": "stop"}'
-          echo "Waiting for server to stop..."
-          sleep 10
-
-      - name: Deploy via SFTP
-        uses: wangyucode/sftp-upload-action@v2.0.4
-        with:
-          host: ${{ secrets.PTERO_SFTP_HOST }}
-          port: ${{ secrets.PTERO_SFTP_PORT }}
-          username: ${{ secrets.PTERO_SFTP_USERNAME }}
-          password: ${{ secrets.PTERO_SFTP_PASSWORD }}
-          forceUpload: true
-          dryRun: false
-          localDir: './'
-          remoteDir: '/'
-          exclude: |
-            .git/**
-            .github/**
-            node_modules/**
-            .env
-            .env.local
-            .env.development
-            *.log
-
-      - name: Start server via Pterodactyl API
-        run: |
-          curl -X POST "${{ secrets.PTERO_PANEL_URL }}/api/client/servers/${{ secrets.PTERO_SERVER_ID }}/power" \
-            -H "Authorization: Bearer ${{ secrets.PTERO_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -H "Accept: application/json" \
-            -d '{"signal": "start"}'
-          echo "Server starting..."
-
-      - name: Deployment complete
-        run: echo "🚀 Deployment to Pterodactyl completed successfully!"
+            -d '{"signal": "restart"}')
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+          
+          echo "Response code: $HTTP_CODE"
+          
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Server restart signal sent successfully!"
+            echo "The server will now:"
+            echo "  1. Stop the current process"
+            echo "  2. Run 'git pull' to fetch latest code"
+            echo "  3. Run 'npm install'"
+            echo "  4. Run 'prisma generate/push/seed'"
+            echo "  5. Run 'npm run build'"
+            echo "  6. Run 'npm run start'"
+            echo ""
+            echo "Deployment will complete in ~2-3 minutes."
+          else
+            echo "Error sending restart signal!"
+            echo "Response: $BODY"
+            exit 1
+          fi
