@@ -51,7 +51,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
         password: '',
         confirmPassword: '',
         pseudo: '',
-        rememberMe: false
+        rememberMe: false,
+        acceptTerms: false
       })
       setErrors({})
     }
