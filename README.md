@@ -1,4 +1,4 @@
-# LeTournoi - Plateforme de gestion de tournois
+# Braket - Plateforme de gestion de tournois
 
 Une plateforme moderne pour créer, organiser et participer à des tournois de jeux vidéo, sport et jeux de société.
 
