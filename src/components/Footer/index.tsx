@@ -50,6 +50,7 @@ export default function Footer() {
               <li><Link href="/contact" className={styles.link}>Contact</Link></li>
               <li><Link href="/privacy" className={styles.link}>Confidentialité</Link></li>
               <li><Link href="/terms" className={styles.link}>Conditions</Link></li>
+              <li><Link href="/mentions-legales" className={styles.link}>Mentions légales</Link></li>
             </ul>
           </div>
         </div>
@@ -57,14 +58,16 @@ export default function Footer() {
         {/* Copyright */}
         <div className={styles.bottom}>
           <div className={styles.copyright}>
-            <p>&copy; 2025 LeTournoi. Tous droits réservés.</p>
+            <p>&copy; 2025 Braket. Tous droits réservés.</p>
           </div>
           <div className={styles.legal}>
             <Link href="/privacy" className={styles.legalLink}>Confidentialité</Link>
             <span className={styles.separator}>•</span>
-            <Link href="/terms" className={styles.legalLink}>Conditions d'utilisation</Link>
+            <Link href="/terms" className={styles.legalLink}>Conditions d&apos;utilisation</Link>
             <span className={styles.separator}>•</span>
             <Link href="/cookies" className={styles.legalLink}>Cookies</Link>
+            <span className={styles.separator}>•</span>
+            <Link href="/mentions-legales" className={styles.legalLink}>Mentions légales</Link>
           </div>
         </div>
       </div>

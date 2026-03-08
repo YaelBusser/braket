@@ -1,6 +1,6 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
 import Cropper from 'react-easy-crop'
@@ -46,7 +46,12 @@ export default function SettingsPage() {
   const [bannerPreviewUrl, setBannerPreviewUrl] = useState<string | null>(null)
   const [selectedBanner, setSelectedBanner] = useState<File | null>(null)
 
-  const [activeSection, setActiveSection] = useState<'account' | 'visuals' | 'password'>('account')
+  const [activeSection, setActiveSection] = useState<'account' | 'visuals' | 'password' | 'data'>('account')
+
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Update formData when session changes
   useEffect(() => {
@@ -397,6 +402,50 @@ export default function SettingsPage() {
     }
   }
 
+  const handleExportData = async () => {
+    setIsExporting(true)
+    try {
+      const res = await fetch('/api/account/export')
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `braket-data-export.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+        notify({ message: 'Données exportées avec succès', type: 'success' })
+      } else {
+        notify({ message: 'Erreur lors de l\'export des données', type: 'error' })
+      }
+    } catch {
+      notify({ message: 'Erreur lors de l\'export des données', type: 'error' })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'SUPPRIMER') return
+
+    setIsDeleting(true)
+    try {
+      const res = await fetch('/api/account', { method: 'DELETE' })
+      if (res.ok) {
+        await signOut({ callbackUrl: '/' })
+      } else {
+        const data = await res.json()
+        notify({ message: data.message || 'Erreur lors de la suppression', type: 'error' })
+      }
+    } catch {
+      notify({ message: 'Erreur lors de la suppression du compte', type: 'error' })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   if (status === 'unauthenticated') {
     return null
   }
@@ -461,6 +510,19 @@ export default function SettingsPage() {
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                   </svg>
                   <span>Mot de passe</span>
+                </button>
+              </div>
+
+              <div className={styles.navSection}>
+                <div className={styles.navSectionTitle}>CONFIDENTIALITÉ</div>
+                <button
+                  className={`${styles.navItem} ${activeSection === 'data' ? styles.navItemActive : ''}`}
+                  onClick={() => setActiveSection('data')}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                  <span>Données personnelles</span>
                 </button>
               </div>
             </nav>
@@ -724,8 +786,106 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+
+            {activeSection === 'data' && (
+              <div className={styles.contentSection}>
+                <h1 className={styles.contentTitle}>Données personnelles</h1>
+                
+                <div className={styles.formSection}>
+                  <div className={styles.dataCard}>
+                    <div className={styles.dataCardHeader}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <div>
+                        <h3>Exporter mes données</h3>
+                        <p>Téléchargez une copie de toutes vos données personnelles au format JSON (droit à la portabilité, art. 20 RGPD).</p>
+                      </div>
+                    </div>
+                    <button
+                      className={styles.exportButton}
+                      onClick={handleExportData}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? 'Export en cours...' : 'Télécharger mes données'}
+                    </button>
+                  </div>
+
+                  <div className={styles.dataCard}>
+                    <div className={styles.dataCardHeader}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                      <div>
+                        <h3>Vos droits</h3>
+                        <p>Consultez notre <a href="/privacy" className={styles.linkButton}>Politique de confidentialité</a> pour connaître vos droits en matière de données personnelles. Vous pouvez aussi nous contacter à <a href="mailto:contact@braket-tournament.com" className={styles.linkButton}>contact@braket-tournament.com</a>.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.dangerZone}>
+                    <h2 className={styles.dangerTitle}>Zone de danger</h2>
+                    <div className={styles.dangerCard}>
+                      <div>
+                        <h3>Supprimer mon compte</h3>
+                        <p>Cette action est irréversible. Toutes vos données, équipes créées, inscriptions aux tournois et messages seront définitivement supprimés.</p>
+                      </div>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => setShowDeleteModal(true)}
+                      >
+                        Supprimer mon compte
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </main>
         </div>
+
+        {/* Modal de suppression de compte */}
+        {showDeleteModal && (
+          <div className={styles.cropModal}>
+            <div className={styles.deleteModal}>
+              <h2 className={styles.deleteModalTitle}>Supprimer votre compte</h2>
+              <p className={styles.deleteModalText}>
+                Cette action est <strong>irréversible</strong>. Toutes vos données seront définitivement supprimées : profil, équipes, inscriptions, messages, notifications.
+              </p>
+              <p className={styles.deleteModalText}>
+                Pour confirmer, tapez <strong>SUPPRIMER</strong> ci-dessous :
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                className={styles.formInput}
+                placeholder="Tapez SUPPRIMER"
+                autoFocus
+              />
+              <div className={styles.deleteModalActions}>
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => {
+                    setShowDeleteModal(false)
+                    setDeleteConfirmText('')
+                  }}
+                >
+                  Annuler
+                </button>
+                <button
+                  className={styles.deleteButton}
+                  onClick={handleDeleteAccount}
+                  disabled={deleteConfirmText !== 'SUPPRIMER' || isDeleting}
+                >
+                  {isDeleting ? 'Suppression...' : 'Confirmer la suppression'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Modal de crop */}
         {showCropper && originalImageUrl && (

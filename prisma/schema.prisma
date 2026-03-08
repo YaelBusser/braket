@@ -20,6 +20,7 @@ model User {
   emailVerified       DateTime?
   isAdmin             Boolean                  @default(false)
   image               String?
+  termsAcceptedAt     DateTime?
   sessions            Session[]
   teamMembers         TeamMember[]
   teamInvitations     TeamInvitation[]         @relation("InvitedUser")

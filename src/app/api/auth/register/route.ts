@@ -4,12 +4,18 @@ import { prisma } from '../../../../../lib/prisma'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, pseudo } = await request.json()
+    const { email, password, pseudo, acceptTerms } = await request.json()
 
-    // Validation
     if (!email || !password || !pseudo) {
       return NextResponse.json(
         { message: 'Tous les champs sont requis' },
+        { status: 400 }
+      )
+    }
+
+    if (acceptTerms !== true) {
+      return NextResponse.json(
+        { message: 'Vous devez accepter les conditions d\'utilisation et la politique de confidentialité' },
         { status: 400 }
       )
     }
@@ -42,6 +48,7 @@ export async function POST(request: NextRequest) {
         email,
         passwordHash,
         pseudo,
+        termsAcceptedAt: new Date(),
       }
     })
 

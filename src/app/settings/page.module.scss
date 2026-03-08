@@ -992,6 +992,152 @@
   }
 }
 
+/* Data & Privacy section */
+.dataCard {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-xl;
+  padding: vars.$spacing-6;
+  margin-bottom: vars.$spacing-4;
+}
+
+.dataCardHeader {
+  display: flex;
+  gap: vars.$spacing-4;
+  align-items: flex-start;
+
+  svg {
+    flex-shrink: 0;
+    color: vars.$lt-text-muted;
+    margin-top: 2px;
+  }
+
+  h3 {
+    font-size: vars.$font-size-lg;
+    font-weight: vars.$font-weight-semibold;
+    color: vars.$lt-text-primary;
+    margin-bottom: vars.$spacing-1;
+  }
+
+  p {
+    font-size: vars.$font-size-sm;
+    color: vars.$lt-text-secondary;
+    line-height: vars.$line-height-relaxed;
+  }
+}
+
+.exportButton {
+  margin-top: vars.$spacing-4;
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$lt-dark-tertiary;
+  color: vars.$lt-text-primary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: vars.$lt-accent-blue;
+    border-color: vars.$lt-accent-blue;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.dangerZone {
+  margin-top: vars.$spacing-8;
+  padding-top: vars.$spacing-6;
+  border-top: 1px solid rgba(vars.$lt-error, 0.3);
+}
+
+.dangerTitle {
+  font-size: vars.$font-size-lg;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-error;
+  margin-bottom: vars.$spacing-4;
+}
+
+.dangerCard {
+  background: rgba(vars.$lt-error, 0.05);
+  border: 1px solid rgba(vars.$lt-error, 0.2);
+  border-radius: vars.$radius-xl;
+  padding: vars.$spacing-6;
+
+  h3 {
+    font-size: vars.$font-size-base;
+    font-weight: vars.$font-weight-semibold;
+    color: vars.$lt-text-primary;
+    margin-bottom: vars.$spacing-2;
+  }
+
+  p {
+    font-size: vars.$font-size-sm;
+    color: vars.$lt-text-secondary;
+    line-height: vars.$line-height-relaxed;
+    margin-bottom: vars.$spacing-4;
+  }
+}
+
+.deleteButton {
+  padding: vars.$spacing-3 vars.$spacing-6;
+  background: vars.$lt-error;
+  color: white;
+  border: none;
+  border-radius: vars.$radius-button;
+  font-size: vars.$font-size-sm;
+  font-weight: vars.$font-weight-medium;
+  cursor: pointer;
+  transition: all vars.$transition-fast;
+
+  &:hover:not(:disabled) {
+    background: vars.$error-700;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.deleteModal {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-xl;
+  padding: vars.$spacing-8;
+  max-width: 480px;
+  width: 90%;
+}
+
+.deleteModalTitle {
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-bold;
+  color: vars.$lt-error;
+  margin-bottom: vars.$spacing-4;
+}
+
+.deleteModalText {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-secondary;
+  line-height: vars.$line-height-relaxed;
+  margin-bottom: vars.$spacing-4;
+
+  strong {
+    color: vars.$lt-text-primary;
+  }
+}
+
+.deleteModalActions {
+  display: flex;
+  gap: vars.$spacing-3;
+  justify-content: flex-end;
+  margin-top: vars.$spacing-6;
+}
+
 /* Responsive */
 @media (max-width: vars.$breakpoint-lg) {
   .settingsLayout {

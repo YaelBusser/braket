@@ -1,0 +1,151 @@
+@use '../../styles/variables.module' as vars;
+
+.legalPage {
+  min-height: calc(100vh - vars.$header-height);
+  background: vars.$bg-page;
+  color: vars.$lt-text-primary;
+  padding: calc(vars.$spacing-16 + vars.$header-height) vars.$spacing-6 vars.$spacing-16;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.title {
+  font-family: vars.$font-family-primary;
+  font-size: vars.$font-size-4xl;
+  font-weight: vars.$font-weight-bold;
+  margin-bottom: vars.$spacing-2;
+  background: vars.$gradient-primary;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lastUpdated {
+  font-size: vars.$font-size-sm;
+  color: vars.$lt-text-muted;
+  margin-bottom: vars.$spacing-10;
+}
+
+.section {
+  margin-bottom: vars.$spacing-8;
+}
+
+.sectionTitle {
+  font-family: vars.$font-family-primary;
+  font-size: vars.$font-size-xl;
+  font-weight: vars.$font-weight-semibold;
+  color: vars.$lt-text-primary;
+  margin-bottom: vars.$spacing-3;
+  padding-bottom: vars.$spacing-2;
+  border-bottom: 1px solid vars.$lt-border;
+}
+
+.paragraph {
+  font-size: vars.$font-size-base;
+  color: vars.$lt-text-secondary;
+  line-height: vars.$line-height-relaxed;
+  margin-bottom: vars.$spacing-4;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: vars.$spacing-4;
+
+  li {
+    position: relative;
+    padding-left: vars.$spacing-5;
+    margin-bottom: vars.$spacing-2;
+    font-size: vars.$font-size-base;
+    color: vars.$lt-text-secondary;
+    line-height: vars.$line-height-relaxed;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 6px;
+      height: 6px;
+      border-radius: vars.$radius-full;
+      background: vars.$primary-600;
+    }
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: vars.$spacing-4;
+  border-radius: vars.$radius-lg;
+  overflow: hidden;
+
+  th,
+  td {
+    padding: vars.$spacing-3 vars.$spacing-4;
+    text-align: left;
+    border-bottom: 1px solid vars.$lt-border;
+    font-size: vars.$font-size-sm;
+  }
+
+  th {
+    background: vars.$lt-dark-secondary;
+    color: vars.$lt-text-primary;
+    font-weight: vars.$font-weight-semibold;
+  }
+
+  td {
+    color: vars.$lt-text-secondary;
+  }
+}
+
+.link {
+  color: vars.$primary-500;
+  text-decoration: none;
+  transition: color vars.$transition-fast;
+
+  &:hover {
+    color: vars.$primary-400;
+    text-decoration: underline;
+  }
+}
+
+.contactInfo {
+  background: vars.$lt-dark-secondary;
+  border: 1px solid vars.$lt-border;
+  border-radius: vars.$radius-xl;
+  padding: vars.$spacing-6;
+  margin-bottom: vars.$spacing-4;
+
+  p {
+    color: vars.$lt-text-secondary;
+    margin-bottom: vars.$spacing-2;
+    font-size: vars.$font-size-base;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: vars.$lt-text-primary;
+    }
+  }
+}
+
+@media (max-width: vars.$breakpoint-md) {
+  .legalPage {
+    padding: calc(vars.$spacing-12 + vars.$header-height) vars.$spacing-4 vars.$spacing-12;
+  }
+
+  .title {
+    font-size: vars.$font-size-3xl;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+  }
+}

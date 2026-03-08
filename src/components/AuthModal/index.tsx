@@ -21,7 +21,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
     password: '',
     confirmPassword: '',
     pseudo: '',
-    rememberMe: false
+    rememberMe: false,
+    acceptTerms: false
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -120,6 +121,10 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
       } else if (formData.pseudo.length < 2) {
         newErrors.pseudo = 'Le pseudo doit contenir au moins 2 caractères'
       }
+
+      if (!formData.acceptTerms) {
+        newErrors.acceptTerms = 'Vous devez accepter les conditions d\'utilisation'
+      }
     }
 
     setErrors(newErrors)
@@ -182,6 +187,7 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
           email: formData.email,
           password: formData.password,
           pseudo: formData.pseudo,
+          acceptTerms: formData.acceptTerms,
         }),
       })
 
@@ -488,6 +494,27 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
                   )}
                 </div>
 
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    name="acceptTerms"
+                    checked={formData.acceptTerms}
+                    onChange={handleChange}
+                    className={styles.checkbox}
+                  />
+                  <span>
+                    J&apos;accepte les{' '}
+                    <a href="/terms" className={styles.termsLink} target="_blank" rel="noopener noreferrer">Conditions d&apos;utilisation</a>
+                    {' '}et la{' '}
+                    <a href="/privacy" className={styles.termsLink} target="_blank" rel="noopener noreferrer">Politique de confidentialité</a>
+                  </span>
+                </label>
+                {errors.acceptTerms && (
+                  <div className={styles.errorText}>{errors.acceptTerms}</div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 disabled={isLoading}
@@ -495,14 +522,6 @@ export default function AuthModal({ isOpen, onClose, initialMode = 'login' }: Au
               >
                 {isLoading ? 'Inscription...' : "S'inscrire gratuitement"}
               </button>
-
-              <p className={styles.termsText}>
-                En cliquant sur "S'inscrire gratuitement", vous acceptez les{' '}
-                <a href="/terms" className={styles.termsLink}>Conditions d'utilisation</a>
-                {' '}et la{' '}
-                <a href="/privacy" className={styles.termsLink}>Politique de confidentialité</a>
-                {' '}de LeTournoi.
-              </p>
               </form>
             </>
           )}
