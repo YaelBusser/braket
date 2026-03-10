@@ -357,15 +357,6 @@
   }
 }
 
-// Enlever le background de sélection de texte
-::selection {
-  background: transparent;
-}
-
-::-moz-selection {
-  background: transparent;
-}
-
 .formRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
